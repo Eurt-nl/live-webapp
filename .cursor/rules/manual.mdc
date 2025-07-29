@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Use this rule when working on layout, UI styling, or theming tasks.
+Regels:
+	•	Use the DiscGolfMetrix visual style as reference.
+	•	(Optional) Use EU-inspired blue-yellow color palette if branding applies.
+Tags: @/layouts, @/css, @/components/ui

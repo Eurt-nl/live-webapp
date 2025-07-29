@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - Pitch-Putt App</title>
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .container {
+        max-width: 600px;
+        padding: 20px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #1976d2;
+        margin-bottom: 20px;
+      }
+      p {
+        margin-bottom: 15px;
+        line-height: 1.5;
+      }
+      .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        color: #1976d2;
+      }
+      .button {
+        display: inline-block;
+        background-color: #1976d2;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-top: 20px;
+        font-weight: bold;
+      }
+      .button:hover {
+        background-color: #1565c0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📡</div>
+      <h1>Je bent offline</h1>
+      <p>
+        Het lijkt erop dat je geen internetverbinding hebt. Controleer je verbinding en probeer het
+        opnieuw.
+      </p>
+      <p>
+        De Pitch-Putt App werkt ook offline, maar sommige functies zijn mogelijk niet beschikbaar.
+      </p>
+      <a href="/" class="button">Probeer opnieuw</a>
+    </div>
+  </body>
+</html>

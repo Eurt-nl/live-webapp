@@ -1,0 +1,22 @@
+---
+alwaysApply: true
+---
+This rule defines the default structure and technology stack for this project, which is a Quasar-based Progressive Web App using Vue 3, TypeScript and PocketBase as backend. Useful when generating files, setting up pages, or creating collections.
+Rules:
+	•	This project is a Progressive Web App (PWA) built with Quasar Framework, Vue 3 and TypeScript.
+	•	Use PocketBase as the backend.
+	•	Use Capacitor only for PWA-specific features, not for native mobile development.
+	•	Use notifications, even without a state management library.
+	•	Do not use Pinia unless multiple components require access to shared state (e.g. notifications or user info).
+	•	The PocketBase instance is available at https://pb.9621da15.cloud.
+
+Defines how AppMenu and UserMenu should be structured and separated. Useful when generating views or organizing feature folders.
+Regels:
+	•	The layout uses a QDrawer on the left for AppMenu and on the right for UserMenu.
+	•	Files must be organized in folders that match the menu structure (AppMenu and UserMenu).
+	•	AppMenu components are for displaying informational (read-only) views.
+	•	UserMenu components are used for creating, editing, and deleting records (CRUD).
+	•	Store PocketBase collections in separate files and group them via an index.ts file.
+Tags: @/layouts, @/pages/appmenu, @/pages/usermenu
+
+All generated code must include clear comments for both logic and layout, to help Cursor and other developers understand the structure
