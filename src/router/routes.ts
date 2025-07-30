@@ -137,6 +137,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'login', component: () => import('pages/auth/LoginPage.vue') },
       { path: 'register', component: () => import('pages/auth/RegisterPage.vue') },
       { path: 'forgot-password', component: () => import('pages/auth/ForgotPasswordPage.vue') },
+      { path: 'reset-password', component: () => import('pages/auth/ResetPasswordPage.vue') },
     ],
   },
   {

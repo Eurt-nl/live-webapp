@@ -104,6 +104,16 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async confirmPasswordReset(token: string, email: string, password: string) {
+      try {
+        await this.pb.collection('users').confirmPasswordReset(token, password, password);
+        return true;
+      } catch (error) {
+        console.error('Password reset confirmation error:', error);
+        return false;
+      }
+    },
+
     async updateProfile(data: {
       name: string;
       birthyear: number;

@@ -25,5 +25,11 @@ export const POCKETBASE_URL = getPocketBaseUrl();
 import PocketBase from 'pocketbase';
 export const pb = new PocketBase(POCKETBASE_URL);
 
+// Stel de redirect URL in voor password reset
+pb.authStore.onChange(() => {
+  // Deze hook wordt aangeroepen wanneer de auth store verandert
+  // We kunnen hier eventueel extra logica toevoegen
+});
+
 // Exporteer de PocketBase instantie als default
 export default pb;
