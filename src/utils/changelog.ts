@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.2.1",
+    date: "2025-07-30",
+    type: "patch",
+    changes: ["# Please enter the commit message for your changes. Lines starting"]
+  },
+  {
+    version: "0.2.0",
+    date: "2025-07-30",
+    type: "minor",
+    changes: ["feat: implement automatic version bumping with commit-based semver"]
+  },
+  {
     version: "0.1.0",
     date: "2025-07-30",
     type: "minor",
