@@ -70,11 +70,23 @@ const token = ref('');
 const email = ref('');
 
 onMounted(() => {
-  // Haal token en email uit URL parameters
-  token.value = route.query.token as string;
+  // Haal token en email uit URL parameters of route params
+  token.value = route.query.token as string || route.params.token as string;
   email.value = route.query.email as string;
 
-  if (!token.value || !email.value) {
+  // Als we geen email hebben, probeer het uit de token te halen
+  if (!email.value && token.value) {
+    try {
+      // Decodeer de JWT token om de email te extraheren
+      const payload = JSON.parse(atob(token.value.split('.')[1]));
+      email.value = payload.email;
+    } catch {
+      // Als decoderen mislukt, gebruik een placeholder
+      email.value = '';
+    }
+  }
+
+  if (!token.value) {
     $q.notify({
       color: 'negative',
       message: $customT('auth.invalidResetLink'),

@@ -32,12 +32,12 @@ const getRedirectUrl = (): string => {
     // Gebruik de huidige window.location om de juiste poort te bepalen
     if (typeof window !== 'undefined') {
       const currentPort = window.location.port;
-      return `https://localhost:${currentPort}/auth/reset-password`;
+      return `https://localhost:${currentPort}/#/auth/reset-password`;
     }
     // Fallback naar geconfigureerde poort
-    return 'https://localhost:9000/auth/reset-password';
+    return 'https://localhost:9000/#/auth/reset-password';
   }
-  return 'https://pitch-putt.live/auth/reset-password';
+  return 'https://pitch-putt.live/#/auth/reset-password';
 };
 
 // Stel de redirect URL in voor password reset
