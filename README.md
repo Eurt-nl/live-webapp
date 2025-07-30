@@ -14,6 +14,8 @@ npm install
 quasar dev
 ```
 
+**BELANGRIJK**: Gebruik altijd `quasar dev` om de app te starten, niet `npm run dev`.
+
 
 ### Lint the files
 ```bash

@@ -24,11 +24,12 @@ Vermijd JS-only snippets — dit project gebruikt altijd `.ts` en `.vue` bestand
 
 ## i18n (Internationalisatie)
 
-Voor i18n in Vue templates:
+Voor i18n in Vue templates en scripts:
 
-- Gebruik **`$t`** in templates (NIET `t`)
-- Gebruik **`t`** in script secties (na `useI18n()`)
-- Voorbeeld template: `{{ $t('common.save') }}`
-- Voorbeeld script: `const { t } = useI18n(); t('common.save')`
+- Gebruik **ALTIJD `$customT`** in templates (NIET `$t`)
+- Gebruik **ALTIJD `$customT`** in script secties (NIET `t`)
+- Destructureer altijd via: `const { t: $customT } = useI18n()`
+- Voorbeeld template: `{{ $customT('common.save') }}`
+- Voorbeeld script: `const { t: $customT } = useI18n(); $customT('common.save')`
 
-**BELANGRIJK**: Vervang NOOIT `$t` door `t` in templates - dit veroorzaakt fouten!
+**BELANGRIJK**: Gebruik NOOIT `$t` of `t` - dit veroorzaakt fouten! Gebruik altijd `$customT`.

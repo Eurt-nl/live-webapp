@@ -30,6 +30,6 @@ fi
 
 # 4️⃣ Start app automatisch
 echo "\n🚀 App starten in development mode..." | tee -a $LOG_FILE
-npm run dev | tee -a $LOG_FILE
+quasar dev | tee -a $LOG_FILE
 
 echo "\n=== Cleanup en check voltooid! ===" | tee -a $LOG_FILE
