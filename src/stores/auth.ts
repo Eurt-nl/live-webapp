@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import pb from 'src/config/pocketbase';
+import pb, { PASSWORD_RESET_REDIRECT_URL } from 'src/config/pocketbase';
 import { isProfileComplete } from 'src/utils/profile-utils';
 import { useCoursesStore } from './courses';
 
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
 
     async requestPasswordReset(email: string) {
       try {
-        await this.pb.collection('users').requestPasswordReset(email);
+        await this.pb.collection('users').requestPasswordReset(email, PASSWORD_RESET_REDIRECT_URL);
         return true;
       } catch (error) {
         console.error('Password reset request error:', error);

@@ -25,11 +25,23 @@ export const POCKETBASE_URL = getPocketBaseUrl();
 import PocketBase from 'pocketbase';
 export const pb = new PocketBase(POCKETBASE_URL);
 
+// Configureer de redirect URL voor password reset
+// Dit zorgt ervoor dat de reset link naar de juiste pagina verwijst
+const getRedirectUrl = (): string => {
+  if (process.env.NODE_ENV === 'development') {
+    return 'https://localhost:9001/auth/reset-password';
+  }
+  return 'https://pitch-putt.live/auth/reset-password';
+};
+
 // Stel de redirect URL in voor password reset
 pb.authStore.onChange(() => {
   // Deze hook wordt aangeroepen wanneer de auth store verandert
   // We kunnen hier eventueel extra logica toevoegen
 });
+
+// Exporteer de redirect URL voor gebruik in andere delen van de app
+export const PASSWORD_RESET_REDIRECT_URL = getRedirectUrl();
 
 // Exporteer de PocketBase instantie als default
 export default pb;
