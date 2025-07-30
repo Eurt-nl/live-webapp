@@ -29,7 +29,13 @@ export const pb = new PocketBase(POCKETBASE_URL);
 // Dit zorgt ervoor dat de reset link naar de juiste pagina verwijst
 const getRedirectUrl = (): string => {
   if (process.env.NODE_ENV === 'development') {
-    return 'https://localhost:9001/auth/reset-password';
+    // Gebruik de huidige window.location om de juiste poort te bepalen
+    if (typeof window !== 'undefined') {
+      const currentPort = window.location.port;
+      return `https://localhost:${currentPort}/auth/reset-password`;
+    }
+    // Fallback naar geconfigureerde poort
+    return 'https://localhost:9000/auth/reset-password';
   }
   return 'https://pitch-putt.live/auth/reset-password';
 };
