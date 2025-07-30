@@ -99,20 +99,20 @@
             <span v-if="updateAvailable" class="text-warning">⚠️ {{ $customT('menu.updateAvailable') }}</span>
             <span v-else class="text-positive">✅ {{ $customT('menu.upToDate') }}</span>
           </div>
+          <!-- Update knop (alleen zichtbaar als versies niet gelijk zijn) -->
+          <div v-if="updateAvailable" class="q-mt-sm">
+            <q-btn
+              flat
+              dense
+              color="primary"
+              icon="system_update"
+              :label="$customT('menu.updateApp')"
+              @click="handleUpdate"
+              :loading="updating"
+              size="sm"
+            />
+          </div>
         </div>
-      </q-item-section>
-      <!-- Update knop (alleen zichtbaar als update beschikbaar is) -->
-      <q-item-section side v-if="updateAvailable">
-        <q-btn
-          flat
-          round
-          dense
-          color="primary"
-          icon="system_update"
-          @click="handleUpdate"
-          :loading="updating"
-          :title="$customT('menu.updateApp')"
-        />
       </q-item-section>
     </q-item>
   </q-list>
