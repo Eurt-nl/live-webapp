@@ -216,9 +216,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, inject } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import PracticeRoundDialog from 'src/components/PracticeRoundDialog.vue';
@@ -232,8 +233,8 @@ const router = useRouter();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 const locationStore = useLocationStore();
-const roundsStore = useRoundsStore(); // Centrale store voor rondes
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+const roundsStore = useRoundsStore();
+const { t: $customT } = useI18n(); // Centrale store voor rondes
 
 // Gebruik de centrale composable voor oefenronde-dialog
 const {
@@ -330,7 +331,7 @@ function formatTime(timeString: string): string {
 async function startEventRound(event: Record<string, unknown>) {
   try {
     // Controleer of gebruiker al een actieve ronde heeft of het maximaal aantal ronden heeft bereikt
-    if (hasActiveRoundForEvent(event.id) || hasReachedMaxRounds(event.id)) {
+    if (hasActiveRoundForEvent(event.id as string) || hasReachedMaxRounds(event.id as string)) {
       const message = $customT('home.activeRoundWarning', { rounds: event.rounds });
       $q.notify({
         color: 'warning',
@@ -441,8 +442,8 @@ function hasReachedMaxRounds(eventId: string): boolean {
 
 // Nieuwe click handler voor eventknoppen
 async function handleEventButtonClick(event: Record<string, unknown>) {
-  if (hasActiveRoundForEvent(event.id)) {
-    const activeRound = getActiveRoundForEvent(event.id);
+  if (hasActiveRoundForEvent(event.id as string)) {
+    const activeRound = getActiveRoundForEvent(event.id as string);
     // Debug: toon de gevonden actieve ronde in de console
     console.log('DEBUG: activeRound', activeRound);
     if (activeRound) {
@@ -450,7 +451,7 @@ async function handleEventButtonClick(event: Record<string, unknown>) {
     }
     return;
   }
-  if (hasReachedMaxRounds(event.id)) {
+  if (hasReachedMaxRounds(event.id as string)) {
     // Doe niets, knop is disabled
     return;
   }
@@ -460,22 +461,22 @@ async function handleEventButtonClick(event: Record<string, unknown>) {
 
 // Helper voor knopkleur
 function getEventBtnColor(event: Record<string, unknown>): string {
-  if (hasActiveRoundForEvent(event.id)) return 'positive';
-  if (hasReachedMaxRounds(event.id)) return 'grey';
+  if (hasActiveRoundForEvent(event.id as string)) return 'positive';
+  if (hasReachedMaxRounds(event.id as string)) return 'grey';
   return 'secondary';
 }
 
 // Helper voor knoplabel
 function getEventBtnLabel(event: Record<string, unknown>): string {
-  if (hasActiveRoundForEvent(event.id)) return $customT('home.goToActiveRound');
-  if (hasReachedMaxRounds(event.id)) return $customT('home.maxRoundsReached');
-  return event.name;
+  if (hasActiveRoundForEvent(event.id as string)) return $customT('home.goToActiveRound');
+  if (hasReachedMaxRounds(event.id as string)) return $customT('home.maxRoundsReached');
+  return event.name as string;
 }
 
 // Helper voor knopicoon
 function getEventIcon(event: Record<string, unknown>): string {
-  if (hasActiveRoundForEvent(event.id)) return 'play_arrow';
-  if (hasReachedMaxRounds(event.id)) return 'block';
+  if (hasActiveRoundForEvent(event.id as string)) return 'play_arrow';
+  if (hasReachedMaxRounds(event.id as string)) return 'block';
   return 'event';
 }
 

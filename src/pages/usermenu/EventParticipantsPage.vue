@@ -31,7 +31,7 @@
                 flat
                 dense
                 :color="sortBy === 'name' ? 'primary' : 'grey'"
-                @click="setSor$customT('name')"
+                @click="setSort('name')"
                 style="width: 100%"
               >
                 {{ $customT('participants.name') }}
@@ -47,7 +47,7 @@
                 flat
                 dense
                 :color="sortBy === 'category' ? 'primary' : 'grey'"
-                @click="setSor$customT('category')"
+                @click="setSort('category')"
                 style="width: 100%"
               >
                 CAT
@@ -63,7 +63,7 @@
                 flat
                 dense
                 :color="sortBy === 'status' ? 'primary' : 'grey'"
-                @click="setSor$customT('status')"
+                @click="setSort('status')"
                 style="width: 100%"
               >
                 {{ $customT('participants.status') }}
@@ -80,7 +80,7 @@
               <q-slide-item
                 v-if="isModerator"
                 right-color="negative"
-                @right="removeParticipan$customT(reg.expand?.user?.id)"
+                @right="removeParticipant(reg.expand?.user?.id)"
               >
                 <template v-slot:right>
                   <div class="row items-center q-px-md"><q-icon name="delete" /></div>
@@ -99,7 +99,7 @@
                   <div class="col-auto text-body2 text-grey-8 text-center" style="width: 32px">
                     {{
                       reg.expand?.category?.name
-                        ? reg.expand.category.name.charA$customT(0).toUpperCase()
+                        ? reg.expand.category.name.charAt(0).toUpperCase()
                         : '-'
                     }}
                   </div>
@@ -126,7 +126,7 @@
                 <div class="col-auto text-body2 text-grey-8 text-center" style="width: 32px">
                   {{
                     reg.expand?.category?.name
-                      ? reg.expand.category.name.charA$customT(0).toUpperCase()
+                      ? reg.expand.category.name.charAt(0).toUpperCase()
                       : '-'
                   }}
                 </div>
@@ -146,7 +146,11 @@
         <q-card style="min-width: 320px; max-width: 90vw">
           <q-card-section>
             <div class="text-h6">
-              {{ isEdit ? $customT('participants.editRegistration') : $customT('participants.addPlayer') }}
+              {{
+                isEdit
+                  ? $customT('participants.editRegistration')
+                  : $customT('participants.addPlayer')
+              }}
             </div>
             <q-select
               v-model="addForm.user"
@@ -217,7 +221,8 @@ import { useQuasar } from 'quasar';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useRegistrations } from 'src/components/events/registrations';
 import { useAuthStore } from 'src/stores/auth';
-import { inject } from 'vue'
+import { useI18n } from 'vue-i18n';
+
 import type { Category } from 'src/components/models';
 
 const route = useRoute();
@@ -225,7 +230,7 @@ const router = useRouter();
 const $q = useQuasar();
 const pb = usePocketbase();
 const authStore = useAuthStore();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
+const { t: $customT } = useI18n();
 
 const event = ref(null);
 const loading = ref(true);
@@ -244,7 +249,7 @@ const { registrations, fetchRegistrationsByEvent, addRegistration, removeRegistr
 const sortBy = ref('name');
 const sortDesc = ref(false);
 
-function setSor$customT(col) {
+function setSort(col) {
   if (sortBy.value === col) {
     sortDesc.value = !sortDesc.value;
   } else {
@@ -300,7 +305,11 @@ const loadEvent = async () => {
     });
     event.value = result;
   } catch {
-    $q.notify({ color: 'negative', message: $customT('notifications.loadEventError'), icon: 'error' });
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.loadEventError'),
+      icon: 'error',
+    });
   } finally {
     loading.value = false;
   }
@@ -312,7 +321,11 @@ const loadAvailablePlayers = async () => {
     allPlayers.value = result.items;
     availablePlayers.value = result.items;
   } catch {
-    $q.notify({ color: 'negative', message: $customT('notifications.loadPlayersError'), icon: 'error' });
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.loadPlayersError'),
+      icon: 'error',
+    });
   }
 };
 
@@ -359,7 +372,7 @@ const loadCategories = async () => {
   }
 };
 
-function onPlayerSelec$customT(userId) {
+function onPlayerSelect(userId) {
   const user = allPlayers.value.find((u) => u.id === userId);
   if (user && user.category) {
     addForm.value.category = user.category;
@@ -380,7 +393,7 @@ function openEditDialog(reg) {
   showAddDialog.value = true;
 }
 
-async function saveParticipan$customT() {
+async function saveParticipant() {
   try {
     if (isEdit.value) {
       await pb.collection('registrations').update(editRegistrationId.value, {
@@ -409,9 +422,13 @@ async function saveParticipan$customT() {
         addForm.value.category,
         addForm.value.notitie,
       );
-      $q.notify({ color: 'positive', message: $customT('notifications.participantAdded'), icon: 'check' });
+      $q.notify({
+        color: 'positive',
+        message: $customT('notifications.participantAdded'),
+        icon: 'check',
+      });
     }
-    await fetchRegistrationsByEven$customT(event.value.id);
+    await fetchRegistrationsByEvent(event.value.id);
     showAddDialog.value = false;
     isEdit.value = false;
     editRegistrationId.value = null;
@@ -432,8 +449,12 @@ const removeParticipant = async (userId: string) => {
     const reg = registrations.value.find((r) => r.expand?.user?.id === userId);
     if (!reg) return;
     await removeRegistration(reg.id);
-    await fetchRegistrationsByEven$customT(event.value.id);
-    $q.notify({ color: 'positive', message: $customT('notifications.participantRemoved'), icon: 'check' });
+    await fetchRegistrationsByEvent(event.value.id);
+    $q.notify({
+      color: 'positive',
+      message: $customT('notifications.participantRemoved'),
+      icon: 'check',
+    });
   } catch {
     $q.notify({
       color: 'negative',
@@ -452,9 +473,9 @@ const isModerator = computed(() => {
 });
 
 onMounted(async () => {
-  await loadEven$customT();
+  await loadEvent();
   await loadAvailablePlayers();
   await loadCategories();
-  await fetchRegistrationsByEven$customT(route.params.id as string);
+  await fetchRegistrationsByEvent(route.params.id as string);
 });
 </script>

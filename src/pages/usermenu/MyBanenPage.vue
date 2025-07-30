@@ -244,7 +244,8 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { inject } from 'vue';
+import { useI18n } from 'vue-i18n';
+
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import { useCoursesStore } from 'stores/courses';
@@ -255,8 +256,8 @@ import HolesManager from 'components/HolesManager.vue';
 import LocationPicker from 'components/LocationPicker.vue';
 import type { Category } from 'src/components/models';
 
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const router = useRouter();
 const pb = usePocketbase();
 const authStore = useAuthStore();
@@ -354,8 +355,12 @@ const loadCategories = async () => {
       filter: 'cat_type = "course"',
       sort: 'name',
     });
-    // Cast de PocketBase resultaten naar Category type
-    categories.value = result.items as Category[];
+    // Map de PocketBase resultaten naar Category type
+    categories.value = result.items.map((item: Record<string, unknown>) => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      name: typeof item.name === 'string' ? item.name : '',
+      cat_type: typeof item.cat_type === 'string' ? item.cat_type : '',
+    })) as Category[];
   } catch (error) {
     console.error('Error loading categories:', error);
   }
@@ -560,10 +565,9 @@ const dialogLogoUrl = computed(() => {
 const isSuperuser = computed(() => {
   // Check of gebruiker superuser is via role expand (zoals in andere bestanden)
   const userRecord = authStore.user as Record<string, unknown>;
-  return (
-    userRecord?.expand?.role?.cat_type === 'role' &&
-    userRecord?.expand?.role?.name === 'superuser'
-  );
+  const expand = userRecord?.expand as Record<string, unknown> | undefined;
+  const role = expand?.role as Record<string, unknown> | undefined;
+  return role?.cat_type === 'role' && role?.name === 'superuser';
 });
 
 const navigateToRequestPage = () => {

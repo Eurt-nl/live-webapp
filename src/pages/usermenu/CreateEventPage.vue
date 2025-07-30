@@ -123,7 +123,7 @@
 
         <!-- Submit knoppen -->
         <div class="row justify-end q-gutter-sm">
-          <q-btn :label="$customT('eventForm.cancel')" color="grey" @click="$router.back()" flat />
+          <q-btn :label="$customT('eventForm.cancel')" color="grey" @click="router.back()" flat />
           <q-btn
             :label="
               isEditing
@@ -143,9 +143,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, inject } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import { debug } from 'src/utils/debug';
@@ -155,7 +156,7 @@ const route = useRoute();
 const $q = useQuasar();
 const pb = usePocketbase();
 const authStore = useAuthStore();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+const { t: $customT } = useI18n();
 
 const saving = ref(false);
 const courses = ref([]);
@@ -193,7 +194,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): nu
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  // Typefout gecorrigeerd: 'sqr$customT' moet 'sqrt' zijn
+
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -211,7 +212,7 @@ const loadEvent = async (id: string) => {
     // Verwerk datum/tijd
     if (event.startdate) {
       // Split de string op spatie om datum en tijd te scheiden
-      // Typefout gecorrigeerd: 'spli$customT' moet 'split' zijn
+
       const parts = event.startdate.split(' ');
       form.value.startdate = parts[0];
       form.value.starttime = parts[1] ? parts[1].slice(0, 5) : '00:00';
@@ -325,7 +326,7 @@ const addIntervalToDate = (date: Date, value: number, interval: string): Date =>
       newDate.setDate(newDate.getDate() + value * 7);
       debug(`addIntervalToDate - Weken: ${newDate.toISOString()}`);
       break;
-    case 'months':
+    case 'months': {
       // Voor maanden: behoud de dag van de maand, maar pas op voor maanden met minder dagen
       const currentDay = newDate.getDate();
       debug(`addIntervalToDate - Maanden - huidige dag: ${currentDay}`);
@@ -339,6 +340,7 @@ const addIntervalToDate = (date: Date, value: number, interval: string): Date =>
         debug(`addIntervalToDate - Maanden - aangepast naar laatste dag: ${newDate.toISOString()}`);
       }
       break;
+    }
   }
   debug(`addIntervalToDate - Resultaat: ${newDate.toISOString()}`);
   return newDate;
@@ -435,7 +437,7 @@ const onSubmit = async () => {
       let currentDateStr = form.value.startdate;
 
       debug('Recurring events - Start datum:', currentDateStr);
-      debug('Recurring events - Interval:', form.value.recurringInterval.value);
+      debug('Recurring events - Interval:', form.value.recurringInterval);
       debug('Recurring events - Aantal:', form.value.recurringCount);
 
       for (let i = 0; i < form.value.recurringCount; i++) {
@@ -465,7 +467,7 @@ const onSubmit = async () => {
         const [year, month, day] = currentDateStr.split('-').map(Number);
         const currentDate = new Date(Date.UTC(year, month - 1, day));
         debug(`Event ${i + 1} - CurrentDate object:`, currentDate.toISOString());
-        const nextDate = addIntervalToDate(currentDate, 1, form.value.recurringInterval.value);
+        const nextDate = addIntervalToDate(currentDate, 1, form.value.recurringInterval);
         debug(`Event ${i + 1} - NextDate object:`, nextDate.toISOString());
         // Gebruik UTC om timezone problemen te voorkomen
         currentDateStr = nextDate.toISOString().split('T')[0];

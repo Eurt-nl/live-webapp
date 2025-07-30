@@ -8,7 +8,7 @@
     <div v-else-if="error" class="text-center q-mt-lg">
       <q-icon name="error" size="64px" color="negative" />
       <div class="text-h6 q-mt-md text-negative">{{ error }}</div>
-      <q-btn label="Terug" color="primary" @click="$router.back()" class="q-mt-md" />
+      <q-btn label="Terug" color="primary" @click="router.back()" class="q-mt-md" />
     </div>
 
     <div v-else-if="user && course" class="row q-col-gutter-md">
@@ -97,19 +97,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { getFileUrl } from 'src/utils/pocketbase-helpers';
 import type { Course, Country } from 'src/components/models';
 import { debug } from 'src/utils/debug';
 
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
-
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 
 const loading = ref(true);

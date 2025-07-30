@@ -22,7 +22,12 @@
               <div class="text-subtitle2">{{ $customT('stats.course') }}</div>
               <div>{{ round.expand?.course?.name }}</div>
               <div class="text-caption text-grey-8">
-                {{ round.expand?.course?.city }}{{ round.expand?.course?.expand?.country?.name ? ', ' + round.expand?.course?.expand?.country?.name : '' }}
+                {{ round.expand?.course?.city
+                }}{{
+                  round.expand?.course?.expand?.country?.name
+                    ? ', ' + round.expand?.course?.expand?.country?.name
+                    : ''
+                }}
               </div>
             </div>
             <div class="col-12 col-sm-6">
@@ -101,16 +106,15 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { debug } from 'src/utils/debug';
 import { getScoreColor } from 'src/constants/scoreColors';
-import { inject } from 'vue'
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
 
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 
 interface Score {

@@ -1,27 +1,30 @@
 <template>
   <div class="q-pa-md">
-    <h2>{{ $t('fileDisplay.title') }}</h2>
+    <h2>{{ $customT('fileDisplay.title') }}</h2>
 
     <div v-if="fileUrl" class="q-mb-md">
-      <h3>{{ $t('fileDisplay.originalFile') }}</h3>
-      <img :src="fileUrl" :alt="$t('fileDisplay.originalFile')" />
+      <h3>{{ $customT('fileDisplay.originalFile') }}</h3>
+      <img :src="fileUrl" :alt="$customT('fileDisplay.originalFile')" />
     </div>
 
     <div v-if="thumbUrl" class="q-mb-md">
-      <h3>{{ $t('fileDisplay.thumbnail') }}</h3>
-      <img :src="thumbUrl" :alt="$t('fileDisplay.thumbnail')" />
+      <h3>{{ $customT('fileDisplay.thumbnail') }}</h3>
+      <img :src="thumbUrl" :alt="$customT('fileDisplay.thumbnail')" />
     </div>
 
     <div v-if="customUrl" class="q-mb-md">
-      <h3>{{ $t('fileDisplay.customFile') }}</h3>
-      <img :src="customUrl" :alt="$t('fileDisplay.customFile')" />
+      <h3>{{ $customT('fileDisplay.customFile') }}</h3>
+      <img :src="customUrl" :alt="$customT('fileDisplay.customFile')" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getFileUrl, getThumbUrl, getFileUrlWithParams } from '../utils/pocketbase-helpers';
+
+const { t: $customT } = useI18n();
 
 const fileUrl = ref<string>('');
 const thumbUrl = ref<string>('');

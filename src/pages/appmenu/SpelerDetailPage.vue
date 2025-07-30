@@ -11,17 +11,17 @@
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
-              <div class="text-subtitle1">Thuisbaan</div>
-              <div class="text-body1">{{ homecourseName || 'Geen thuisbaan' }}</div>
+              <div class="text-subtitle1">{{ $customT('players.homecourse') }}</div>
+              <div class="text-body1">{{ homecourseName || $customT('players.noHomecourse') }}</div>
             </div>
 
             <div class="col-12 col-md-6">
-              <div class="text-subtitle1">Categorie</div>
-              <div class="text-body1">{{ categoryName || 'Niet gespecificeerd' }}</div>
+              <div class="text-subtitle1">{{ $customT('players.category') }}</div>
+              <div class="text-body1">{{ categoryName || $customT('players.notSpecified') }}</div>
             </div>
 
             <div class="col-12 col-md-6">
-              <div class="text-subtitle1">Geboortejaar</div>
+              <div class="text-subtitle1">{{ $customT('players.birthyear') }}</div>
               <div class="text-body1">{{ speler.birthyear }}</div>
             </div>
           </div>
@@ -31,7 +31,7 @@
 
     <div v-else class="text-center q-mt-lg">
       <q-spinner size="xl" />
-      <div class="text-h6 q-mt-md">Speler laden...</div>
+      <div class="text-h6 q-mt-md">{{ $customT('players.loadingPlayer') }}</div>
     </div>
 
     <!-- Avatar Dialog -->
@@ -58,10 +58,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import pb from 'src/config/pocketbase';
 import { getAvatarUrl } from 'src/utils/avatar-utils';
 import { debug } from 'src/utils/debug';
 
+const { t: $customT } = useI18n();
 const route = useRoute();
 const speler = ref(null);
 const categories = ref({});

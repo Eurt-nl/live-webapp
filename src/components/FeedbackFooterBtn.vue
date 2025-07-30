@@ -6,22 +6,22 @@
   <q-dialog v-model="dialogOpen">
     <q-card style="min-width: 320px">
       <q-card-section>
-        <div class="text-h6">{{ $t('feedback.sendFeedback') }}</div>
+        <div class="text-h6">{{ $customT('feedback.sendFeedback') }}</div>
       </q-card-section>
       <q-card-section>
         <q-input
           v-model="feedbackText"
-          :label="$t('feedback.whatToReport')"
+          :label="$customT('feedback.whatToReport')"
           type="textarea"
           autogrow
-          :rules="[(val) => !!val || $t('notifications.fillMessage')]"
+          :rules="[(val) => !!val || $customT('notifications.fillMessage')]"
         />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat :label="$t('feedback.cancel')" color="grey" v-close-popup />
+        <q-btn flat :label="$customT('feedback.cancel')" color="grey" v-close-popup />
         <q-btn
           flat
-          :label="$t('feedback.send')"
+          :label="$customT('feedback.send')"
           color="primary"
           :loading="sending"
           @click="sendFeedback"
@@ -42,7 +42,7 @@ import html2canvas from 'html2canvas';
 const $q = useQuasar();
 const authStore = useAuthStore();
 const pb = usePocketbase();
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 
 // PWA detectie
 const isPwaMode = computed(() => {
@@ -88,7 +88,7 @@ async function handleFabClick() {
     screenshotFile.value = new File([blob], 'screenshot.png', { type: 'image/png' });
     dialogOpen.value = true;
   } catch {
-    $q.notify({ color: 'negative', message: t('notifications.screenshotError'), icon: 'error' });
+    $q.notify({ color: 'negative', message: $customT('notifications.screenshotError'), icon: 'error' });
   }
 }
 
@@ -98,7 +98,7 @@ async function sendFeedback() {
   try {
     // FormData opbouwen voor PocketBase
     const formData = new FormData();
-    formData.append('title', t('feedback.sendFeedback'));
+    formData.append('title', $customT('feedback.sendFeedback'));
     formData.append('body', feedbackText.value);
     // Gebruik altijd de id van de ingelogde gebruiker
     formData.append('from_user', authStore.user?.id || '');
@@ -109,12 +109,12 @@ async function sendFeedback() {
     formData.append('link', window.location.href);
 
     await pb.collection('notifications').create(formData);
-    $q.notify({ color: 'positive', message: t('notifications.feedbackSent'), icon: 'check' });
+    $q.notify({ color: 'positive', message: $customT('notifications.feedbackSent'), icon: 'check' });
     dialogOpen.value = false;
     feedbackText.value = '';
     screenshotFile.value = null;
   } catch {
-    $q.notify({ color: 'negative', message: t('notifications.feedbackError'), icon: 'error' });
+    $q.notify({ color: 'negative', message: $customT('notifications.feedbackError'), icon: 'error' });
   } finally {
     sending.value = false;
   }

@@ -3,7 +3,7 @@
   <q-dialog v-model="dialogModel">
     <q-card style="min-width: 350px">
       <q-card-section>
-        <div class="text-h6">{{ $t('practiceRound.newRound') }}</div>
+        <div class="text-h6">{{ $customT('practiceRound.newRound') }}</div>
       </q-card-section>
       <q-card-section class="q-pt-none">
         <q-form @submit="createRound" class="q-gutter-md">
@@ -11,12 +11,12 @@
           <q-select
             v-model="newRound.course"
             :options="props.courses"
-            :label="$t('practiceRound.course')"
+            :label="$customT('practiceRound.course')"
             option-label="name"
             option-value="id"
             emit-value
             map-options
-            :rules="[(val) => !!val || $t('practiceRound.courseRequired')]"
+            :rules="[(val) => !!val || $customT('practiceRound.courseRequired')]"
           />
 
           <!-- Melding als er geen banen binnen 300m zijn -->
@@ -25,29 +25,29 @@
             class="text-caption text-warning q-mt-sm"
           >
             <q-icon name="warning" size="sm" class="q-mr-xs" />
-            {{ $t('practiceRound.noNearbyCourses') }}
+            {{ $customT('practiceRound.noNearbyCourses') }}
           </div>
           <!-- Datum en tijd -->
           <q-input
             v-model="newRound.date"
-            :label="$t('practiceRound.dateTime')"
+            :label="$customT('practiceRound.dateTime')"
             type="datetime-local"
-            :rules="[(val) => !!val || $t('practiceRound.dateTimeRequired')]"
+            :rules="[(val) => !!val || $customT('practiceRound.dateTimeRequired')]"
           />
           <!-- Notities -->
           <q-input
             v-model="newRound.notes"
-            :label="$t('practiceRound.notes')"
+            :label="$customT('practiceRound.notes')"
             type="textarea"
             autogrow
           />
           <!-- Knoppen -->
           <div class="row justify-end q-gutter-sm">
-            <q-btn flat :label="$t('practiceRound.cancel')" color="primary" @click="closeDialog" />
+            <q-btn flat :label="$customT('practiceRound.cancel')" color="primary" @click="closeDialog" />
             <q-btn
               type="submit"
               color="primary"
-              :label="$t('practiceRound.startRound')"
+              :label="$customT('practiceRound.startRound')"
               :loading="loading"
             />
           </div>
@@ -69,7 +69,6 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useRouter } from 'vue-router';
-import type { Course } from './models';
 
 // Props voor openen/sluiten van de dialog en voor de banenlijst
 const props = defineProps({
@@ -86,7 +85,7 @@ const dialogModel = computed({
 });
 
 const $q = useQuasar();
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 const authStore = useAuthStore();
 const pb = usePocketbase();
 const router = useRouter();
@@ -113,19 +112,6 @@ watch(
     if (!val) loading.value = false;
   },
 );
-
-// Functie om afstand tussen twee GPS-punten te berekenen (Haversine-formule)
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Helper om huidige datum/tijd te formatteren voor datetime-local input (altijd lokale tijd, geen tijdzone)
 function getNowForInput() {
@@ -162,11 +148,17 @@ watch(
         const defaultDate = getNowForInput();
         // Zet default course uit props
         newRound.value = { course: '', date: defaultDate, notes: '' };
-      } catch {
-        $q.notify({ color: 'negative', message: t('practiceRound.errorLoad'), icon: 'error' });
-        loading.value = false;
+      } catch (error) {
+        console.error('Error loading round types:', error)
+        $q.notify({
+          color: 'negative',
+          message: $customT('practiceRound.errorLoad'),
+          icon: 'error'
+        })
+        loading.value = false
+        return // Early return after error to prevent setting loading false twice
       }
-      loading.value = false;
+      loading.value = false
     }
   },
   { immediate: false },
@@ -192,18 +184,18 @@ async function createRound() {
       emit('update:modelValue', false);
       $q.notify({
         color: 'warning',
-        message: t('home.activeRoundWarning', { rounds: 1 }),
+        message: $customT('home.activeRoundWarning', { rounds: 1 }),
         icon: 'warning',
       });
-      router.push({ name: 'ronde-scores', params: { id: activePractice.id } });
+      void router.push({ name: 'ronde-scores', params: { id: activePractice.id } });
       loading.value = false;
       return;
     }
     // Zoek de concept status en oefenronde type
     const conceptStatus = statusTypes.value.find((s) => s.name.toLowerCase() === 'concept');
     const practiceType = roundTypes.value.find((t) => t.name.toLowerCase() === 'oefenronde');
-    if (!conceptStatus) throw new Error(t('practiceRound.errorConceptStatus'));
-    if (!practiceType) throw new Error(t('practiceRound.errorPracticeType'));
+    if (!conceptStatus) throw new Error($customT('practiceRound.errorConceptStatus'));
+    if (!practiceType) throw new Error($customT('practiceRound.errorPracticeType'));
     if (!newRound.value.course) throw new Error('Geen course geselecteerd!');
     const roundData = {
       course: newRound.value.course,
@@ -217,14 +209,14 @@ async function createRound() {
       is_finalized: false, // Nog niet afgerond
     };
     const created = await pb.collection('rounds').create(roundData);
-    $q.notify({ color: 'positive', message: t('practiceRound.success'), icon: 'check' });
+    $q.notify({ color: 'positive', message: $customT('practiceRound.success'), icon: 'check' });
     emit('round-created');
     emit('update:modelValue', false);
     // Navigeer direct naar de score-invoerpagina van de nieuwe ronde
-    router.push({ name: 'ronde-scores', params: { id: created.id } });
-  } catch (e) {
-    $q.notify({ color: 'negative', message: t('practiceRound.errorCreate'), icon: 'error' });
-    console.error('createRound: error', e);
+    void router.push({ name: 'ronde-scores', params: { id: created.id } });
+  } catch (error) {
+    console.error('createRound: error', error);
+    $q.notify({ color: 'negative', message: $customT('practiceRound.errorCreate'), icon: 'error' });
   } finally {
     loading.value = false;
   }

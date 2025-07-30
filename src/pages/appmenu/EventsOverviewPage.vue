@@ -53,16 +53,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { debug } from 'src/utils/debug';
 
 const router = useRouter();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 const events = ref([]);
 const loading = ref(true);

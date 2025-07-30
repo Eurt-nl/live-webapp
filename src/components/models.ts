@@ -75,6 +75,8 @@ export interface Hole {
   hole_length: number; // Lengte van de hole in meters
   hole_index: number; // Index van de hole
   image?: string; // Optionele afbeelding van de hole
+  gps_tee?: GPSLocation; // GPS coördinaten van de tee
+  gps_green?: GPSLocation; // GPS coördinaten van de green
   [key: string]: unknown; // Voor eventuele extra velden
 }
 

@@ -103,18 +103,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import { QrcodeStream } from 'vue-qrcode-reader';
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 const pb = usePocketbase();
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { t: $customT } = useI18n();
 
 const qrToken = ref('');
 const round = ref<Record<string, unknown> | null>(null);
@@ -173,7 +173,7 @@ const onDecode = (result) => {
     qrToken.value = token;
     void findRound();
     scanWarning.value = false;
-    if (scanTimeout.value) clearTimeou$customT(scanTimeout.value);
+    if (scanTimeout.value) clearTimeout(scanTimeout.value);
   } else {
     scanWarning.value = true;
     error.value = $customT('marker.invalidQrCode');
@@ -182,8 +182,8 @@ const onDecode = (result) => {
 
 const onDetect = (detected) => {
   scanWarning.value = false;
-  if (scanTimeout.value) clearTimeou$customT(scanTimeout.value);
-  scanTimeout.value = setTimeou$customT(() => {
+  if (scanTimeout.value) clearTimeout(scanTimeout.value);
+  scanTimeout.value = setTimeout(() => {
     scanWarning.value = true;
   }, 5000);
 
@@ -195,7 +195,7 @@ const onDetect = (detected) => {
       qrToken.value = token;
       void findRound();
       scanWarning.value = false;
-      if (scanTimeout.value) clearTimeou$customT(scanTimeout.value);
+      if (scanTimeout.value) clearTimeout(scanTimeout.value);
     }
   }
 };

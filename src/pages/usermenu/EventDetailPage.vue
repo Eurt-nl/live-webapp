@@ -107,7 +107,7 @@
               flat
               dense
               :color="sortBy === 'name' ? 'primary' : 'grey'"
-              @click="setSor$customT('name')"
+              @click="setSort('name')"
               style="width: 100%"
               >Naam
               <q-icon
@@ -122,7 +122,7 @@
               flat
               dense
               :color="sortBy === 'category' ? 'primary' : 'grey'"
-              @click="setSor$customT('category')"
+              @click="setSort('category')"
               style="width: 100%"
               >CAT
               <q-icon
@@ -137,7 +137,7 @@
               flat
               dense
               :color="sortBy === 'status' ? 'primary' : 'grey'"
-              @click="setSor$customT('status')"
+              @click="setSort('status')"
               style="width: 100%"
               >Status
               <q-icon
@@ -161,7 +161,7 @@
               <div class="col-auto text-body2 text-grey-8 text-center" style="width: 32px">
                 {{
                   reg.expand?.category?.name
-                    ? reg.expand.category.name.charA$customT(0).toUpperCase()
+                    ? reg.expand.category.name.charAt(0).toUpperCase()
                     : '-'
                 }}
               </div>
@@ -225,18 +225,17 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import { useRegistrations } from 'src/components/events/registrations';
 import { debug } from 'src/utils/debug';
-import { inject } from 'vue'
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
 
 // Initialiseer router, Quasar, PocketBase en authenticatie-store
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 
@@ -294,7 +293,7 @@ const canUnenroll = computed(() => {
 // -----------------------------
 // Sorteer- en statushelpers
 // -----------------------------
-function setSor$customT(col) {
+function setSort(col) {
   if (sortBy.value === col) {
     sortDesc.value = !sortDesc.value;
   } else {
@@ -418,7 +417,7 @@ const enrollInEvent = async () => {
   try {
     enrolling.value = true;
     await addRegistration(event.value.id, authStore.user?.id);
-    await fetchRegistrationsByEven$customT(event.value.id);
+    await fetchRegistrationsByEvent(event.value.id);
     $q.notify({
       color: 'positive',
       message: $customT('notifications.eventEnrolled'),
@@ -445,7 +444,7 @@ const unenrollFromEvent = async () => {
 
     if (reg) {
       await removeRegistration(reg.id);
-      await fetchRegistrationsByEven$customT(event.value.id);
+      await fetchRegistrationsByEvent(event.value.id);
       $q.notify({
         color: 'positive',
         message: $customT('notifications.eventUnenrolled'),
@@ -476,7 +475,11 @@ function openNotificationDialog() {
 
 const sendNotification = async () => {
   if (!notificationTitle.value || !notificationBody.value) {
-    $q.notify({ color: 'negative', message: $customT('notifications.fillAllFields'), icon: 'error' });
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.fillAllFields'),
+      icon: 'error',
+    });
     return;
   }
   try {
@@ -494,7 +497,11 @@ const sendNotification = async () => {
       link: '',
       seen: false,
     });
-    $q.notify({ color: 'positive', message: $customT('notifications.notificationSent'), icon: 'check' });
+    $q.notify({
+      color: 'positive',
+      message: $customT('notifications.notificationSent'),
+      icon: 'check',
+    });
     notificationDialog.value = false;
   } catch (error) {
     $q.notify({
@@ -511,7 +518,7 @@ const sendNotification = async () => {
 // Lifecycle: bij laden van de pagina
 // -----------------------------
 onMounted(async () => {
-  await loadEven$customT();
-  await fetchRegistrationsByEven$customT(route.params.id as string);
+  await loadEvent();
+  await fetchRegistrationsByEvent(route.params.id as string);
 });
 </script>

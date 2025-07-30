@@ -152,20 +152,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, inject, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
-import { useAuthStore } from 'stores/auth';
+import { useAuthStore, type User } from 'stores/auth';
 import { useNotificationsStore } from 'stores/notifications';
 import { debug } from 'src/utils/debug';
 import { POCKETBASE_URL } from 'src/config/pocketbase';
-import { translateMessageTemplate } from 'src/utils/pocketbase-helpers';
 
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 const notificationsStore = useNotificationsStore();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 const berichten = ref([]);
 const berichtDialog = ref(false);
@@ -233,7 +233,7 @@ const getTranslatedTitle = (bericht) => {
 };
 
 // Functie om template-based berichten te vertalen
-const loadTranslatedMessage = async (bericht) => {
+const loadTranslatedMessage = (bericht) => {
   if (!bericht?.template || !bericht?.data) {
     debug('No template or data found, using body');
     translatedMessage.value = bericht?.body || '';
@@ -319,14 +319,14 @@ const updateAuthUserWithRole = async () => {
         expand: 'role',
       });
       // Cast de PocketBase record naar User type
-      authStore.user = userWithRole as Record<string, unknown>;
+      authStore.user = userWithRole as unknown as User;
     } catch (error) {
       debug.warn('Kon user role niet ophalen:', error);
     }
   }
 };
 
-const openBericht = async (bericht) => {
+const openBericht = (bericht) => {
   selectedBericht.value = bericht;
   berichtDialog.value = true;
 
@@ -342,7 +342,7 @@ const openBericht = async (bericht) => {
   // Laad vertaalde bericht als het een template-based bericht is
   if (bericht?.template && bericht?.data) {
     debug('Loading template-based message');
-    await loadTranslatedMessage(bericht);
+    loadTranslatedMessage(bericht);
   } else {
     debug('Loading regular message');
     translatedMessage.value = bericht?.body || '';
@@ -480,7 +480,7 @@ const approveModerator = async (bericht) => {
     });
 
     // Debug: toon de role informatie
-    const userRecord = currentUser as Record<string, unknown>;
+    const userRecord = currentUser as User;
     debug('Role debug:', {
       role: userRecord?.role,
       roleType: typeof userRecord?.role,

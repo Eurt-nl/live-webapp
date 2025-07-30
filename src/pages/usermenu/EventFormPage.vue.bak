@@ -1,0 +1,532 @@
+<template>
+  <div class="q-pa-md">
+    <div class="row justify-between items-center q-mb-md">
+      <div class="text-h5">{{ isNew ? $customT('eventForm.newEvent') : $customT('eventForm.editEvent') }}</div>
+    </div>
+
+    <q-card>
+      <q-card-section class="q-pl-lg">
+        <q-form @submit="saveEvent">
+          <div class="row q-col-gutter-xs">
+            <div class="col-12">
+              <q-input
+                v-model="form.name"
+                :label="$customT('eventForm.eventName')"
+                :rules="[(val) => !!val || $customT('eventForm.eventNameRequired')]"
+                hide-bottom-space
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.eventNameRequired') }}</q-tooltip>
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12">
+              <q-select
+                v-model="form.status"
+                :options="statuses"
+                option-label="name"
+                option-value="id"
+                :label="$customT('eventForm.status')"
+                :rules="[(val) => !!val || $customT('eventForm.statusRequired')]"
+                hide-bottom-space
+                emit-value
+                map-options
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.statusRequired') }}</q-tooltip>
+                </template>
+              </q-select>
+            </div>
+
+            <div class="col-12">
+              <q-select
+                v-model="form.course"
+                :options="courses"
+                option-label="name"
+                option-value="id"
+                :label="$customT('eventForm.course')"
+                :rules="[(val) => !!val || $customT('eventForm.courseRequired')]"
+                hide-bottom-space
+                emit-value
+                map-options
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.courseRequired') }}</q-tooltip>
+                </template>
+              </q-select>
+            </div>
+
+            <div class="col-12">
+              <q-select
+                v-model="form.category"
+                :options="categories"
+                option-label="name"
+                option-value="id"
+                :label="$customT('eventForm.category')"
+                :rules="[(val) => !!val || $customT('eventForm.categoryRequired')]"
+                hide-bottom-space
+                emit-value
+                map-options
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.categoryRequired') }}</q-tooltip>
+                </template>
+              </q-select>
+            </div>
+
+            <div class="col-6">
+              <q-input
+                v-model="form.startdate"
+                :label="$customT('eventForm.startDate')"
+                type="date"
+                :rules="[(val) => !!val || $customT('eventForm.startDateRequired')]"
+                hide-bottom-space
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.startDateRequired') }}</q-tooltip>
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-6">
+              <q-input
+                v-model="form.enddate"
+                :label="$customT('eventForm.endDate')"
+                type="date"
+                hide-bottom-space
+                outlined
+              />
+            </div>
+
+            <div class="col-6">
+              <q-input
+                v-model.number="form.max_players"
+                :label="$customT('eventForm.maxPlayers')"
+                type="number"
+                :rules="[(val) => val > 0 || $customT('eventForm.maxPlayersRequired')]"
+                hide-bottom-space
+                outlined
+              >
+                <template v-slot:error>
+                  <q-tooltip>{{ $customT('eventForm.maxPlayersRequired') }}</q-tooltip>
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12">
+              <q-input
+                v-model="form.description"
+                :label="$customT('eventForm.description')"
+                type="textarea"
+                hide-bottom-space
+                outlined
+                autogrow
+              />
+            </div>
+
+            <div class="col-12">
+              <!-- Moderators veld met Quasar-style filtering en map-options voor correcte weergave -->
+              <q-select
+                v-model="form.moderators"
+                :options="options"
+                option-label="name"
+                option-value="id"
+                :label="$customT('eventForm.moderators')"
+                multiple
+                emit-value
+                map-options
+                outlined
+                use-chips
+                use-input
+                fill-input
+                input-debounce="0"
+                behavior="menu"
+                @filter="filterFn"
+              />
+            </div>
+          </div>
+
+          <div class="row justify-end q-mt-md">
+            <q-btn flat color="negative" :label="$customT('eventForm.cancel')" @click="router.back()" />
+            <q-btn
+              type="submit"
+              color="primary"
+              :label="$customT('eventForm.save')"
+              :loading="saving"
+              class="q-ml-sm"
+            />
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
+import { usePocketbase } from 'src/composables/usePocketbase';
+import { useAuthStore } from 'src/stores/auth';
+import { inject } from 'vue'
+
+const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
+
+interface EventData {
+  name: string;
+  course: string;
+  startdate: string;
+  enddate: string | null;
+  owner: string;
+  moderators: string[];
+  enrolled: string[];
+  max_players: number;
+  status: string;
+  category?: string;
+  description: string;
+}
+
+const route = useRoute();
+const router = useRouter();
+const $q = useQuasar();
+const pb = usePocketbase();
+const authStore = useAuthStore();
+
+const saving = ref(false);
+const courses = ref([]);
+const users = ref([]);
+const categories = ref([]);
+const statuses = ref([]);
+
+// allUsers is de bronlijst, options is de zichtbare lijst voor de select
+const allUsers = ref([]);
+const options = ref([]);
+
+// Filterfunctie voor q-select, Quasar-style
+function filterFn(val, update) {
+  update(() => {
+    if (!val) {
+      options.value = allUsers.value;
+      return;
+    }
+    const needle = val.toLowerCase();
+    options.value = allUsers.value.filter((u) => u.name.toLowerCase().includes(needle));
+  });
+}
+
+const isNew = computed(() => route.params.id === 'new');
+
+const form = ref({
+  name: '',
+  course: null,
+  startdate: '',
+  enddate: '',
+  max_players: 72,
+  description: '',
+  moderators: [],
+  enrolled: [],
+  category: null,
+  status: null,
+});
+
+// Functie om afstand tussen twee GPS-punten te berekenen (Haversine-formule)
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const loadData = async () => {
+  try {
+    // Laad banen uit de view-collectie
+    const coursesResult = await pb
+      .collection('vw_courses_with_details')
+      .getList(1, 50, { sort: 'name' });
+    let allCourses = coursesResult.items;
+    // Sorteer op afstand tot gebruiker indien locatie beschikbaar
+    if (navigator.geolocation) {
+      await new Promise<void>((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            allCourses = [...allCourses].sort((a, b) => {
+              if (!a.gps || !b.gps) return 0;
+              const distA = getDistance(latitude, longitude, a.gps.latitude, a.gps.longitude);
+              const distB = getDistance(latitude, longitude, b.gps.latitude, b.gps.longitude);
+              return distA - distB;
+            });
+            resolve();
+          },
+          () => resolve(),
+          { enableHighAccuracy: false, timeout: 3000 },
+        );
+      });
+    }
+    courses.value = allCourses.map((course) => ({
+      id: course.id,
+      name: course.name,
+      value: course.id,
+      label: course.name,
+    }));
+
+    // Laad gebruikers
+    const usersResult = await pb.collection('users').getList(1, 50, {
+      sort: 'name',
+    });
+
+    // Alleen de eigenaar van het event mag niet als moderator gekozen worden
+    let ownerId = null;
+    if (!isNew.value) {
+      // Haal de eigenaar op uit het event record
+      const event = await pb.collection('events').getOne(route.params.id as string);
+      ownerId = event.owner;
+    }
+    const userList = usersResult.items
+      .filter((user) => user.id !== ownerId)
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        value: user.id,
+        label: user.name,
+      }));
+    users.value = userList;
+    allUsers.value = userList;
+    options.value = userList;
+
+    // Laad event categorieën
+    const categoriesResult = await pb.collection('categories').getList(1, 50, {
+      filter: 'cat_type = "event"',
+      sort: 'name',
+    });
+    categories.value = categoriesResult.items.map((category) => ({
+      id: category.id,
+      name: category.name,
+      value: category.id,
+      label: category.name,
+    }));
+
+    // Laad status categorieën
+    const statusesResult = await pb.collection('categories').getList(1, 50, {
+      filter: 'cat_type = "event_status"',
+      sort: 'name',
+    });
+    statuses.value = statusesResult.items.map((status) => ({
+      id: status.id,
+      name: status.name,
+      value: status.id,
+      label: status.name,
+    }));
+
+    // Als we een bestaand event bewerken, laad dan de gegevens
+    if (!isNew.value) {
+      const event = await pb.collection('events').getOne(route.params.id as string, {
+        expand: 'course,moderators,category',
+      });
+
+      // Converteer de datum naar lokale datum zonder tijdzone
+      const startDate = new Date(event.startdate);
+      const endDate = event.enddate ? new Date(event.enddate) : null;
+
+      // Maak een course object met de juiste structuur voor q-select
+      const selectedCourse = event.expand?.course?.[0]
+        ? {
+            id: event.course[0],
+            name: event.expand.course[0].name,
+            value: event.course[0],
+            label: event.expand.course[0].name,
+          }
+        : event.course[0];
+
+      form.value = {
+        name: event.name,
+        course: selectedCourse,
+        startdate: startDate.toISOString().split('T')[0],
+        enddate: endDate ? endDate.toISOString().split('T')[0] : '',
+        max_players: event.max_players,
+        description: event.description || '',
+        moderators: event.moderators || [],
+        enrolled: event.enrolled || [],
+        category: event.category,
+        status: event.status || 'draft',
+      };
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.loadDataError'),
+      icon: 'error',
+    });
+  }
+};
+
+const saveEvent = async () => {
+  try {
+    saving.value = true;
+
+    // Valideer verplichte velden
+    if (
+      !form.value.name ||
+      !form.value.course ||
+      !form.value.startdate ||
+      !form.value.max_players
+    ) {
+      throw new Error('Niet alle verplichte velden zijn ingevuld');
+    }
+
+    // Zorg dat relation fields als id (string) of array van ids worden meegestuurd
+    const courseId =
+      typeof form.value.course === 'object' && form.value.course !== null
+        ? form.value.course.id
+        : form.value.course;
+    const categoryId =
+      typeof form.value.category === 'object' && form.value.category !== null
+        ? form.value.category.id
+        : form.value.category;
+    const moderatorsIds = Array.isArray(form.value.moderators)
+      ? form.value.moderators.map((mod) => (typeof mod === 'object' && mod !== null ? mod.id : mod))
+      : [];
+
+    // Als enddate leeg is, gebruik de startdatum + 1 dag
+    const startDate = new Date(form.value.startdate);
+    let endDate = form.value.enddate ? new Date(form.value.enddate) : null;
+
+    if (!endDate) {
+      // Maak een nieuwe datum op basis van startDate en voeg 1 dag toe
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+    }
+
+    const finalStartDate = startDate.toISOString().split('T')[0];
+    const finalEndDate = endDate.toISOString().split('T')[0];
+
+    // Owner alleen toevoegen bij create
+    const eventData: Partial<EventData> = {
+      name: form.value.name,
+      course: courseId,
+      startdate: finalStartDate,
+      enddate: finalEndDate,
+      max_players: parseInt(form.value.max_players.toString()),
+      description: form.value.description || '',
+      moderators: moderatorsIds,
+      enrolled: form.value.enrolled || [],
+      category: categoryId,
+      status: form.value.status || null,
+    };
+
+    if (isNew.value) {
+      // Voeg owner toe bij create
+      eventData.owner = authStore.user?.id || '';
+      // Haal de 'concept' status op
+      const statusResult = await pb.collection('categories').getList(1, 1, {
+        filter: 'cat_type = "event_status" && name = "Concept"',
+      });
+
+      if (statusResult.items.length > 0) {
+        eventData.status = statusResult.items[0].id;
+      } else {
+        throw new Error('Geen concept status gevonden');
+      }
+
+      try {
+        await pb.collection('events').create(eventData);
+      } catch (createError: unknown) {
+        if (
+          typeof createError === 'object' &&
+          createError !== null &&
+          'response' in createError &&
+          typeof (createError as { response?: { data?: unknown } }).response?.data !== 'undefined'
+        ) {
+          console.error(
+            'Server response:',
+            (createError as { response?: { data?: unknown } }).response?.data,
+          );
+        }
+        throw new Error(
+          `Fout bij aanmaken: ${
+            typeof createError === 'object' &&
+            createError !== null &&
+            'message' in createError &&
+            typeof (createError as { message?: string }).message === 'string'
+              ? (createError as { message?: string }).message
+              : 'Onbekende fout'
+          }`,
+        );
+      }
+    } else {
+      try {
+        await pb.collection('events').update(route.params.id as string, eventData);
+      } catch (updateError: unknown) {
+        if (
+          typeof updateError === 'object' &&
+          updateError !== null &&
+          'response' in updateError &&
+          typeof (updateError as { response?: { data?: unknown } }).response?.data !== 'undefined'
+        ) {
+          console.error(
+            'Server response:',
+            (updateError as { response?: { data?: unknown } }).response?.data,
+          );
+        }
+        throw new Error(
+          `Fout bij bijwerken: ${
+            typeof updateError === 'object' &&
+            updateError !== null &&
+            'message' in updateError &&
+            typeof (updateError as { message?: string }).message === 'string'
+              ? (updateError as { message?: string }).message
+              : 'Onbekende fout'
+          }`,
+        );
+      }
+    }
+
+    $q.notify({
+      color: 'positive',
+      message: isNew.value ? 'Event succesvol aangemaakt' : 'Event succesvol bijgewerkt',
+      icon: 'check',
+    });
+
+    void router.push('/mijn-events');
+  } catch (error: unknown) {
+    console.error('Error saving event:', error);
+    $q.notify({
+      color: 'negative',
+      message: `Fout bij het opslaan van het event: ${
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof (error as { message?: string }).message === 'string'
+          ? (error as { message?: string }).message
+          : 'Onbekende fout'
+      }`,
+      icon: 'error',
+      timeout: 5000,
+    });
+  } finally {
+    saving.value = false;
+  }
+};
+
+onMounted(() => {
+  void loadData();
+});
+</script>
+
+<style>
+.q-field--with-bottom {
+  padding-bottom: 8px !important;
+}
+</style>

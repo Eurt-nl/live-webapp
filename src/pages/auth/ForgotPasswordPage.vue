@@ -40,15 +40,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 
 const $q = useQuasar();
 const router = useRouter();
 const authStore = useAuthStore();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+const { t: $customT } = useI18n();
 
 const email = ref('');
 const loading = ref(false);
@@ -56,7 +57,7 @@ const loading = ref(false);
 const onSubmit = async () => {
   try {
     loading.value = true;
-    const success = await authStore.requestPasswordRese$customT(email.value);
+    const success = await authStore.requestPasswordReset(email.value);
 
     if (success) {
       $q.notify({

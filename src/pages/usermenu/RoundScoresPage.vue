@@ -541,9 +541,7 @@ import { useAuthStore } from 'stores/auth';
 import { useRoundsStore } from 'stores/rounds';
 import { getScoreColor } from 'src/constants/scoreColors';
 import { debug } from 'src/utils/debug';
-import { inject } from 'vue';
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+import { useI18n } from 'vue-i18n';
 
 // Initialiseer router, Quasar, PocketBase en authenticatie-store
 const route = useRoute();
@@ -551,7 +549,8 @@ const router = useRouter();
 const $q = useQuasar();
 const pb = usePocketbase();
 const authStore = useAuthStore();
-const roundsStore = useRoundsStore(); // Centrale store voor rondes
+const roundsStore = useRoundsStore();
+const { t: $customT } = useI18n(); // Centrale store voor rondes
 
 // -----------------------------
 // Type-definities
@@ -877,7 +876,7 @@ const getMarkerScoreForHole = (holeId: string) => {
 // Bepaal de kleur van een score (voor visuele feedback)
 const getScoreColorStyle = (score: string | number) => {
   // Geeft een achtergrondkleur afhankelijk van de score
-  // Typefout gecorrigeerd: 'parseIn$customT' moet 'parseInt' zijn
+
   const num = parseInt(score as string);
   if (!score || isNaN(num)) return {};
   const color = getScoreColor(num);
@@ -1569,16 +1568,16 @@ const qrCanvas = ref<HTMLCanvasElement | null>(null);
 // Helper: eenvoudige QR-code generator (alleen hoofdletters/cijfers, geen externe lib)
 function drawSimpleQrCode(canvas: HTMLCanvasElement, text: string) {
   // Placeholder: teken het token als grote tekst in het midden
-  const ctx = canvas.getContex$customT('2d');
+  const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  ctx.clearRec$customT(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#fff';
-  ctx.fillRec$customT(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#222';
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillTex$customT(text, canvas.width / 2, canvas.height / 2);
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 }
 
 // QR-code tekenen als marker nog niet gekoppeld is

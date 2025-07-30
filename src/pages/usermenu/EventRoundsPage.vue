@@ -1,11 +1,11 @@
 <template>
   <div class="q-pa-md">
     <div class="row justify-between items-center q-mb-md">
-      <div class="text-h5">{{ event?.name || $$customT('common.loading') }}</div>
+      <div class="text-h5">{{ event?.name || $customT('common.loading') }}</div>
       <q-btn
         color="primary"
         icon="add"
-        :label="$$customT('eventRounds.newRound')"
+        :label="$customT('eventRounds.newRound')"
         @click="showAddRoundDialog = true"
       />
     </div>
@@ -48,7 +48,7 @@
                         color="secondary"
                         icon="group"
                         size="sm"
-                        :label="$$customT('eventRounds.participants')"
+                        :label="$customT('eventRounds.participants')"
                         @click.stop="openParticipantsDialog(round)"
                       />
                     </div>
@@ -58,7 +58,7 @@
                         color="primary"
                         icon="play_arrow"
                         size="sm"
-                        :label="$$customT('eventRounds.startRound')"
+                        :label="$customT('eventRounds.startRound')"
                         :disable="(round.expand?.status?.name || round.status) !== 'Actief'"
                         @click.stop="openStartRoundDialog(round)"
                       />
@@ -74,8 +74,8 @@
 
     <!-- Geen rondes melding -->
     <div v-if="rounds.length === 0" class="text-center q-mt-lg">
-      <div class="text-h6">{{ $$customT('eventRounds.noRoundsFound') }}</div>
-      <div class="text-subtitle1">{{ $$customT('eventRounds.addRoundHint') }}</div>
+      <div class="text-h6">{{ $customT('eventRounds.noRoundsFound') }}</div>
+      <div class="text-subtitle1">{{ $customT('eventRounds.addRoundHint') }}</div>
     </div>
 
     <!-- Ronde toevoegen/bewerken dialog -->
@@ -83,7 +83,7 @@
       <q-card style="min-width: 350px">
         <q-card-section class="row items-center">
           <div class="text-h6">
-            {{ editingRound ? $$customT('eventRounds.editRound') : $$customT('eventRounds.newRound') }}
+            {{ editingRound ? $customT('eventRounds.editRound') : $customT('eventRounds.newRound') }}
           </div>
         </q-card-section>
 
@@ -92,7 +92,7 @@
             <q-input
               v-model.number="roundForm.round_number"
               type="number"
-              :label="$$customT('eventRounds.roundNumber')"
+              :label="$customT('eventRounds.roundNumber')"
               :rules="roundNumberRules"
             />
 
@@ -106,7 +106,7 @@
             <q-input
               v-model="roundForm.date_time_event_round"
               type="datetime-local"
-              :label="$$customT('eventRounds.dateTime')"
+              :label="$customT('eventRounds.dateTime')"
               :rules="dateTimeRules"
             />
 
@@ -115,17 +115,17 @@
               :options="statuses"
               option-label="name"
               option-value="id"
-              :label="$$customT('eventRounds.status')"
+              :label="$customT('eventRounds.status')"
               emit-value
               map-options
             />
 
             <div class="row justify-end q-mt-md">
-              <q-btn flat :label="$$customT('eventRounds.cancel')" color="primary" v-close-popup />
+              <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
               <q-btn
                 type="submit"
                 flat
-                :label="$$customT('eventRounds.save')"
+                :label="$customT('eventRounds.save')"
                 color="primary"
                 :loading="saving"
               />
@@ -139,17 +139,17 @@
     <q-dialog v-model="showDeleteDialog" @hide="resetSlide">
       <q-card>
         <q-card-section class="row items-center">
-          <div class="text-h6">{{ $$customT('eventRounds.deleteRound') }}</div>
+          <div class="text-h6">{{ $customT('eventRounds.deleteRound') }}</div>
         </q-card-section>
         <q-card-section>
-          <p>{{ $$customT('eventRounds.deleteRoundConfirm', { eventName: selectedRound?.name }) }}</p>
-          <p class="text-caption">{{ $$customT('eventRounds.deleteRoundWarning') }}</p>
+          <p>{{ $customT('eventRounds.deleteRoundConfirm', { eventName: selectedRound?.name }) }}</p>
+          <p class="text-caption">{{ $customT('eventRounds.deleteRoundWarning') }}</p>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$$customT('eventRounds.cancel')" color="primary" v-close-popup />
+          <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
           <q-btn
             flat
-            :label="$$customT('eventRounds.delete')"
+            :label="$customT('eventRounds.delete')"
             color="negative"
             @click="deleteRound"
             :loading="deleting"
@@ -162,7 +162,7 @@
     <q-dialog v-model="showStartRoundDialog">
       <q-card style="min-width: 350px">
         <q-card-section>
-          <div class="text-h6">{{ $$customT('eventRounds.startRoundConfirm') }}</div>
+          <div class="text-h6">{{ $customT('eventRounds.startRoundConfirm') }}</div>
         </q-card-section>
         <q-card-section>
           <div>
@@ -173,10 +173,10 @@
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$$customT('eventRounds.cancel')" color="primary" v-close-popup />
+          <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
           <q-btn
             flat
-            :label="$$customT('eventRounds.createScorecards')"
+            :label="$customT('eventRounds.createScorecards')"
             color="primary"
             @click="confirmStartRound"
           />
@@ -188,11 +188,11 @@
     <q-dialog v-model="showParticipantsDialog">
       <q-card style="min-width: 350px; max-width: 500px">
         <q-card-section>
-          <div class="text-h6">{{ $$customT('eventRounds.manageParticipants') }}</div>
+          <div class="text-h6">{{ $customT('eventRounds.manageParticipants') }}</div>
         </q-card-section>
         <q-card-section>
           <div v-if="participantsLoading" class="q-mb-md">
-            <q-spinner color="primary" size="2em" /> {{ $$customT('eventRounds.loadingParticipants') }}
+            <q-spinner color="primary" size="2em" /> {{ $customT('eventRounds.loadingParticipants') }}
           </div>
           <div v-else>
             <q-option-group
@@ -207,14 +207,14 @@
         <q-card-actions align="right">
           <q-btn
             flat
-            :label="$$customT('eventRounds.cancel')"
+            :label="$customT('eventRounds.cancel')"
             color="grey"
             v-close-popup
             :disable="participantsSaving"
           />
           <q-btn
             flat
-            :label="$$customT('eventRounds.save')"
+            :label="$customT('eventRounds.save')"
             color="primary"
             :loading="participantsSaving"
             @click="saveParticipants"
@@ -351,7 +351,7 @@ const loadStatuses = async () => {
 const resetForm = () => {
   roundForm.value = {
     round_number: rounds.value.length + 1,
-    date_time_event_round: formatDateTimeForInpu$customT(new Date().toISOString()),
+    date_time_event_round: formatDateTimeForInput(new Date().toISOString()),
     status: null,
     event: event.value?.id || '',
     players: [],
@@ -365,7 +365,7 @@ const editRound = (round) => {
   editingRound.value = round;
   roundForm.value = {
     round_number: Number(round.round_number),
-    date_time_event_round: formatDateTimeForInpu$customT(round.date_time_event_round),
+    date_time_event_round: formatDateTimeForInput(round.date_time_event_round),
     status: round.status,
     event: round.event,
     players: round.players || [],
@@ -540,7 +540,7 @@ const deleteRound = async () => {
 const resetSlide = () => {
   slideRefs.value.forEach((slideRef) => {
     if (slideRef) {
-      slideRef.rese$customT();
+      slideRef.reset();
     }
   });
 };
@@ -583,7 +583,7 @@ const linkConfirmedRegistrations = async (eventRound) => {
     }
     const confirmedStatusId = statusResult.items[0].id;
     // Haal alle bevestigde inschrijvingen op voor dit event
-    const regsResult = await pb.collection('registrations').getFullLis$customT({
+    const regsResult = await pb.collection('registrations').getFullList({
       filter: `event = "${eventId}" && status = "${confirmedStatusId}"`,
       expand: 'user,category',
     });
@@ -667,7 +667,7 @@ const confirmStartRound = async () => {
   if (catId === SKINS_ID || catId === COMPETITIE_ID) {
     // Skins/Competitie: gebruik round_participants
     try {
-      const participants = await pb.collection('round_participants').getFullLis$customT({
+      const participants = await pb.collection('round_participants').getFullList({
         filter: `event_round = "${roundToStart.value.id}"`,
       });
       if (!participants.length) {
@@ -742,7 +742,7 @@ async function openParticipantsDialog(round) {
   participantsLoading.value = true;
   try {
     // 1. Haal alle geregistreerde spelers op voor het event
-    const regs = await pb.collection('registrations').getFullLis$customT({
+    const regs = await pb.collection('registrations').getFullList({
       filter: `event = "${event.value.id}"`,
       expand: 'user',
     });
@@ -751,7 +751,7 @@ async function openParticipantsDialog(round) {
       name: r.expand?.user?.name || 'Onbekend',
     }));
     // 2. Haal bestaande deelnemers op voor deze ronde
-    const parts = await pb.collection('round_participants').getFullLis$customT({
+    const parts = await pb.collection('round_participants').getFullList({
       filter: `event_round = "${round.id}"`,
     });
     selectedParticipants.value = parts.map((p) => p.user);
@@ -767,7 +767,7 @@ async function saveParticipants() {
   participantsSaving.value = true;
   try {
     // 1. Haal bestaande deelnemers op
-    const existing = await pb.collection('round_participants').getFullLis$customT({
+    const existing = await pb.collection('round_participants').getFullList({
       filter: `event_round = "${currentRoundId.value}"`,
     });
     const existingUserIds = existing.map((p) => p.user);
@@ -797,7 +797,7 @@ async function saveParticipants() {
 }
 
 onMounted(() => {
-  void loadEven$customT();
+  void loadEvent();
   void loadRounds();
   void loadStatuses();
 });

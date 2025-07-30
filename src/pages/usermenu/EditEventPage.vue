@@ -3,7 +3,9 @@
   <div class="q-pa-md">
     <!-- Titelbalk met dynamische titel afhankelijk van nieuw/bewerken -->
     <div class="row justify-between items-center q-mb-md">
-      <div class="text-h5">{{ isNew ? $customT('events.newEvent') : $customT('events.editEvent') }}</div>
+      <div class="text-h5">
+        {{ isNew ? $customT('events.newEvent') : $customT('events.editEvent') }}
+      </div>
     </div>
 
     <!-- Laadspinner als data wordt opgehaald -->
@@ -123,7 +125,12 @@
 
             <!-- Actieknoppen onderaan het formulier -->
             <div class="row justify-end q-mt-md">
-              <q-btn flat color="negative" :label="$customT('events.cancel')" @click="router.back()" />
+              <q-btn
+                flat
+                color="negative"
+                :label="$customT('events.cancel')"
+                @click="router.back()"
+              />
               <q-btn
                 type="submit"
                 color="primary"
@@ -152,7 +159,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { inject } from 'vue'
+import { useI18n } from 'vue-i18n';
+
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'src/stores/auth';
 import { debug } from 'src/utils/debug';
@@ -161,7 +169,7 @@ import { debug } from 'src/utils/debug';
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 
@@ -292,7 +300,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqr$customT(a), Math.sqr$customT(1 - a));
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
@@ -385,6 +393,6 @@ const saveEvent = async () => {
 // -----------------------------
 onMounted(async () => {
   // Haal event, banen en gebruikers tegelijk op
-  await Promise.all([loadEven$customT(), loadCourses(), loadUsers()]);
+  await Promise.all([loadEvent(), loadCourses(), loadUsers()]);
 });
 </script>

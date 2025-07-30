@@ -1,15 +1,15 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useLocationStore } from 'stores/location';
-import { inject } from 'vue';
 
 // Centrale composable voor oefenronde-dialog
 export function usePracticeRoundDialog() {
   const $q = useQuasar();
+  const { t: $customT } = useI18n();
   const pb = usePocketbase();
   const locationStore = useLocationStore();
-  const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
   const showPracticeDialog = ref(false);
   const filteredCourses = ref([]);
@@ -20,8 +20,8 @@ export function usePracticeRoundDialog() {
     console.log('DEBUG: openPracticeRoundDialog (begin)', showPracticeDialog.value);
     // Gebruik de centrale locatie uit de store
     const loc = await locationStore.getOrFetchLocation();
-    let latitude = loc?.latitude ?? null;
-    let longitude = loc?.longitude ?? null;
+    const latitude = loc?.latitude ?? null;
+    const longitude = loc?.longitude ?? null;
     // Landcode via Nominatim (cache in localStorage)
     let countryCode = localStorage.getItem('userCountryCode');
     if (!countryCode && latitude && longitude) {
@@ -40,7 +40,9 @@ export function usePracticeRoundDialog() {
     if (countryCode) {
       try {
         country = await pb.collection('countries').getFirstListItem(`isoAlpha2 = "${countryCode}"`);
-      } catch {}
+      } catch {
+        // Land niet gevonden, gebruik null
+      }
     }
     // Banen ophalen en filteren
     let allCourses = [];

@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div class="text-h4 q-mb-md">{{ t('players.title') }}</div>
+    <div class="text-h4 q-mb-md">{{ $customT('players.title') }}</div>
 
     <div class="row q-col-gutter-md">
       <div v-for="speler in spelers" :key="speler.id" class="col-12 col-sm-6 col-md-4">
@@ -12,7 +12,7 @@
             <div>
               <div class="text-h6">{{ speler.name }}</div>
               <div class="text-caption text-grey">
-                {{ speler.expand?.homecourse?.name || t('players.noHomecourse') }}
+                {{ speler.expand?.homecourse?.name || $customT('players.noHomecourse') }}
               </div>
             </div>
           </q-card-section>
@@ -33,7 +33,7 @@ import { getAvatarUrl } from 'src/utils/avatar-utils';
 
 const $q = useQuasar();
 const router = useRouter();
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 const loading = ref(true);
 const spelers = ref([]);
 
@@ -54,7 +54,7 @@ onMounted(async () => {
     debug('Error loading data:', error);
     $q.notify({
       color: 'negative',
-      message: t('players.loadError'),
+      message: $customT('players.loadError'),
       icon: 'error',
     });
   } finally {

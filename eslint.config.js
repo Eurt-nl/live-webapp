@@ -20,53 +20,49 @@ export default defineConfigWithVueTs(
 
   pluginQuasar.configs.recommended(),
   js.configs.recommended,
-
-  /**
-   * https://eslint.vuejs.org
-   *
-   * pluginVue.configs.base
-   *   -> Settings and rules to enable correct ESLint parsing.
-   * pluginVue.configs[ 'flat/essential']
-   *   -> base, plus rules to prevent errors or unintended behavior.
-   * pluginVue.configs["flat/strongly-recommended"]
-   *   -> Above, plus rules to considerably improve code readability and/or dev experience.
-   * pluginVue.configs["flat/recommended"]
-   *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
-   */
   pluginVue.configs['flat/essential'],
-
-  {
-    files: ['**/*.ts', '**/*.vue'],
-    rules: {
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-    },
-  },
-  // https://github.com/vuejs/eslint-config-typescript
   vueTsConfigs.recommendedTypeChecked,
 
   {
+    files: ['**/*.ts', '**/*.vue'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-
       globals: {
         ...globals.browser,
-        ...globals.node, // SSR, Electron, config files
-        process: 'readonly', // process.env.*
-        ga: 'readonly', // Google Analytics
+        ...globals.node,
+        process: 'readonly',
+        ga: 'readonly',
         cordova: 'readonly',
         Capacitor: 'readonly',
-        chrome: 'readonly', // BEX related
-        browser: 'readonly', // BEX related
+        chrome: 'readonly',
+        browser: 'readonly',
       },
     },
-
-    // add your custom rules here
     rules: {
+      // TypeScript
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       'prefer-promise-reject-errors': 'off',
 
-      // allow debugger during development only
-      'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+      // Allow debugger during development only
+      'no-debugger': 'off',
+
+      /**
+       * Enforce i18n translation usage consistency
+       * - Always use $customT (destructured from useI18n)
+       * - Forbid $t() and bare t() calls
+       */
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='$t']",
+          message: 'Gebruik altijd $customT in plaats van $t voor vertalingen.',
+        },
+        {
+          selector: "CallExpression[callee.name='t']",
+          message: 'Gebruik altijd $customT in plaats van t voor vertalingen.',
+        },
+      ],
     },
   },
 

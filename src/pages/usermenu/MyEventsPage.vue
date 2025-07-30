@@ -44,7 +44,7 @@
                     <q-list>
                       <q-item
                         clickable
-                        @click="() => editEven$customT(event.id)"
+                        @click="() => editEvent(event.id)"
                         :disable="isEventStarted(event)"
                       >
                         <q-item-section>
@@ -156,18 +156,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { debug } from 'src/utils/debug';
 
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
 const pb = usePocketbase();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 const events = ref([]);
 const loading = ref(false);
@@ -254,7 +255,7 @@ const loadEvents = async () => {
       // Toon alleen events ouder dan 2 dagen, gesorteerd van nieuw naar oud
       events.value = eventsResult.items
         .filter(isEventOlderThanTwoDays)
-        .sort((a, b) => new Date(b.startdate) - new Date(a.startdate));
+        .sort((a, b) => new Date(b.startdate).getTime() - new Date(a.startdate).getTime());
       debug('Debug - Gearchiveerde events:', events.value.length);
     } else {
       // Toon alleen events van de laatste 2 dagen
@@ -282,11 +283,6 @@ const loadEvents = async () => {
 // const manageParticipants = (id: string) => {
 //   void router.push(`/events/${id}/deelnemers`);
 // };
-
-const confirmDelete = (event) => {
-  selectedEvent.value = event;
-  showDeleteDialog.value = true;
-};
 
 const deleteEvent = async () => {
   try {
@@ -317,8 +313,8 @@ const deleteEvent = async () => {
 };
 
 const updateFooterButtons = () => {
-  if (footerButtons) {
-    footerButtons.value = [
+  if (footerButtons && 'value' in (footerButtons as object)) {
+    (footerButtons as { value: unknown[] }).value = [
       {
         icon: '',
         label: showArchived.value ? $customT('events.active') : $customT('events.archived'),
@@ -370,8 +366,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (footerButtons) {
-    footerButtons.value = [];
+  if (footerButtons && 'value' in (footerButtons as object)) {
+    (footerButtons as { value: unknown[] }).value = [];
   }
 });
 </script>

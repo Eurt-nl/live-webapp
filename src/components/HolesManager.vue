@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="row justify-between items-center q-mb-md">
-      <div class="text-h6">{{ $t('holes.title') }}</div>
-      <q-btn color="primary" icon="add" :label="$t('holes.addHole')" @click="openNewHoleDialog" />
+      <div class="text-h6">{{ $customT('holes.title') }}</div>
+      <q-btn color="primary" icon="add" :label="$customT('holes.addHole')" @click="openNewHoleDialog" />
     </div>
 
     <q-list bordered separator v-if="holes.length > 0">
@@ -19,10 +19,10 @@
         </template>
         <q-item>
           <q-item-section>
-            <q-item-label>{{ $t('holes.hole') }} {{ hole.hole }}</q-item-label>
+            <q-item-label>{{ $customT('holes.hole') }} {{ hole.hole }}</q-item-label>
             <q-item-label caption>
-              {{ $t('holes.index') }}: {{ String(hole.hole_index).padStart(2, '0') }} |
-              {{ $t('holes.lengthLabel') }}: {{ String(hole.hole_length).padStart(2, '0') }}m |
+              {{ $customT('holes.index') }}: {{ String(hole.hole_index).padStart(2, '0') }} |
+              {{ $customT('holes.lengthLabel') }}: {{ String(hole.hole_length).padStart(2, '0') }}m |
               <q-icon
                 :name="hole.gps_tee?.latitude ? 'square' : 'square'"
                 :color="hole.gps_tee?.latitude ? 'positive' : 'grey'"
@@ -45,13 +45,13 @@
       </q-slide-item>
     </q-list>
 
-    <div v-else class="text-center q-pa-md text-grey">{{ $t('holes.noHolesYet') }}</div>
+    <div v-else class="text-center q-pa-md text-grey">{{ $customT('holes.noHolesYet') }}</div>
 
     <!-- Dialoog voor toevoegen/bewerken van hole -->
     <q-dialog v-model="holeDialog" persistent>
       <q-card style="min-width: 350px">
         <q-card-section>
-          <div class="text-h6">{{ isNewHole ? $t('holes.newHole') : $t('holes.editHole') }}</div>
+          <div class="text-h6">{{ isNewHole ? $customT('holes.newHole') : $customT('holes.editHole') }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
@@ -60,12 +60,12 @@
               v-model="holeForm.hole"
               type="number"
               inputmode="numeric"
-              :label="$t('holes.holeNumber')"
+              :label="$customT('holes.holeNumber')"
               :rules="[
-                (val) => !!val || $t('holes.holeNumberRequired'),
-                (val) => val > 0 || $t('holes.holeNumberPositive'),
-                (val) => val <= 18 || $t('holes.holeNumberMax'),
-                (val) => !existingHoleNumbers.includes(val) || $t('holes.holeNumberExists'),
+                (val) => !!val || $customT('holes.holeNumberRequired'),
+                (val) => val > 0 || $customT('holes.holeNumberPositive'),
+                (val) => val <= 18 || $customT('holes.holeNumberMax'),
+                (val) => !existingHoleNumbers.includes(val) || $customT('holes.holeNumberExists'),
               ]"
               :disable="!isNewHole"
             />
@@ -74,12 +74,12 @@
               v-model="holeForm.hole_index"
               type="number"
               inputmode="numeric"
-              :label="$t('holes.holeIndex')"
+              :label="$customT('holes.holeIndex')"
               :rules="[
-                (val) => !!val || $t('holes.holeIndexRequired'),
-                (val) => val > 0 || $t('holes.holeIndexPositive'),
-                (val) => val <= 18 || $t('holes.holeIndexMax'),
-                (val) => !existingHoleIndexes.includes(val) || $t('holes.holeIndexExists'),
+                (val) => !!val || $customT('holes.holeIndexRequired'),
+                (val) => val > 0 || $customT('holes.holeIndexPositive'),
+                (val) => val <= 18 || $customT('holes.holeIndexMax'),
+                (val) => !existingHoleIndexes.includes(val) || $customT('holes.holeIndexExists'),
               ]"
             />
 
@@ -87,11 +87,11 @@
               v-model="holeForm.hole_length"
               type="number"
               inputmode="numeric"
-              :label="$t('holes.length')"
+              :label="$customT('holes.length')"
               :rules="[
-                (val) => !!val || $t('holes.lengthRequired'),
-                (val) => val >= 15 || $t('holes.lengthMin'),
-                (val) => val <= 90 || $t('holes.lengthMax'),
+                (val) => !!val || $customT('holes.lengthRequired'),
+                (val) => val >= 15 || $customT('holes.lengthMin'),
+                (val) => val <= 90 || $customT('holes.lengthMax'),
               ]"
             />
 
@@ -102,8 +102,8 @@
                   icon="square"
                   :label="
                     holeForm.gps_tee.latitude
-                      ? $t('holes.teeLocationSaved')
-                      : $t('holes.teeLocationAdd')
+                      ? $customT('holes.teeLocationSaved')
+                      : $customT('holes.teeLocationAdd')
                   "
                   @click="
                     holeForm.gps_tee.latitude ? clearGpsData('tee') : getCurrentLocation('tee')
@@ -118,8 +118,8 @@
                   icon="circle"
                   :label="
                     holeForm.gps_green.latitude
-                      ? $t('holes.greenLocationSaved')
-                      : $t('holes.greenLocationAdd')
+                      ? $customT('holes.greenLocationSaved')
+                      : $customT('holes.greenLocationAdd')
                   "
                   @click="
                     holeForm.gps_green.latitude
@@ -134,12 +134,12 @@
 
             <q-input
               v-model="holeForm.calculated_length"
-              :label="$t('holes.calculatedLength')"
+              :label="$customT('holes.calculatedLength')"
               type="number"
               readonly
               outlined
               class="q-mb-md"
-              :hint="!hasGpsData ? $t('holes.calculatedLengthHint') : ''"
+              :hint="!hasGpsData ? $customT('holes.calculatedLengthHint') : ''"
             >
               <template v-slot:append>
                 <q-icon name="calculate" />
@@ -166,7 +166,7 @@
                 </q-img>
                 <div v-else class="image-placeholder">
                   <q-icon name="add_photo_alternate" size="48px" />
-                  <div class="text-subtitle2 q-mt-sm">{{ $t('holes.clickToAddPhoto') }}</div>
+                  <div class="text-subtitle2 q-mt-sm">{{ $customT('holes.clickToAddPhoto') }}</div>
                 </div>
               </div>
               <input
@@ -179,8 +179,8 @@
             </div>
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn :label="$t('holes.cancel')" color="grey" v-close-popup />
-              <q-btn :label="$t('holes.save')" type="submit" color="primary" :loading="loading" />
+              <q-btn :label="$customT('holes.cancel')" color="grey" v-close-popup />
+              <q-btn :label="$customT('holes.save')" type="submit" color="primary" :loading="loading" />
             </div>
           </q-form>
         </q-card-section>
@@ -194,8 +194,8 @@
           <div class="text-h6">
             {{
               locationType === 'tee'
-                ? $t('holes.selectTeeLocation')
-                : $t('holes.selectGreenLocation')
+                ? $customT('holes.selectTeeLocation')
+                : $customT('holes.selectGreenLocation')
             }}
           </div>
         </q-card-section>
@@ -212,9 +212,9 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn :label="$t('holes.cancel')" color="grey" v-close-popup />
+          <q-btn :label="$customT('holes.cancel')" color="grey" v-close-popup />
           <q-btn
-            :label="$t('holes.confirm')"
+            :label="$customT('holes.confirm')"
             color="primary"
             v-close-popup
             @click="confirmLocation"
@@ -228,12 +228,12 @@
       <q-card>
         <q-card-section class="row items-center">
           <q-avatar icon="warning" color="warning" text-color="white" />
-          <span class="q-ml-sm">{{ $t('holes.deleteHoleConfirm') }}</span>
+          <span class="q-ml-sm">{{ $customT('holes.deleteHoleConfirm') }}</span>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('holes.cancel')" color="grey" v-close-popup />
-          <q-btn flat :label="$t('holes.delete')" color="negative" @click="deleteHole" />
+          <q-btn flat :label="$customT('holes.cancel')" color="grey" v-close-popup />
+          <q-btn flat :label="$customT('holes.delete')" color="negative" @click="deleteHole" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -262,7 +262,7 @@ const $q = useQuasar();
 const pb = usePocketbase();
 
 // I18n moet na andere composables worden aangeroepen
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 
 const holes = ref([]);
 const loading = ref(false);
@@ -471,7 +471,7 @@ const loadHoles = async () => {
     debug('Error loading holes:', error);
     $q.notify({
       color: 'negative',
-      message: t('notifications.loadDataError'),
+      message: $customT('notifications.loadDataError'),
       icon: 'error',
     });
   } finally {
@@ -561,7 +561,9 @@ const onHoleSubmit = async () => {
 
     $q.notify({
       color: 'positive',
-      message: isNewHole.value ? t('notifications.holeAdded') : t('notifications.holeUpdated'),
+      message: isNewHole.value
+        ? $customT('notifications.holeAdded')
+        : $customT('notifications.holeUpdated'),
       icon: 'check',
     });
 
@@ -571,7 +573,7 @@ const onHoleSubmit = async () => {
     debug('Error saving hole:', error);
     $q.notify({
       color: 'negative',
-      message: t('notifications.saveError'),
+      message: $customT('notifications.saveError'),
       icon: 'error',
     });
   } finally {
@@ -585,7 +587,7 @@ const deleteHole = async () => {
     await pb.collection('course_detail').delete(holeToDelete.value.id);
     $q.notify({
       color: 'positive',
-      message: t('notifications.holeDeleted'),
+      message: $customT('notifications.holeDeleted'),
       icon: 'check',
     });
     deleteDialog.value = false;
@@ -594,7 +596,7 @@ const deleteHole = async () => {
     debug('Error deleting hole:', error);
     $q.notify({
       color: 'negative',
-      message: t('notifications.deleteError'),
+      message: $customT('notifications.deleteError'),
       icon: 'error',
     });
   } finally {
@@ -629,7 +631,7 @@ const deleteHoleDirect = async (hole) => {
     await pb.collection('course_detail').delete(hole.id);
     $q.notify({
       color: 'positive',
-      message: t('notifications.holeDeleted'),
+      message: $customT('notifications.holeDeleted'),
       icon: 'check',
     });
     await loadHoles();
@@ -637,11 +639,11 @@ const deleteHoleDirect = async (hole) => {
     debug('Error deleting hole:', error);
     $q.notify({
       color: 'negative',
-      message: t('notifications.deleteError'),
+      message: $customT('notifications.deleteError'),
       icon: 'error',
     });
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 };
 

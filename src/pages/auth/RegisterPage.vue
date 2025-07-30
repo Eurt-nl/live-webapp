@@ -82,15 +82,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue'
-import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
-import { useAuthStore } from 'stores/auth'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useAuthStore } from 'stores/auth';
 
-const $q = useQuasar()
-const router = useRouter()
-const authStore = useAuthStore()
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
+const $q = useQuasar();
+const router = useRouter();
+const authStore = useAuthStore();
+const { t: $customT } = useI18n();
 
 const name = ref('');
 const email = ref('');

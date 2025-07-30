@@ -92,10 +92,11 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { useNotificationsStore } from 'stores/notifications';
 
-import { onMounted, computed, inject } from 'vue';
+import { onMounted, computed } from 'vue';
 
 import { useCoursesStore } from 'stores/courses';
 
@@ -103,7 +104,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const notificationsStore = useNotificationsStore();
 const $q = useQuasar();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+const { t: $customT } = useI18n();
 
 const coursesStore = useCoursesStore();
 

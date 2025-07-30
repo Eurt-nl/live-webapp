@@ -1,8 +1,8 @@
 import { register } from 'register-service-worker';
 
-if (process.env.NODE_ENV === 'production') {
+if (import.meta.env.PROD) {
   // Gebruik BASE_URL als het beschikbaar is, anders gebruik een relatieve URL
-  const baseUrl = process.env.BASE_URL || '/';
+  const baseUrl = import.meta.env.BASE_URL || '/';
   const swUrl = `${baseUrl}sw.js`;
 
   console.log('🔧 Registering service worker with URL:', swUrl);

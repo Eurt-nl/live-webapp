@@ -120,19 +120,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import LocationPicker from 'src/components/LocationPicker.vue';
 import { debug } from 'src/utils/debug';
 
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const router = useRouter();
 const pb = usePocketbase();
 const authStore = useAuthStore();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 // Form data
 const formData = ref({
@@ -262,6 +263,10 @@ const onSubmit = async () => {
         // Gebruik admin user als superuser
         superusersResult = {
           items: [adminUser],
+          page: 1,
+          perPage: 1,
+          totalItems: 1,
+          totalPages: 1,
         };
       } catch (emailError) {
         debug('Ook geen admin gebruiker gevonden via email:', emailError);

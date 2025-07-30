@@ -1,0 +1,821 @@
+<template>
+  <div class="q-pa-md">
+    <div class="row justify-between items-center q-mb-md">
+      <div class="text-h5">{{ event?.name || $customT('common.loading') }}</div>
+      <q-btn
+        color="primary"
+        icon="add"
+        :label="$customT('eventRounds.newRound')"
+        @click="showAddRoundDialog = true"
+      />
+    </div>
+
+    <!-- Rondes lijst -->
+    <div class="row">
+      <div v-for="round in rounds" :key="round.id" class="col-12">
+        <q-slide-item
+          ref="slideRefs"
+          @right="confirmDelete(round)"
+          right-color="negative"
+          class="q-mb-sm"
+        >
+          <template v-slot:right>
+            <div class="row items-center">
+              <q-icon name="delete" />
+            </div>
+          </template>
+          <q-card class="cursor-pointer my-card" @click="editRound(round)" flat>
+            <q-card-section>
+              <div class="row items-center">
+                <div class="col">
+                  <div class="row items-center">
+                    <div class="text-subtitle1">Ronde {{ String(round.round_number) }}</div>
+                  </div>
+                  <div class="text-caption q-mt-sm">
+                    {{ formatDateTime(round.date_time_event_round) }}
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Status: {{ round.expand?.status?.name || 'Geen status' }}
+                  </div>
+                  <div class="text-caption text-grey-8">
+                    Aantal spelers: {{ round.players?.length || 0 }}
+                  </div>
+                  <!-- Knoppen deelnemers (links) en start ronde (rechts) onder de ronde-info -->
+                  <div class="row q-mt-sm items-center">
+                    <div class="col-auto">
+                      <q-btn
+                        v-if="showParticipantsBtn"
+                        color="secondary"
+                        icon="group"
+                        size="sm"
+                        :label="$customT('eventRounds.participants')"
+                        @click.stop="openParticipantsDialog(round)"
+                      />
+                    </div>
+                    <q-space />
+                    <div class="col-auto">
+                      <q-btn
+                        color="primary"
+                        icon="play_arrow"
+                        size="sm"
+                        :label="$customT('eventRounds.startRound')"
+                        :disable="(round.expand?.status?.name || round.status) !== 'Actief'"
+                        @click.stop="openStartRoundDialog(round)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
+        </q-slide-item>
+      </div>
+    </div>
+
+    <!-- Geen rondes melding -->
+    <div v-if="rounds.length === 0" class="text-center q-mt-lg">
+      <div class="text-h6">{{ $customT('eventRounds.noRoundsFound') }}</div>
+      <div class="text-subtitle1">{{ $customT('eventRounds.addRoundHint') }}</div>
+    </div>
+
+    <!-- Ronde toevoegen/bewerken dialog -->
+    <q-dialog v-model="showAddRoundDialog" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section class="row items-center">
+          <div class="text-h6">
+            {{ editingRound ? $customT('eventRounds.editRound') : $customT('eventRounds.newRound') }}
+          </div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-form @submit="saveRound" class="q-gutter-md">
+            <q-input
+              v-model.number="roundForm.round_number"
+              type="number"
+              :label="$customT('eventRounds.roundNumber')"
+              :rules="roundNumberRules"
+            />
+
+            <div class="text-caption q-pa-sm bg-grey-2">
+              Debug info event datums:<br />
+              Event start: {{ formatDebugDate(event?.startdate) }}<br />
+              Event eind: {{ formatDebugDate(event?.enddate) }}<br />
+              Ronde datum: {{ roundForm.date_time_event_round }}
+            </div>
+
+            <q-input
+              v-model="roundForm.date_time_event_round"
+              type="datetime-local"
+              :label="$customT('eventRounds.dateTime')"
+              :rules="dateTimeRules"
+            />
+
+            <q-select
+              v-model="roundForm.status"
+              :options="statuses"
+              option-label="name"
+              option-value="id"
+              :label="$customT('eventRounds.status')"
+              emit-value
+              map-options
+            />
+
+            <div class="row justify-end q-mt-md">
+              <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
+              <q-btn
+                type="submit"
+                flat
+                :label="$customT('eventRounds.save')"
+                color="primary"
+                :loading="saving"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- Verwijder bevestiging dialog -->
+    <q-dialog v-model="showDeleteDialog" @hide="resetSlide">
+      <q-card>
+        <q-card-section class="row items-center">
+          <div class="text-h6">{{ $customT('eventRounds.deleteRound') }}</div>
+        </q-card-section>
+        <q-card-section>
+          <p>{{ $customT('eventRounds.deleteRoundConfirm', { eventName: selectedRound?.name }) }}</p>
+          <p class="text-caption">{{ $customT('eventRounds.deleteRoundWarning') }}</p>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
+          <q-btn
+            flat
+            :label="$customT('eventRounds.delete')"
+            color="negative"
+            @click="deleteRound"
+            :loading="deleting"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Start ronde bevestiging dialog -->
+    <q-dialog v-model="showStartRoundDialog">
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">{{ $customT('eventRounds.startRoundConfirm') }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div>
+            Je staat op het punt de ronde te starten. Dat betekent dat er voor elke speler die in
+            deze ronde mag spelen een scorekaart wordt aangemaakt. Deze actie kun je niet
+            terugdraaien!<br /><br />
+            Wil je de scorekaarten nu aanmaken?
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="$customT('eventRounds.cancel')" color="primary" v-close-popup />
+          <q-btn
+            flat
+            :label="$customT('eventRounds.createScorecards')"
+            color="primary"
+            @click="confirmStartRound"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog voor deelnemers beheren -->
+    <q-dialog v-model="showParticipantsDialog">
+      <q-card style="min-width: 350px; max-width: 500px">
+        <q-card-section>
+          <div class="text-h6">{{ $customT('eventRounds.manageParticipants') }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div v-if="participantsLoading" class="q-mb-md">
+            <q-spinner color="primary" size="2em" /> {{ $customT('eventRounds.loadingParticipants') }}
+          </div>
+          <div v-else>
+            <q-option-group
+              v-model="selectedParticipants"
+              :options="availablePlayers.map((p) => ({ label: p.name, value: p.id }))"
+              type="checkbox"
+              color="primary"
+              :disable="participantsSaving"
+            />
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            :label="$customT('eventRounds.cancel')"
+            color="grey"
+            v-close-popup
+            :disable="participantsSaving"
+          />
+          <q-btn
+            flat
+            :label="$customT('eventRounds.save')"
+            color="primary"
+            :loading="participantsSaving"
+            @click="saveParticipants"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useQuasar } from 'quasar';
+import { usePocketbase } from 'src/composables/usePocketbase';
+import { useAuthStore } from 'stores/auth';
+
+const route = useRoute();
+// const router = useRouter(); // Niet gebruikt
+const $q = useQuasar();
+const pb = usePocketbase();
+const authStore = useAuthStore();
+
+const event = ref(null);
+const rounds = ref([]);
+const statuses = ref([]);
+const showAddRoundDialog = ref(false);
+const showDeleteDialog = ref(false);
+const saving = ref(false);
+const deleting = ref(false);
+const selectedRound = ref(null);
+const editingRound = ref(null);
+const slideRefs = ref([]);
+const showStartRoundDialog = ref(false);
+const roundToStart = ref(null);
+
+// State voor deelnemers-dialog
+const showParticipantsDialog = ref(false);
+const participantsLoading = ref(false);
+const participantsSaving = ref(false);
+const availablePlayers = ref([]); // Geregistreerde spelers voor het event
+const selectedParticipants = ref([]); // Geselecteerde user-ids
+const currentRoundId = ref(null);
+
+const roundForm = ref({
+  round_number: null,
+  date_time_event_round: '',
+  status: null,
+  event: '',
+  players: [],
+  flight: null,
+  event_round_logic: null,
+});
+
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleString('nl-NL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatDateTimeForInput = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+};
+
+const formatDateTimeForSave = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString(); // Format: YYYY-MM-DDTHH:mm:ss.sssZ
+};
+
+const loadEvent = async () => {
+  try {
+    const eventData = await pb.collection('events').getOne(route.params.id as string);
+    // Bereken einddatum als deze niet bestaat
+    if (!eventData.enddate) {
+      const startDate = new Date(eventData.startdate);
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      eventData.enddate = endDate.toISOString();
+    }
+    // Zorg voor consistent datumformaat
+    eventData.startdate = new Date(eventData.startdate).toISOString();
+    eventData.enddate = new Date(eventData.enddate).toISOString();
+    event.value = eventData;
+    roundForm.value.event = eventData.id;
+  } catch (error) {
+    console.error('Error loading event:', error);
+    $q.notify({
+      color: 'negative',
+      message: 'Fout bij het laden van het event',
+      icon: 'error',
+    });
+  }
+};
+
+const loadRounds = async () => {
+  try {
+    const eventId = String(route.params.id || '');
+    const roundsResult = await pb.collection('event_rounds').getList(1, 50, {
+      filter: `event = "${eventId}"`,
+      sort: 'round_number',
+      expand: 'status',
+    });
+    rounds.value = roundsResult.items;
+  } catch (error) {
+    console.error('Error loading rounds:', error);
+    $q.notify({
+      color: 'negative',
+      message: 'Fout bij het laden van de rondes',
+      icon: 'error',
+    });
+  }
+};
+
+const loadStatuses = async () => {
+  try {
+    const statusesResult = await pb.collection('categories').getList(1, 50, {
+      filter: 'cat_type = "status"',
+      sort: 'name',
+    });
+    statuses.value = statusesResult.items;
+  } catch (error) {
+    console.error('Error loading statuses:', error);
+  }
+};
+
+const resetForm = () => {
+  roundForm.value = {
+    round_number: rounds.value.length + 1,
+    date_time_event_round: formatDateTimeForInpu$customT(new Date().toISOString()),
+    status: null,
+    event: event.value?.id || '',
+    players: [],
+    flight: null,
+    event_round_logic: null,
+  };
+  editingRound.value = null;
+};
+
+const editRound = (round) => {
+  editingRound.value = round;
+  roundForm.value = {
+    round_number: Number(round.round_number),
+    date_time_event_round: formatDateTimeForInpu$customT(round.date_time_event_round),
+    status: round.status,
+    event: round.event,
+    players: round.players || [],
+    flight: round.flight,
+    event_round_logic: round.event_round_logic,
+  };
+  showAddRoundDialog.value = true;
+};
+
+const formatDebugDate = (dateString: string) => {
+  if (!dateString) return 'Geen datum';
+  return new Date(dateString).toISOString();
+};
+
+const validateDateTime = (dateTimeStr: string, roundNumber: number) => {
+  if (!dateTimeStr || !event.value) return 'Datum en tijd is verplicht';
+  const roundDate = new Date(dateTimeStr);
+  const eventStartDate = new Date(event.value.startdate);
+  const eventEndDate = new Date(event.value.enddate); // Nu altijd beschikbaar
+  // Check of de datum binnen het event valt
+  if (roundDate < eventStartDate) {
+    return 'Datum en/of tijd kan niet voor de startdatum van het event liggen';
+  }
+  if (roundDate > eventEndDate) {
+    return 'Datum en/of tijd kan niet na de einddatum van het event liggen';
+  }
+  // Check rondenummer volgorde
+  const lowerRounds = rounds.value.filter(
+    (r) => r.round_number < roundNumber && (!editingRound.value || r.id !== editingRound.value.id),
+  );
+  const higherRounds = rounds.value.filter(
+    (r) => r.round_number > roundNumber && (!editingRound.value || r.id !== editingRound.value.id),
+  );
+  for (const round of lowerRounds) {
+    if (new Date(round.date_time_event_round) > roundDate) {
+      return `Datum en/of tijd kan niet voor ronde ${String(round.round_number || '')} liggen`;
+    }
+  }
+  for (const round of higherRounds) {
+    if (new Date(round.date_time_event_round) < roundDate) {
+      return `Datum en/of tijd kan niet na ronde ${String(round.round_number || '')} liggen`;
+    }
+  }
+  return true;
+};
+
+const validateRoundNumber = (number: number) => {
+  if (!number) return 'Ronde nummer is verplicht';
+
+  // Check of het rondenummer al bestaat (behalve bij bewerken)
+  const exists = rounds.value.some(
+    (r) => r.round_number === number && (!editingRound.value || r.id !== editingRound.value.id),
+  );
+
+  if (exists) {
+    return 'Dit rondenummer bestaat al';
+  }
+
+  return true;
+};
+
+const saveRound = async () => {
+  try {
+    // Valideer eerst
+    const dateTimeValidation = validateDateTime(
+      roundForm.value.date_time_event_round,
+      roundForm.value.round_number,
+    );
+    const roundNumberValidation = validateRoundNumber(roundForm.value.round_number);
+
+    if (dateTimeValidation !== true) {
+      $q.notify({
+        color: 'negative',
+        message: dateTimeValidation,
+        icon: 'error',
+      });
+      return;
+    }
+
+    if (roundNumberValidation !== true) {
+      $q.notify({
+        color: 'negative',
+        message: roundNumberValidation,
+        icon: 'error',
+      });
+      return;
+    }
+
+    saving.value = true;
+
+    const roundData = {
+      round_number: roundForm.value.round_number,
+      date_time_event_round: formatDateTimeForSave(roundForm.value.date_time_event_round),
+      status: roundForm.value.status,
+      event: roundForm.value.event,
+      players: roundForm.value.players,
+      flight: roundForm.value.flight,
+      event_round_logic: roundForm.value.event_round_logic,
+    };
+
+    if (editingRound.value) {
+      await pb.collection('event_rounds').update(editingRound.value.id, roundData);
+    } else {
+      await pb.collection('event_rounds').create(roundData);
+    }
+
+    $q.notify({
+      color: 'positive',
+      message: editingRound.value ? 'Ronde bijgewerkt' : 'Ronde toegevoegd',
+      icon: 'check',
+    });
+
+    showAddRoundDialog.value = false;
+    resetForm();
+    void loadRounds();
+  } catch (error) {
+    console.error('Error saving round:', error);
+    $q.notify({
+      color: 'negative',
+      message: 'Fout bij het opslaan van de ronde',
+      icon: 'error',
+    });
+  } finally {
+    saving.value = false;
+  }
+};
+
+// Update the form rules
+const dateTimeRules = computed(() => [
+  (val) => !!val || 'Datum en tijd is verplicht',
+  (val) => validateDateTime(val, roundForm.value.round_number),
+]);
+
+const roundNumberRules = computed(() => [
+  (val) => !!val || 'Ronde nummer is verplicht',
+  (val) => validateRoundNumber(val),
+]);
+
+const confirmDelete = (round) => {
+  selectedRound.value = round;
+  showDeleteDialog.value = true;
+};
+
+const deleteRound = async () => {
+  if (!selectedRound.value) return;
+
+  try {
+    deleting.value = true;
+    await pb.collection('event_rounds').delete(selectedRound.value.id);
+
+    $q.notify({
+      color: 'positive',
+      message: 'Ronde verwijderd',
+      icon: 'check',
+    });
+
+    showDeleteDialog.value = false;
+    selectedRound.value = null;
+    void loadRounds();
+  } catch (error) {
+    console.error('Error deleting round:', error);
+    $q.notify({
+      color: 'negative',
+      message: 'Fout bij het verwijderen van de ronde',
+      icon: 'error',
+    });
+  } finally {
+    deleting.value = false;
+  }
+};
+
+const resetSlide = () => {
+  slideRefs.value.forEach((slideRef) => {
+    if (slideRef) {
+      slideRef.reset();
+    }
+  });
+};
+
+// Hulpfunctie om een unieke 4-hoofdletterige qr_token te genereren voor een bepaalde datum
+const generateUniqueQrToken = async (date) => {
+  let unique = false;
+  let token = '';
+  while (!unique) {
+    // Genereer een string van 4 hoofdletters (A-Z)
+    token = Array.from({ length: 4 }, () =>
+      String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+    ).join('');
+    // Controleer of deze token al bestaat op dezelfde datum
+    const result = await pb.collection('rounds').getList(1, 1, {
+      filter: `qr_token = "${token}" && date = "${date}"`,
+    });
+    if (result.items.length === 0) {
+      unique = true;
+    }
+  }
+  return token;
+};
+
+// Functie om bevestigde inschrijvingen te koppelen aan nieuwe rounds
+const linkConfirmedRegistrations = async (eventRound) => {
+  try {
+    const eventId = event.value?.id;
+    if (!eventId) {
+      $q.notify({ color: 'negative', message: 'Event niet gevonden', icon: 'error' });
+      return;
+    }
+    // Zoek de status "Bevestigd" op
+    const statusResult = await pb.collection('categories').getList(1, 1, {
+      filter: 'cat_type = "registration" && name = "Bevestigd"',
+    });
+    if (!statusResult.items.length) {
+      $q.notify({ color: 'negative', message: 'Status "Bevestigd" niet gevonden', icon: 'error' });
+      return;
+    }
+    const confirmedStatusId = statusResult.items[0].id;
+    // Haal alle bevestigde inschrijvingen op voor dit event
+    const regsResult = await pb.collection('registrations').getFullList({
+      filter: `event = "${eventId}" && status = "${confirmedStatusId}"`,
+      expand: 'user,category',
+    });
+    if (!regsResult.length) {
+      $q.notify({
+        color: 'info',
+        message: 'Geen bevestigde inschrijvingen gevonden',
+        icon: 'info',
+      });
+      return;
+    }
+    // Haal het eerste course id uit het event
+    let courseId = null;
+    if (Array.isArray(event.value.course)) {
+      courseId = event.value.course[0];
+    } else {
+      courseId = event.value.course;
+    }
+    if (!courseId) {
+      $q.notify({ color: 'negative', message: 'Geen baan gevonden bij event', icon: 'error' });
+      return;
+    }
+    let createdCount = 0;
+    for (const reg of regsResult) {
+      try {
+        // Controleer of er al een round bestaat voor deze speler en event_round
+        const existing = await pb.collection('rounds').getList(1, 1, {
+          filter: `player = "${reg.user}" && event_round = "${eventRound.id}"`,
+        });
+        if (existing.items.length > 0) {
+          // Sla deze speler over, want er bestaat al een round
+          continue;
+        }
+        // Genereer unieke qr_token voor deze datum
+        const qrToken = await generateUniqueQrToken(eventRound.date_time_event_round);
+        await pb.collection('rounds').create({
+          created_by: authStore.user?.id,
+          player: reg.user,
+          category: event.value.category,
+          course: courseId,
+          event_round: eventRound.id,
+          date: eventRound.date_time_event_round,
+          qr_token: qrToken,
+          status: '5c7f9h447rw5b05',
+        });
+        createdCount++;
+      } catch {
+        // Fout bij individuele registratie, log alleen
+        console.error('Fout bij aanmaken ronde voor registratie', reg.id);
+      }
+    }
+    if (createdCount > 0) {
+      $q.notify({
+        color: 'positive',
+        message: `${createdCount} rondes aangemaakt voor bevestigde inschrijvingen`,
+        icon: 'check',
+      });
+    } else {
+      $q.notify({ color: 'info', message: 'Geen nieuwe rondes aangemaakt', icon: 'info' });
+    }
+  } catch (error) {
+    console.error('Fout bij koppelen inschrijvingen:', error);
+    $q.notify({ color: 'negative', message: 'Fout bij koppelen inschrijvingen', icon: 'error' });
+  }
+};
+
+const openStartRoundDialog = (round) => {
+  roundToStart.value = round;
+  showStartRoundDialog.value = true;
+};
+
+const confirmStartRound = async () => {
+  showStartRoundDialog.value = false;
+  if (!roundToStart.value) return;
+
+  // Categorie-ids voor Skins en Competitie
+  const SKINS_ID = 's7rbnu26407pa3x';
+  const COMPETITIE_ID = 'p3zcg33ejg9a720';
+  const catId = event.value?.category;
+
+  if (catId === SKINS_ID || catId === COMPETITIE_ID) {
+    // Skins/Competitie: gebruik round_participants
+    try {
+      const participants = await pb.collection('round_participants').getFullList({
+        filter: `event_round = "${roundToStart.value.id}"`,
+      });
+      if (!participants.length) {
+        $q.notify({
+          color: 'warning',
+          message: 'Geen deelnemers gevonden voor deze ronde',
+          icon: 'warning',
+        });
+        return;
+      }
+      let courseId = null;
+      if (Array.isArray(event.value.course)) {
+        courseId = event.value.course[0];
+      } else {
+        courseId = event.value.course;
+      }
+      if (!courseId) {
+        $q.notify({ color: 'negative', message: 'Geen baan gevonden bij event', icon: 'error' });
+        return;
+      }
+      let createdCount = 0;
+      for (const part of participants) {
+        const existing = await pb.collection('rounds').getList(1, 1, {
+          filter: `player = "${part.user}" && event_round = "${roundToStart.value.id}"`,
+        });
+        if (existing.items.length > 0) continue;
+        const qrToken = await generateUniqueQrToken(roundToStart.value.date_time_event_round);
+        await pb.collection('rounds').create({
+          created_by: authStore.user?.id,
+          player: part.user,
+          category: event.value.category,
+          course: courseId,
+          event_round: roundToStart.value.id,
+          date: roundToStart.value.date_time_event_round,
+          qr_token: qrToken,
+          status: '5c7f9h447rw5b05',
+        });
+        createdCount++;
+      }
+      if (createdCount > 0) {
+        $q.notify({
+          color: 'positive',
+          message: `${createdCount} scorekaarten aangemaakt`,
+          icon: 'check',
+        });
+      } else {
+        $q.notify({ color: 'info', message: 'Geen nieuwe scorekaarten aangemaakt', icon: 'info' });
+      }
+    } catch (error) {
+      console.error('Fout bij aanmaken scorekaarten:', error);
+      $q.notify({ color: 'negative', message: 'Fout bij aanmaken scorekaarten', icon: 'error' });
+    } finally {
+      roundToStart.value = null;
+    }
+  } else {
+    // Toernooi: gebruik bestaande flow via registrations
+    void linkConfirmedRegistrations(roundToStart.value);
+    roundToStart.value = null;
+  }
+};
+
+// Toon de deelnemersknop alleen als het event een relevante categorie-id heeft (Skins of Competitie)
+const showParticipantsBtn = computed(() => {
+  const catId = event.value?.category;
+  return catId === 's7rbnu26407pa3x' || catId === 'p3zcg33ejg9a720';
+});
+
+// Open de deelnemers-dialog voor een specifieke ronde
+async function openParticipantsDialog(round) {
+  showParticipantsDialog.value = true;
+  currentRoundId.value = round.id;
+  participantsLoading.value = true;
+  try {
+    // 1. Haal alle geregistreerde spelers op voor het event
+    const regs = await pb.collection('registrations').getFullList({
+      filter: `event = "${event.value.id}"`,
+      expand: 'user',
+    });
+    availablePlayers.value = regs.map((r) => ({
+      id: r.user,
+      name: r.expand?.user?.name || 'Onbekend',
+    }));
+    // 2. Haal bestaande deelnemers op voor deze ronde
+    const parts = await pb.collection('round_participants').getFullList({
+      filter: `event_round = "${round.id}"`,
+    });
+    selectedParticipants.value = parts.map((p) => p.user);
+  } catch {
+    $q.notify({ color: 'negative', message: 'Fout bij laden deelnemers', icon: 'error' });
+  } finally {
+    participantsLoading.value = false;
+  }
+}
+
+// Sla de deelnemers op in round_participants
+async function saveParticipants() {
+  participantsSaving.value = true;
+  try {
+    // 1. Haal bestaande deelnemers op
+    const existing = await pb.collection('round_participants').getFullList({
+      filter: `event_round = "${currentRoundId.value}"`,
+    });
+    const existingUserIds = existing.map((p) => p.user);
+    // 2. Toevoegen: alle nieuw geselecteerde die nog niet bestaan
+    for (const userId of selectedParticipants.value) {
+      if (!existingUserIds.includes(userId)) {
+        await pb.collection('round_participants').create({
+          event_round: currentRoundId.value,
+          user: userId,
+          created_by: authStore.user?.id,
+        });
+      }
+    }
+    // 3. Verwijderen: alle bestaande die niet meer geselecteerd zijn
+    for (const part of existing) {
+      if (!selectedParticipants.value.includes(part.user)) {
+        await pb.collection('round_participants').delete(part.id);
+      }
+    }
+    $q.notify({ color: 'positive', message: 'Deelnemers bijgewerkt', icon: 'check' });
+    showParticipantsDialog.value = false;
+  } catch {
+    $q.notify({ color: 'negative', message: 'Fout bij opslaan deelnemers', icon: 'error' });
+  } finally {
+    participantsSaving.value = false;
+  }
+}
+
+onMounted(() => {
+  void loadEvent();
+  void loadRounds();
+  void loadStatuses();
+});
+</script>
+
+<style lang="scss">
+.my-card {
+  border: 1px solid #ddd;
+  transition: all 0.2s ease;
+  background: white;
+
+  &:hover {
+    border-color: var(--q-primary);
+    transform: translateX(4px);
+  }
+}
+
+.q-slide-item {
+  background: white;
+}
+</style>

@@ -48,7 +48,7 @@ export const useLocationStore = defineStore('location', () => {
           };
           resolve(userLocation.value);
         },
-        (error) => {
+        () => {
           userLocation.value = null;
           resolve(null);
         },

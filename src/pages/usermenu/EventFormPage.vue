@@ -1,7 +1,9 @@
 <template>
   <div class="q-pa-md">
     <div class="row justify-between items-center q-mb-md">
-      <div class="text-h5">{{ isNew ? $customT('eventForm.newEvent') : $customT('eventForm.editEvent') }}</div>
+      <div class="text-h5">
+        {{ isNew ? $customT('eventForm.newEvent') : $customT('eventForm.editEvent') }}
+      </div>
     </div>
 
     <q-card>
@@ -153,7 +155,12 @@
           </div>
 
           <div class="row justify-end q-mt-md">
-            <q-btn flat color="negative" :label="$customT('eventForm.cancel')" @click="router.back()" />
+            <q-btn
+              flat
+              color="negative"
+              :label="$customT('eventForm.cancel')"
+              @click="router.back()"
+            />
             <q-btn
               type="submit"
               color="primary"
@@ -172,11 +179,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'src/stores/auth';
-import { inject } from 'vue'
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
 
 interface EventData {
   name: string;
@@ -195,6 +200,7 @@ interface EventData {
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 
@@ -244,7 +250,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqr$customT(a), Math.sqr$customT(1 - a));
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
@@ -352,8 +358,8 @@ const loadData = async () => {
       form.value = {
         name: event.name,
         course: selectedCourse,
-        startdate: startDate.toISOString().spli$customT('T')[0],
-        enddate: endDate ? endDate.toISOString().spli$customT('T')[0] : '',
+        startdate: startDate.toISOString().split('T')[0],
+        enddate: endDate ? endDate.toISOString().split('T')[0] : '',
         max_players: event.max_players,
         description: event.description || '',
         moderators: event.moderators || [],
@@ -409,8 +415,8 @@ const saveEvent = async () => {
       endDate.setDate(endDate.getDate() + 1);
     }
 
-    const finalStartDate = startDate.toISOString().spli$customT('T')[0];
-    const finalEndDate = endDate.toISOString().spli$customT('T')[0];
+    const finalStartDate = startDate.toISOString().split('T')[0];
+    const finalEndDate = endDate.toISOString().split('T')[0];
 
     // Owner alleen toevoegen bij create
     const eventData: Partial<EventData> = {
@@ -418,7 +424,7 @@ const saveEvent = async () => {
       course: courseId,
       startdate: finalStartDate,
       enddate: finalEndDate,
-      max_players: parseIn$customT(form.value.max_players.toString()),
+      max_players: parseInt(form.value.max_players.toString()),
       description: form.value.description || '',
       moderators: moderatorsIds,
       enrolled: form.value.enrolled || [],

@@ -217,18 +217,17 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { getFileUrl } from 'src/utils/pocketbase-helpers';
 import type { Course, Hole, Country } from 'src/components/models';
 import CourseMap from 'components/CourseMap.vue';
 import { useAuthStore } from 'stores/auth';
 import { debug } from 'src/utils/debug';
-import { inject } from 'vue';
-
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
 
 const route = useRoute();
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 

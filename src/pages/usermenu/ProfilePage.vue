@@ -146,6 +146,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
@@ -153,10 +154,11 @@ import { debug } from 'src/utils/debug';
 import { getAvatarUrl } from 'src/utils/avatar-utils';
 
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const $router = useRouter();
 const authStore = useAuthStore();
 const fileInput = ref<HTMLInputElement | null>(null);
-const profileForm = ref<Record<string, unknown> | null>(null);
+const profileForm = ref<{ validate: () => Promise<boolean> } | null>(null);
 const pb = usePocketbase();
 
 const name = ref('');
@@ -206,7 +208,7 @@ const loadCountries = async () => {
   const perPage = 100;
   let totalPages = 1;
   do {
-          const result = await pb.collection('countries').getList(page, perPage);
+    const result = await pb.collection('countries').getList(page, perPage);
     landen.push(
       ...result.items.map((item: Record<string, unknown>) => ({
         id: typeof item.id === 'string' ? item.id : '',

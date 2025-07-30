@@ -7,19 +7,32 @@
         {{ formatDate(event.start_date) }} - {{ formatDate(event.end_date) }}
       </div>
       <div class="text-caption">
-        {{ $t('events.participants') }}: {{ registrationsCount || 0 }}/{{ event.max_players }}
+        {{ $customT('events.participants') }}: {{ registrationsCount || 0 }}/{{ event.max_players }}
       </div>
     </q-card-section>
 
     <q-card-actions align="right">
-      <q-btn flat color="primary" :label="$t('events.details')" :to="`/events/${event.id}/edit`" />
-      <q-btn flat color="primary" :label="$t('events.participants')" :to="`/events/${event.id}/deelnemers`" />
+      <q-btn
+        flat
+        color="primary"
+        :label="$customT('events.details')"
+        :to="`/events/${event.id}/edit`"
+      />
+      <q-btn
+        flat
+        color="primary"
+        :label="$customT('events.participants')"
+        :to="`/events/${event.id}/deelnemers`"
+      />
     </q-card-actions>
   </q-card>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { formatDate } from 'src/utils/dateUtils';
+
+const { t: $customT } = useI18n();
 
 defineProps<{
   event: {

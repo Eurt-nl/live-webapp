@@ -277,7 +277,13 @@
     "loadCourseError": "Error loading course",
     "loadHolesError": "Error loading holes",
     "finalizeRoundError": "Error finalizing round",
-    "finalizeEventRoundError": "Error finalizing event round"
+    "finalizeEventRoundError": "Error finalizing event round",
+    "sendNotification": "Send notification",
+    "applyForModerator": "Apply for moderator",
+    "applyForModeratorDescription": "Apply to become a moderator for {courseName}. Moderators can edit course information and manage events.",
+    "subject": "Subject",
+    "notification": "Notification",
+    "send": "Send"
   },
   "validation": {
     "required": "This field is required",
@@ -319,7 +325,12 @@
   "players": {
     "title": "Players",
     "noHomecourse": "No homecourse",
-    "loadError": "Error loading data"
+    "loadError": "Error loading data",
+    "loadingPlayer": "Loading player...",
+    "notSpecified": "Not specified",
+    "homecourse": "Homecourse",
+    "category": "Category",
+    "birthyear": "Year of birth"
   },
   "events": {
     "title": "Events",
@@ -677,5 +688,11 @@
     "averageScore": "Average score",
     "worstScore": "Worst score",
     "noCourseStats": "No course statistics available"
+  },
+  "serviceWorker": {
+    "newVersionDownloading": "New version available, downloading...",
+    "newVersionAvailable": "New version available! Click to refresh.",
+    "refresh": "Refresh",
+    "offlineMessage": "You are offline. Some features may not be available."
   }
 }

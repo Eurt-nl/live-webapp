@@ -47,7 +47,7 @@ const emit = defineEmits<{
 }>();
 
 const pb = usePocketbase();
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<L.Map | null>(null);
 const holes = ref<Hole[]>([]);
@@ -102,53 +102,58 @@ const updateMap = () => {
       const teeLatLng = L.latLng(hole.gps_tee.latitude, hole.gps_tee.longitude);
       bounds.extend(teeLatLng);
 
-      L.marker(teeLatLng, {
-        icon: teeIcon,
-      }).addTo(map.value);
+      if (map.value) {
+        const teeMarker: L.Marker = L.marker(teeLatLng, {
+          icon: teeIcon,
+        });
+        teeMarker.addTo(map.value as L.Map);
+      }
 
       if (hole.gps_green?.latitude && hole.gps_green?.longitude) {
         const greenLatLng = L.latLng(hole.gps_green.latitude, hole.gps_green.longitude);
         bounds.extend(greenLatLng);
 
-        L.marker(greenLatLng, {
-          icon: greenIcon,
-        }).addTo(map.value);
+        if (map.value) {
+          L.marker(greenLatLng, {
+            icon: greenIcon,
+          }).addTo(map.value as L.Map);
 
-        // Teken een lijn tussen tee en green
-        L.polyline([teeLatLng, greenLatLng], {
-          color: '#1976D2',
-          weight: 2,
-        }).addTo(map.value);
+          // Teken een lijn tussen tee en green
+          L.polyline([teeLatLng, greenLatLng], {
+            color: '#1976D2',
+            weight: 2,
+          }).addTo(map.value as L.Map);
 
-        // Voeg een label toe aan de lijn
-        const label = L.marker(
-          [
-            (hole.gps_tee.latitude + hole.gps_green.latitude) / 2,
-            (hole.gps_tee.longitude + hole.gps_green.longitude) / 2,
-          ],
-          {
-            icon: L.divIcon({
-              className: 'hole-label',
-              html: `<div class="hole-label-inner">${hole.hole}</div>`,
-              iconSize: [30, 20],
-            }),
-          },
-        ).addTo(map.value);
+          // Voeg een label toe aan de lijn
+          const label = L.marker(
+            [
+              (hole.gps_tee.latitude + hole.gps_green.latitude) / 2,
+              (hole.gps_tee.longitude + hole.gps_green.longitude) / 2,
+            ],
+            {
+              icon: L.divIcon({
+                className: 'hole-label',
+                html: `<div class="hole-label-inner">${hole.hole}</div>`,
+                iconSize: [30, 20],
+              }),
+            },
+          ).addTo(map.value as L.Map);
 
-        // Voeg een popup toe aan de label
-        let thumbHtml = '';
-        if (hole.image) {
-          const imgUrl = getFileUrl('course_detail', hole.id, hole.image);
-          thumbHtml = `<img src="${imgUrl}" alt="${t('holes.holePhoto')}" style="width:100px;max-width:100px;max-height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer;" onclick="window.__showHoleImage && window.__showHoleImage('${imgUrl}')" />`;
+          // Voeg een popup toe aan de label
+          let thumbHtml = '';
+          if (hole.image) {
+            const imgUrl = getFileUrl('course_detail', hole.id, hole.image);
+            thumbHtml = `<img src="${imgUrl}" alt="${$customT('holes.holePhoto')}" style="width:100px;max-width:100px;max-height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer;" onclick="window.__showHoleImage && window.__showHoleImage('${imgUrl}')" />`;
+          }
+          label.bindPopup(`
+            <div class="hole-popup">
+              ${thumbHtml}
+              <div class="text-h6">${$customT('holes.hole')} ${hole.hole}</div>
+              <div class="text-subtitle2">${$customT('holes.distance')}: ${hole.hole_length}m</div>
+              <div class="text-subtitle2">${$customT('holes.index')}: ${String(hole.hole_index).padStart(2, '0')}</div>
+            </div>
+          `);
         }
-        label.bindPopup(`
-          <div class="hole-popup">
-            ${thumbHtml}
-            <div class="text-h6">${t('holes.hole')} ${hole.hole}</div>
-            <div class="text-subtitle2">${t('holes.distance')}: ${hole.hole_length}m</div>
-            <div class="text-subtitle2">${t('holes.index')}: ${String(hole.hole_index).padStart(2, '0')}</div>
-          </div>
-        `);
       }
     }
   });
@@ -181,7 +186,7 @@ onMounted(() => {
         attribution:
           'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       },
-    ).addTo(map.value);
+    ).addTo(map.value as L.Map);
 
     void loadHoles();
   }

@@ -70,17 +70,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { useProfileCheck } from 'src/composables/useProfileCheck';
 
-const router = useRouter()
-const authStore = useAuthStore()
-const $q = useQuasar()
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string
-const { checkProfileCompleteness } = useProfileCheck()
+const router = useRouter();
+const authStore = useAuthStore();
+const $q = useQuasar();
+const { t: $customT } = useI18n();
+
+const { checkProfileCompleteness } = useProfileCheck();
 
 const email = ref('');
 const password = ref('');

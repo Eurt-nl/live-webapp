@@ -57,7 +57,7 @@ import { getFileUrl } from 'src/utils/pocketbase-helpers';
 
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t: $customT } = useI18n();
 
 const props = defineProps<{
   courseId: string;
@@ -139,7 +139,7 @@ const loadHoles = async () => {
     console.error('Error loading holes:', error);
     $q.notify({
       color: 'negative',
-      message: t('notifications.loadHolesError'),
+      message: $customT('notifications.loadHolesError'),
       icon: 'error',
     });
   } finally {

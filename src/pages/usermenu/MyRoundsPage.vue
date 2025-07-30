@@ -143,9 +143,10 @@
 
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import { ref, onMounted, inject, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import QrcodeVue from 'qrcode.vue';
@@ -154,8 +155,9 @@ import { debug } from 'src/utils/debug';
 import { usePracticeRoundDialog } from 'src/composables/usePracticeRoundDialog';
 
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const router = useRouter();
-const $customT = inject('$customT') as (key: string, params?: Record<string, any>) => string;
+
 const authStore = useAuthStore();
 const pb = usePocketbase();
 
@@ -164,7 +166,6 @@ const courses = ref([]);
 const roundTypes = ref([]);
 const statusTypes = ref([]);
 const loading = ref(false);
-const showNewRoundDialog = ref(false);
 
 const showArchived = ref(false);
 
@@ -275,7 +276,7 @@ const loadData = async () => {
       // Toon alleen rondes ouder dan 2 dagen, gesorteerd op datum van nieuw naar oud
       rounds.value = roundsResult.items
         .filter(isRoundOlderThanTwoDays)
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       debug('Debug - Gearchiveerde rondes:', rounds.value.length);
     } else {
       // Toon alleen rondes van de laatste 2 dagen
@@ -444,51 +445,6 @@ const onRefresh = async (done: () => void) => {
     });
   } finally {
     done();
-  }
-};
-
-const deleteRoundWithoutConfirm = async (round) => {
-  try {
-    await pb.collection('rounds').delete(round.id);
-    rounds.value = rounds.value.filter((r) => r.id !== round.id);
-    $q.notify({
-      type: 'positive',
-      message: $customT('rounds.deleted'),
-    });
-  } catch (error) {
-    debug('Fout bij verwijderen ronde:', error);
-    $q.notify({
-      type: 'negative',
-      message: $customT('rounds.errorDelete'),
-    });
-  }
-};
-
-const cancelEventRound = async (round) => {
-  try {
-    // Controleer of het een event ronde is
-    if (!round.event) {
-      $q.notify({
-        type: 'negative',
-        message: $customT('rounds.eventRoundError'),
-        icon: 'error',
-      });
-      return;
-    }
-
-    // Verwijder de ronde (scores worden automatisch verwijderd door cascade delete)
-    await pb.collection('rounds').delete(round.id);
-    rounds.value = rounds.value.filter((r) => r.id !== round.id);
-    $q.notify({
-      type: 'positive',
-      message: $customT('rounds.eventRoundCancelled'),
-    });
-  } catch (error) {
-    debug('Fout bij annuleren event ronde:', error);
-    $q.notify({
-      type: 'negative',
-      message: $customT('rounds.errorCancel'),
-    });
   }
 };
 

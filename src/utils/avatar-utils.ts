@@ -8,9 +8,9 @@ import maleAvatar from '../assets/images/male.png';
  */
 export const getAvatarUrl = (speler: Record<string, unknown>): string => {
   if (speler?.avatar) {
-    return getFileUrl('users', speler.id, speler.avatar);
+    return getFileUrl('users', speler.id as string, speler.avatar as string)
   }
 
   // Gebruik de geïmporteerde afbeelding voor PWA compatibiliteit
-  return maleAvatar;
+  return maleAvatar
 };
