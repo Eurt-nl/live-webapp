@@ -145,7 +145,11 @@
     "courses": "Banen",
     "events": "Events",
     "refresh": "Vernieuwen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "currentVersion": "Huidige versie",
+    "newVersion": "Nieuwe versie",
+    "upToDate": "Up-to-date",
+    "updateAvailable": "Update beschikbaar"
   },
   "auth": {
     "welcome": "Welkom bij Pitch & Putt",

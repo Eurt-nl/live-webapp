@@ -93,11 +93,11 @@
     <q-item>
       <q-item-section>
         <div class="text-caption text-grey-7 q-ml-sm">
-          <div>Huidige versie: {{ currentVersion }}</div>
-          <div v-if="latestVersion">Nieuwe versie: {{ latestVersion }}</div>
+          <div>{{ $customT('menu.currentVersion') }}: {{ currentVersion }}</div>
+          <div v-if="latestVersion">{{ $customT('menu.newVersion') }}: {{ latestVersion }}</div>
           <div v-if="updateStatus" class="q-mt-xs">
-            <span v-if="updateAvailable" class="text-warning">⚠️ Update beschikbaar</span>
-            <span v-else class="text-positive">✅ Up-to-date</span>
+            <span v-if="updateAvailable" class="text-warning">⚠️ {{ $customT('menu.updateAvailable') }}</span>
+            <span v-else class="text-positive">✅ {{ $customT('menu.upToDate') }}</span>
           </div>
         </div>
       </q-item-section>

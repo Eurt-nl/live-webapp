@@ -76,3 +76,45 @@ Constraints:
     • Use ISO date format (YYYY-MM-DD).
     • Automatically push a Git tag for each version bump.
 Tags: @/utils/changelog.ts, package.json, Git tags
+
+Rule: Always apply i18n translations with English as fallback
+
+Context:
+This Quasar PWA uses Vue 3, TypeScript, and vue-i18n for translations. All user-facing text must be translated using $customT with keys defined in nl.json (Dutch) and en.json (English fallback). You (the developer) will give instructions in Dutch, but the fallback language in the app is English.
+
+Enforcement:
+1. When generating or modifying any Vue component:
+    • Detect any hardcoded user-facing strings in templates, scripts, buttons, labels, placeholders, dialogs, notifications, etc.
+    • Automatically replace them with `$customT('translation.key')` references.
+    • Add the corresponding translation keys to both `nl.json` and `en.json` if they do not exist:
+        - nl.json: Dutch translation (based on the prompt or context).
+        - en.json: English translation as fallback.
+    • Use a consistent key naming convention based on context:
+        - Example: `userMenu.version.current` or `auth.login.title`.
+
+2. Language-specific behavior:
+    • Always treat English as the fallback language (even though instructions are in Dutch).
+    • When a new key is added, automatically:
+        - Translate to Dutch (nl.json) based on the developer's instruction language.
+        - Translate to English (en.json) as fallback.
+    • Validate that every key added to nl.json also exists in en.json and vice versa.
+
+3. Code generation requirements:
+    • In templates: Always use `{{ $customT('key') }}` for text content.
+    • In script sections: Use `$customT('key')` for messages (e.g., `$q.notify`).
+    • Do NOT leave any hardcoded strings in code; they must all be converted to i18n keys.
+
+4. File updates:
+    • Ensure `src/boot/i18n.ts` is always properly configured with fallbackLocale set to 'en'.
+    • When adding new keys, update both `src/i18n/nl.json` and `src/i18n/en.json`.
+    • If a key already exists, reuse it instead of duplicating.
+
+5. Validation:
+    • Before completing any code generation, scan the modified files for untranslated hardcoded strings and automatically convert them.
+    • Ensure translations are grouped logically in both JSON files (e.g., by component or feature).
+
+Constraints:
+    • Developer instructions are given in Dutch, but fallback must remain English.
+    • Maintain correct JSON formatting in both translation files.
+    • Never output untranslated UI text directly in components.
+Tags: @/i18n, @/boot/i18n, @/pages, @/components

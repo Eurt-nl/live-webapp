@@ -76,7 +76,11 @@
     "courses": "Courses",
     "events": "Events",
     "refresh": "Refresh",
-    "logout": "Logout"
+    "logout": "Logout",
+    "currentVersion": "Current version",
+    "newVersion": "New version",
+    "upToDate": "Up-to-date",
+    "updateAvailable": "Update available"
   },
   "auth": {
     "welcome": "Welcome to Pitch & Putt",
