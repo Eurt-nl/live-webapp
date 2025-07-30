@@ -71,14 +71,6 @@
     </q-item>
     -->
 
-    <!-- Vernieuwen -->
-    <q-item clickable v-close-popup @click="handleRefresh">
-      <q-item-section avatar>
-        <q-icon name="refresh" />
-      </q-item-section>
-      <q-item-section>{{ $customT('menu.refresh') }}</q-item-section>
-    </q-item>
-
     <!-- Uitloggen -->
     <q-item clickable v-close-popup @click="handleLogout">
       <q-item-section avatar>
@@ -259,73 +251,7 @@ const handleUpdate = async () => {
   }
 };
 
-const handleRefresh = async () => {
-  try {
-    // Controleer of we in PWA modus zijn
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-
-      // Probeer service worker update
-      await registration.update();
-
-      if (isStandalone) {
-        // In PWA modus: gebruik een meer betrouwbare refresh methode
-        $q.notify({
-          color: 'positive',
-          message: $customT('notifications.appRefreshing'),
-          icon: 'refresh',
-          timeout: 1500,
-        });
-
-        // Gebruik een combinatie van methoden voor PWA
-        setTimeout(() => {
-          // Methode 1: Probeer location.reload()
-          try {
-            window.location.reload();
-          } catch {
-            // Methode 2: Fallback - ververs de pagina via router
-            router.go(0);
-          }
-        }, 1500);
-      } else {
-        // In browser modus: standaard reload
-        $q.notify({
-          color: 'positive',
-          message: $customT('notifications.pageRefreshing'),
-          icon: 'refresh',
-          timeout: 1500,
-        });
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      }
-    } else {
-      // Fallback voor browsers zonder service worker
-      $q.notify({
-        color: 'info',
-        message: $customT('notifications.pageRefreshing'),
-        icon: 'refresh',
-        timeout: 1500,
-      });
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    }
-  } catch (error) {
-    console.error('Error refreshing app:', error);
-    $q.notify({
-      color: 'negative',
-      message: $customT('notifications.refreshError'),
-      icon: 'error',
-    });
-  }
-};
 
 onMounted(() => {
   void notificationsStore.checkUnreadMessages();
