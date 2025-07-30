@@ -101,6 +101,19 @@
           </div>
         </div>
       </q-item-section>
+      <!-- Update knop (alleen zichtbaar als update beschikbaar is) -->
+      <q-item-section side v-if="updateAvailable">
+        <q-btn
+          flat
+          round
+          dense
+          color="primary"
+          icon="system_update"
+          @click="handleUpdate"
+          :loading="updating"
+          :title="$customT('menu.updateApp')"
+        />
+      </q-item-section>
     </q-item>
   </q-list>
 </template>
@@ -132,6 +145,7 @@ const currentVersion = ref('0.0.1');
 const latestVersion = ref<string | null>(null);
 const updateAvailable = ref(false);
 const updateStatus = ref(false);
+const updating = ref(false);
 
 // Functie om huidige versie op te halen
 const getCurrentVersion = () => {
@@ -171,6 +185,77 @@ const handleLogout = () => {
       message: $customT('notifications.logoutFailed'),
       icon: 'error',
     });
+  }
+};
+
+const handleUpdate = async () => {
+  if (updating.value) return;
+  
+  updating.value = true;
+  
+  try {
+    // Controleer of we in PWA modus zijn
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+
+      // Forceer service worker update
+      await registration.update();
+
+      // Wacht even om de update te laten verwerken
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (isStandalone) {
+        // In PWA modus: toon update melding en herlaad
+        $q.notify({
+          color: 'positive',
+          message: $customT('notifications.appUpdating'),
+          icon: 'system_update',
+          timeout: 2000,
+        });
+
+        // Herlaad de app na een korte vertraging
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        // In browser modus: standaard reload
+        $q.notify({
+          color: 'positive',
+          message: $customT('notifications.pageUpdating'),
+          icon: 'system_update',
+          timeout: 2000,
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } else {
+      // Fallback voor browsers zonder service worker
+      $q.notify({
+        color: 'info',
+        message: $customT('notifications.pageUpdating'),
+        icon: 'system_update',
+        timeout: 2000,
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  } catch (error) {
+    console.error('Error updating app:', error);
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.updateError'),
+      icon: 'error',
+    });
+  } finally {
+    updating.value = false;
   }
 };
 

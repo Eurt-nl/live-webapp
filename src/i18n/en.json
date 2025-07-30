@@ -80,7 +80,8 @@
     "currentVersion": "Current version",
     "newVersion": "New version",
     "upToDate": "Up-to-date",
-    "updateAvailable": "Update available"
+    "updateAvailable": "Update available",
+    "updateApp": "Update app"
   },
   "auth": {
     "welcome": "Welcome to Pitch & Putt",
@@ -207,6 +208,9 @@
     "appRefreshing": "App is refreshing...",
     "pageRefreshing": "Page is refreshing...",
     "refreshError": "Error refreshing the app",
+    "appUpdating": "App is updating...",
+    "pageUpdating": "Page is updating...",
+    "updateError": "Error updating the app",
     "feedbackSent": "Feedback sent!",
     "loadEventError": "Error loading event",
     "loadPlayersError": "Error loading players",

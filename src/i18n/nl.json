@@ -149,7 +149,8 @@
     "currentVersion": "Huidige versie",
     "newVersion": "Nieuwe versie",
     "upToDate": "Up-to-date",
-    "updateAvailable": "Update beschikbaar"
+    "updateAvailable": "Update beschikbaar",
+    "updateApp": "App updaten"
   },
   "auth": {
     "welcome": "Welkom bij Pitch & Putt",
@@ -611,6 +612,9 @@
     "appRefreshing": "App wordt vernieuwd...",
     "pageRefreshing": "Pagina wordt vernieuwd...",
     "refreshError": "Fout bij het vernieuwen van de app",
+    "appUpdating": "App wordt bijgewerkt...",
+    "pageUpdating": "Pagina wordt bijgewerkt...",
+    "updateError": "Fout bij het bijwerken van de app",
     "feedbackSent": "Feedback verzonden!",
     "loadEventError": "Fout bij het laden van event",
     "loadPlayersError": "Fout bij het laden van spelers",
