@@ -86,6 +86,22 @@
       </q-item-section>
       <q-item-section>{{ $customT('menu.logout') }}</q-item-section>
     </q-item>
+
+    <q-separator />
+
+    <!-- Versie informatie -->
+    <q-item>
+      <q-item-section>
+        <div class="text-caption text-grey-7 q-ml-sm">
+          <div>Huidige versie: {{ currentVersion }}</div>
+          <div v-if="latestVersion">Nieuwe versie: {{ latestVersion }}</div>
+          <div v-if="updateStatus" class="q-mt-xs">
+            <span v-if="updateAvailable" class="text-warning">⚠️ Update beschikbaar</span>
+            <span v-else class="text-positive">✅ Up-to-date</span>
+          </div>
+        </div>
+      </q-item-section>
+    </q-item>
   </q-list>
 </template>
 
@@ -96,7 +112,7 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { useNotificationsStore } from 'stores/notifications';
 
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 
 import { useCoursesStore } from 'stores/courses';
 
@@ -110,6 +126,35 @@ const coursesStore = useCoursesStore();
 
 // Computed: heeft de gebruiker banen?
 const hasCourses = computed(() => coursesStore.courses.length > 0);
+
+// Versie management
+const currentVersion = ref('0.0.1');
+const latestVersion = ref<string | null>(null);
+const updateAvailable = ref(false);
+const updateStatus = ref(false);
+
+// Functie om huidige versie op te halen
+const getCurrentVersion = () => {
+  // In een echte app zou je dit uit package.json of een config halen
+  // Voor nu gebruiken we een hardcoded waarde die overeenkomt met package.json
+  return '0.0.1';
+};
+
+// Functie om versies te vergelijken
+const compareVersions = (current: string, latest: string): boolean => {
+  const currentParts = current.split('.').map(Number);
+  const latestParts = latest.split('.').map(Number);
+  
+  for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+    const currentPart = currentParts[i] || 0;
+    const latestPart = latestParts[i] || 0;
+    
+    if (latestPart > currentPart) return true;
+    if (latestPart < currentPart) return false;
+  }
+  
+  return false; // Versies zijn gelijk
+};
 
 const handleLogout = () => {
   try {
@@ -199,5 +244,37 @@ const handleRefresh = async () => {
 
 onMounted(() => {
   void notificationsStore.checkUnreadMessages();
+  
+  // Initialiseer huidige versie
+  currentVersion.value = getCurrentVersion();
+  
+  // Check voor updates
+  void checkForUpdates();
 });
+
+// Functie om te controleren op updates
+const checkForUpdates = async () => {
+  try {
+    const response = await fetch('/version.json');
+    if (response.ok) {
+      const versionData = await response.json();
+      latestVersion.value = versionData.version;
+      
+      // Vergelijk versies
+      if (latestVersion.value && latestVersion.value !== currentVersion.value) {
+        updateAvailable.value = compareVersions(currentVersion.value, latestVersion.value);
+      } else {
+        updateAvailable.value = false;
+      }
+      
+      updateStatus.value = true;
+    }
+  } catch {
+    console.log('Could not fetch version.json, using current version as fallback');
+    // Fallback: gebruik huidige versie als latest
+    latestVersion.value = currentVersion.value;
+    updateAvailable.value = false;
+    updateStatus.value = true;
+  }
+};
 </script>

@@ -1,8 +1,8 @@
 {
-  "name": "my-pnpapp",
+  "name": "pitch-putt-live-app",
   "version": "0.0.1",
-  "description": "A Quasar Project",
-  "productName": "Pitch-Putt Live app",
+  "description": "App voor Pitch-Putt.live",
+  "productName": "Pitch-Putt.live app",
   "author": "Renze Hasper <rh.hasper@me.com>",
   "type": "module",
   "private": true,
@@ -10,8 +10,8 @@
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
-    "dev": "quasar dev",
-    "build": "quasar build",
+    "dev": "node scripts/update-version.js && quasar dev",
+    "build": "node scripts/update-version.js && quasar build",
     "postinstall": "quasar prepare"
   },
   "dependencies": {

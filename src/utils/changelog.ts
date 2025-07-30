@@ -6,7 +6,7 @@ export interface ChangelogEntry {
   type: 'major' | 'minor' | 'patch';
 }
 
-// Automatisch gegenereerde changelog entries
+// Automatisch gegenereerde changelog entries (nieuwste altijd bovenaan)
 export const changelog: ChangelogEntry[] = [
   {
     version: '1.2.0',
@@ -28,6 +28,17 @@ export const changelog: ChangelogEntry[] = [
     ],
   },
   {
+    version: '1.1.0',
+    date: '2024-01-16',
+    type: 'minor',
+    changes: [
+      'Automatische update notificaties toegevoegd',
+      'Verbeterde PWA installatie flow',
+      'Changelog systeem geïmplementeerd',
+      'Betere error handling voor service worker updates',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2024-01-15',
     type: 'major',
@@ -39,31 +50,19 @@ export const changelog: ChangelogEntry[] = [
       'Capacitor integratie voor native features',
     ],
   },
-  {
-    version: '1.1.0',
-    date: '2024-01-16',
-    type: 'minor',
-    changes: [
-      'Automatische update notificaties toegevoegd',
-      'Verbeterde PWA installatie flow',
-      'Changelog systeem geïmplementeerd',
-      'Betere error handling voor service worker updates',
-    ],
-  },
 ];
 
-// Functie om de huidige app versie op te halen
+// Huidige appversie gebaseerd op laatste changelog-entry
 export function getCurrentVersion(): string {
-  // Gebruik package.json versie of een fallback
-  return import.meta.env.VITE_APP_VERSION || '1.2.0';
+  return changelog.length > 0 ? changelog[0].version : '0.0.0';
 }
 
-// Functie om de laatste changelog entry op te halen
+// Haal de laatste changelog-entry op
 export function getLatestChangelog(): ChangelogEntry | null {
   return changelog.length > 0 ? changelog[0] : null;
 }
 
-// Functie om changelog entries te vergelijken
+// Vergelijk versies om te zien of er een update is
 export function hasNewVersion(currentVersion: string, latestVersion: string): boolean {
   const current = parseVersion(currentVersion);
   const latest = parseVersion(latestVersion);
@@ -77,7 +76,7 @@ export function hasNewVersion(currentVersion: string, latestVersion: string): bo
   );
 }
 
-// Helper functie om versie strings te parsen
+// Parse een semver string
 function parseVersion(version: string): { major: number; minor: number; patch: number } {
   const parts = version.split('.').map(Number);
   return {
@@ -87,12 +86,12 @@ function parseVersion(version: string): { major: number; minor: number; patch: n
   };
 }
 
-// Functie om changelog entries te filteren op type
+// Filter changelog op type
 export function getChangelogByType(type: 'major' | 'minor' | 'patch'): ChangelogEntry[] {
   return changelog.filter((entry) => entry.type === type);
 }
 
-// Functie om changelog entries sinds een bepaalde versie op te halen
+// Haal alle entries sinds een bepaalde versie op
 export function getChangelogSince(version: string): ChangelogEntry[] {
   const targetVersion = parseVersion(version);
 

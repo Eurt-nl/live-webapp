@@ -34,3 +34,45 @@ Rules:
     • Ensure `src/types/vue.d.ts` includes proper type augmentation for `$customT`.
     • Validate that keys passed to `$customT` exist in both `nl.json` and `en.json` and flag missing keys.
 Tags: @/boot/i18n, @/i18n, @/types/vue
+
+---
+
+Rule: Automatically update changelog, bump version, and tag releases
+
+When committing changes:
+1. Extract the commit message (first line only).
+2. Parse the commit type (feat, fix, chore, docs, refactor) from the conventional commit format.
+3. Map commit types to changelog types:
+    - feat → minor
+    - fix → patch
+    - chore/docs/refactor → patch
+    - Any commit with "BREAKING CHANGE" in its body or type "major" → major
+4. Open src/utils/changelog.ts:
+    • Insert a new entry at the TOP of the `changelog` array in this format:
+      {
+        version: "<incremented version number>",
+        date: "<YYYY-MM-DD>",
+        type: "<mapped changelog type>",
+        changes: ["<commit message text>"]
+      }
+5. Increment the version based on semver rules:
+    - major: X+1.0.0
+    - minor: X.Y+1.0
+    - patch: X.Y.Z+1
+6. Update package.json:
+    • Replace the "version" field with the new incremented version.
+    • Ensure JSON formatting uses 2 spaces indentation.
+7. Tagging (automated GitHub release):
+    • Create a Git tag matching the new version (e.g., v1.3.0).
+    • Push the tag to the remote repository.
+8. Ensure src/utils/changelog.ts remains valid TypeScript and preserves the `ChangelogEntry` interface.
+9. If src/utils/changelog.ts does not exist, create it with:
+    export const changelog: ChangelogEntry[] = [ ... ];
+
+Constraints:
+    • Always insert new entries at index 0 (top of array).
+    • Never modify or reorder older entries.
+    • Keep changelog and package.json versions in sync.
+    • Use ISO date format (YYYY-MM-DD).
+    • Automatically push a Git tag for each version bump.
+Tags: @/utils/changelog.ts, package.json, Git tags
