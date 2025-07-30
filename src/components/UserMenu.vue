@@ -120,6 +120,7 @@ import { useNotificationsStore } from 'stores/notifications';
 import { onMounted, computed, ref } from 'vue';
 
 import { useCoursesStore } from 'stores/courses';
+import { getCurrentVersion } from 'src/utils/changelog';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -133,18 +134,11 @@ const coursesStore = useCoursesStore();
 const hasCourses = computed(() => coursesStore.courses.length > 0);
 
 // Versie management
-const currentVersion = ref('0.0.2');
+const currentVersion = ref(getCurrentVersion());
 const latestVersion = ref<string | null>(null);
 const updateAvailable = ref(false);
 const updateStatus = ref(false);
 const updating = ref(false);
-
-// Functie om huidige versie op te halen
-const getCurrentVersion = () => {
-  // In een echte app zou je dit uit package.json of een config halen
-  // Voor nu gebruiken we een hardcoded waarde die overeenkomt met package.json
-  return '0.0.2';
-};
 
 // Functie om versies te vergelijken
 const compareVersions = (current: string, latest: string): boolean => {

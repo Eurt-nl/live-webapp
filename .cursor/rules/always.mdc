@@ -118,3 +118,41 @@ Constraints:
     • Maintain correct JSON formatting in both translation files.
     • Never output untranslated UI text directly in components.
 Tags: @/i18n, @/boot/i18n, @/pages, @/components
+
+Rule: Enforce PocketBase date/time format (YYYY-MM-DD HH:mm:ss)
+
+Context:
+This project uses PocketBase, which expects date and time fields in the format "YYYY-MM-DD HH:mm:ss" (e.g., 2025-07-29 16:35:17). Cursor must ensure that any code dealing with date/time parsing, formatting, or saving to PocketBase uses this format consistently.
+
+Enforcement:
+1. When generating or modifying any code that handles dates/times (e.g., storing to PocketBase, API calls, displaying timestamps):
+    • Automatically format dates using "YYYY-MM-DD HH:mm:ss".
+    • Never use ISO strings (e.g., "2025-07-30T12:37:32.995Z") or include timezone markers (`T` or `Z`).
+    • Always convert using JavaScript/TypeScript utilities (e.g., `Date` or `dayjs`/`date-fns` if available).
+
+2. Implementation details:
+    • When using `toISOString()`, strip the `T` and `Z` and replace them:
+        Example:  
+        ```ts
+        const formatted = new Date().toISOString().replace('T', ' ').replace(/\..+/, '');
+        ```
+        Result: "2025-07-29 16:35:17"
+    • Alternatively, explicitly build the format:
+        ```ts
+        const d = new Date();
+        const formatted = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+        ```
+
+3. PocketBase usage:
+    • Any `create()`, `update()`, or query filters involving dates must use "YYYY-MM-DD HH:mm:ss".
+    • Ensure that UI inputs (e.g., datetime pickers) are converted into this format before saving.
+
+4. Validation:
+    • Before finalizing code, scan for ISO-style datetime strings (`T` or `Z`) and auto-rewrite them to the PocketBase format.
+    • Ensure tests or examples always demonstrate PocketBase-compatible formatting.
+
+Constraints:
+    • Output format must always be "YYYY-MM-DD HH:mm:ss" with 24-hour time.
+    • No milliseconds, no timezone indicators, no "T" separator.
+    • Maintain consistent formatting in all database operations, API calls, and UI displays.
+Tags: @/utils/datetime, PocketBase, date formatting

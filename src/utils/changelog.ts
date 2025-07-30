@@ -1,55 +1,17 @@
-// Changelog utility voor het bijhouden van versie-informatie
 export interface ChangelogEntry {
   version: string;
   date: string;
-  changes: string[];
   type: 'major' | 'minor' | 'patch';
+  changes: string[];
 }
 
-// Automatisch gegenereerde changelog entries (nieuwste altijd bovenaan)
 export const changelog: ChangelogEntry[] = [
   {
-    version: '1.2.0',
-    date: '2024-12-19',
-    type: 'minor',
-    changes: [
-      'Nieuwe eventsysteem geïmplementeerd zonder vooraf inschrijven',
-      'Events verschijnen als pop-ups op homepage binnen 300m en 30 minuten',
-      'Bulk event aanmaak functionaliteit toegevoegd (recurring events)',
-      'Moderator systeem toegevoegd voor events',
-      'Verbeterde homepage met logo en "is live!" tekst',
-      'Hamburger menu toegevoegd in plaats van logo',
-      'Event bewerken geblokkeerd na start van event',
-      'Event archiveren alleen mogelijk na datum van event',
-      'Verbeterde MyEventsPage met sortering op datum/tijd',
-      'CreateEventPage uitgebreid met moderator selectie',
-      'Recurring events met interval selectie (dag/week/maand)',
-      'Verbeterde datum/tijd verwerking zonder tijdzone problemen',
-    ],
-  },
-  {
-    version: '1.1.0',
-    date: '2024-01-16',
-    type: 'minor',
-    changes: [
-      'Automatische update notificaties toegevoegd',
-      'Verbeterde PWA installatie flow',
-      'Changelog systeem geïmplementeerd',
-      'Betere error handling voor service worker updates',
-    ],
-  },
-  {
-    version: '1.0.0',
-    date: '2024-01-15',
-    type: 'major',
-    changes: [
-      'Eerste release van de Pitch & Putt app',
-      'Basis functionaliteit voor banen, spelers en events',
-      'PWA ondersteuning met offline functionaliteit',
-      'Push notificatie systeem (later verwijderd)',
-      'Capacitor integratie voor native features',
-    ],
-  },
+    version: "0.1.0",
+    date: "2025-07-30",
+    type: "minor",
+    changes: ["feat: test automatische versie verhoging"]
+  }
 ];
 
 // Huidige appversie gebaseerd op laatste changelog-entry
