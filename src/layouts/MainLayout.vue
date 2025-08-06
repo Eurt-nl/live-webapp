@@ -62,7 +62,7 @@
       <div class="q-pa-md text-center">
         <div class="text-caption text-grey-6 q-mb-sm">{{ $customT('navigation.comingSoon') }}</div>
         <q-avatar size="80px" class="q-mb-sm">
-          <img src="/src/assets/RAFI.PNG" alt="AI Referee" />
+          <img src="/RAFI.png" alt="AI Referee" />
         </q-avatar>
         <div class="text-subtitle2">AI Referee</div>
       </div>

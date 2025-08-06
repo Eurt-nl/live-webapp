@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.4.0",
+    date: "2025-08-06",
+    type: "minor",
+    changes: ["feat: AI Referee avatar toegevoegd aan AppMenu met 'Binnenkort' tekst"]
+  },
+  {
     version: "0.3.2",
     date: "2025-08-06",
     type: "patch",
