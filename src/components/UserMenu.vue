@@ -250,7 +250,7 @@ const handleUpdate = async () => {
 onMounted(() => {
   void notificationsStore.checkUnreadMessages();
   
-  // Initialiseer huidige versie
+  // Initialiseer huidige versie en forceer refresh
   currentVersion.value = getCurrentVersion();
   
   // Check voor updates
@@ -260,10 +260,18 @@ onMounted(() => {
 // Functie om te controleren op updates
 const checkForUpdates = async () => {
   try {
-    const response = await fetch('/version.json');
+    // Voeg cache-busting parameter toe om browser cache te omzeilen
+    const response = await fetch(`/version.json?v=${Date.now()}`);
     if (response.ok) {
       const versionData = await response.json();
       latestVersion.value = versionData.version;
+      
+      // Debug: log versies
+      console.log('Version check:', {
+        current: currentVersion.value,
+        latest: latestVersion.value,
+        fromChangelog: getCurrentVersion()
+      });
       
       // Vergelijk versies
       if (latestVersion.value && latestVersion.value !== currentVersion.value) {

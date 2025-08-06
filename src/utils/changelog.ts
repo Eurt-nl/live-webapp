@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.3.0",
+    date: "2025-08-06",
+    type: "minor",
+    changes: ["feat: slide-in score invoer met +/- knoppen voor putts/chips"]
+  },
+  {
     version: "0.2.8",
     date: "2025-08-06",
     type: "patch",
