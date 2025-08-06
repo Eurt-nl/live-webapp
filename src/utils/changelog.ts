@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.4.1",
+    date: "2025-08-06",
+    type: "patch",
+    changes: ["fix: RAFI avatar toegevoegd aan public map voor PWA build"]
+  },
+  {
     version: "0.4.0",
     date: "2025-08-06",
     type: "minor",
