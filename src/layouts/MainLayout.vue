@@ -56,6 +56,16 @@
           <q-item-section>Events</q-item-section>
         </q-item> -->
       </q-list>
+
+      <!-- AI Referee - Binnenkort -->
+      <q-separator />
+      <div class="q-pa-md text-center">
+        <div class="text-caption text-grey-6 q-mb-sm">{{ $customT('navigation.comingSoon') }}</div>
+        <q-avatar size="80px" class="q-mb-sm">
+          <img src="/src/assets/RAFI.PNG" alt="AI Referee" />
+        </q-avatar>
+        <div class="text-subtitle2">AI Referee</div>
+      </div>
     </q-drawer>
 
     <q-drawer
@@ -74,7 +84,16 @@
 
     <q-footer elevated class="bg-grey-8 text-secondary">
       <q-toolbar>
-        <q-btn flat round dense icon="arrow_back" @click="goBack" :disable="!canGoBack" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="arrow_back"
+          @click="goBack"
+          :disable="!canGoBack"
+          style="min-width: 48px; min-height: 48px; touch-action: manipulation"
+          :aria-label="$customT('navigation.back')"
+        />
 
         <!-- Dynamische buttons links van home -->
         <template v-for="button in leftFooterButtons" :key="button.order">
@@ -421,7 +440,15 @@ const rightFooterButtons = computed(() => {
 provide('footerButtons', footerButtons);
 
 const canGoBack = computed(() => {
-  return router.options.history.state.back !== null;
+  // Check of we niet op de home pagina zijn
+  if (route.path === '/') return false;
+
+  // Check of er een history entry is
+  if (window.history.length > 1) return true;
+
+  // Als er geen history is maar we zijn niet op home, toon de back knop toch
+  // (gebruiker kan altijd naar home gaan)
+  return true;
 });
 
 const toggleLeftDrawer = () => {
@@ -433,7 +460,23 @@ const toggleRightDrawer = () => {
 };
 
 const goBack = () => {
-  router.back();
+  // Als we op de home pagina zijn, doe niets
+  if (route.path === '/') return;
+
+  // Als er geen history is, ga naar home
+  if (window.history.length <= 1) {
+    void router.push('/');
+    return;
+  }
+
+  // Probeer eerst router.back()
+  try {
+    router.back();
+  } catch (error) {
+    // Als router.back() faalt, ga naar home
+    console.warn('Router.back() failed, navigating to home:', error);
+    void router.push('/');
+  }
 };
 
 watch(

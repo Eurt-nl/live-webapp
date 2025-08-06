@@ -9,7 +9,8 @@
     "players": "Spelers",
     "events": "Events",
     "back": "Terug",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "comingSoon": "Binnenkort"
   },
   "courses": {
     "title": "Banen",
@@ -65,7 +66,37 @@
     "viewCourseList": "Bekijk banenlijst",
     "allFieldsRequired": "Alle velden zijn verplicht",
     "locationSearchHint": "Gebruik het vergrootglas om te zoeken naar een locatie, of klik direct op de kaart om een locatie te selecteren",
-    "scrollForForm": "Scroll naar beneden voor het formulier"
+    "scrollForForm": "Scroll naar beneden voor het formulier",
+    "localRules": "Lokale regels",
+    "localRulesText": "Lokale regels tekst",
+    "localRulesPlaceholder": "Voer hier de lokale regels voor deze baan in.\n\nFormat:\nTitel van regel 1\nBeschrijving van regel 1\n\n---\n\nTitel van regel 2\nBeschrijving van regel 2",
+    "localRulesSaved": "Lokale regels succesvol opgeslagen",
+    "localRulesSaveError": "Fout bij het opslaan van lokale regels",
+    "addLocalRule": "Regel toevoegen",
+    "editLocalRule": "Regel bewerken",
+    "ruleTitle": "Titel van regel",
+    "ruleDescription": "Beschrijving van regel",
+    "ruleType": "Type regel",
+    "ruleActive": "Regel actief",
+    "ruleTypeGeneral": "Algemeen",
+    "ruleTypeEtiquette": "Etiquette",
+    "ruleTypeSafety": "Veiligheid",
+    "ruleTypeDresscode": "Dresscode",
+    "ruleTypeOpening": "Openingstijden",
+    "noLocalRules": "Geen lokale regels",
+    "addLocalRuleHint": "Klik op 'Regel toevoegen' om je eerste regel toe te voegen",
+    "localRuleAdded": "Regel succesvol toegevoegd",
+    "localRuleUpdated": "Regel succesvol bijgewerkt",
+    "localRuleDeleted": "Regel succesvol verwijderd",
+    "localRuleSaveError": "Fout bij het opslaan van regel",
+    "localRuleDeleteError": "Fout bij het verwijderen van regel",
+    "deleteLocalRule": "Regel verwijderen",
+    "deleteLocalRuleConfirm": "Weet je zeker dat je deze regel wilt verwijderen?",
+    "ruleHole": "Hole",
+    "ruleHoleHint": "Selecteer een specifieke hole of laat leeg voor algemene regel",
+    "ruleGeneral": "Algemeen",
+    "delete": "Verwijderen",
+    "searchPlaceholder": "Zoek op baan naam, plaats of land..."
   },
   "players": {
     "title": "Spelers",
@@ -75,7 +106,9 @@
     "notSpecified": "Niet gespecificeerd",
     "homecourse": "Homecourse",
     "category": "Categorie",
-    "birthyear": "Geboortejaar"
+    "birthyear": "Geboortejaar",
+    "searchPlaceholder": "Zoek op naam, land of baan...",
+    "noPlayersFound": "Geen spelers gevonden"
   },
   "events": {
     "title": "Events",
@@ -289,6 +322,8 @@
     "locale": "nl-NL",
     "loading": "Laden...",
     "close": "Sluiten",
+    "active": "Actief",
+    "inactive": "Inactief",
     "yes": "Ja",
     "no": "Nee",
     "confirm": "Bevestigen",

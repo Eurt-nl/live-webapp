@@ -45,27 +45,17 @@
                 </div>
                 -->
                 <div class="col-12">
-                  <div class="row q-gutter-sm">
-                    <q-btn
-                      color="secondary"
-                      class="col"
-                      :label="$customT('home.startPracticeRound')"
-                      @click="
-                        () => {
-                          console.log('DEBUG: start practice round button clicked');
-                          openPracticeRoundDialog();
-                        }
-                      "
-                    />
-                    <q-btn
-                      color="primary"
-                      icon="refresh"
-                      @click="refreshLocation"
-                      class="col-auto"
-                      :loading="refreshingLocation"
-                      :title="$customT('home.refreshLocation')"
-                    />
-                  </div>
+                  <q-btn
+                    color="secondary"
+                    class="full-width"
+                    :label="$customT('home.startPracticeRound')"
+                    @click="
+                      () => {
+                        console.log('DEBUG: start practice round button clicked');
+                        openPracticeRoundDialog();
+                      }
+                    "
+                  />
                 </div>
               </div>
 
@@ -258,7 +248,6 @@ const {
 const showInfoDialog = ref(false);
 const allEvents = ref([]);
 const loading = ref(false);
-const refreshingLocation = ref(false);
 
 // Computed property voor events in de buurt
 const nearbyEvents = computed(() => {
@@ -336,27 +325,6 @@ function formatTime(timeString: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-// Functie om locatie te verversen
-async function refreshLocation() {
-  refreshingLocation.value = true;
-  try {
-    await locationStore.refreshLocation();
-    $q.notify({
-      color: 'positive',
-      message: $customT('home.locationRefreshed'),
-      icon: 'check',
-    });
-  } catch (error) {
-    $q.notify({
-      color: 'negative',
-      message: $customT('home.locationRefreshError'),
-      icon: 'error',
-    });
-  } finally {
-    refreshingLocation.value = false;
-  }
 }
 
 // Functie om een event ronde te starten

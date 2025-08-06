@@ -41,6 +41,9 @@
                       <q-item clickable @click="() => toggleHoles(baan.id)">
                         <q-item-section>{{ $customT('courses.holes') }}</q-item-section>
                       </q-item>
+                      <q-item clickable @click="() => toggleLocalRules(baan.id)">
+                        <q-item-section>{{ $customT('courses.localRules') }}</q-item-section>
+                      </q-item>
                     </q-list>
                   </q-menu>
                 </q-btn>
@@ -88,6 +91,11 @@
         <q-card v-if="expandedBaan === baan.id" class="q-mt-sm">
           <q-card-section>
             <holes-manager :course-id="baan.id" />
+          </q-card-section>
+        </q-card>
+        <q-card v-if="expandedLocalRules === baan.id" class="q-mt-sm">
+          <q-card-section>
+            <local-rules-manager :course-id="baan.id" />
           </q-card-section>
         </q-card>
       </div>
@@ -253,6 +261,7 @@ import type { Course, Country } from 'src/components/models';
 import { getFileUrl } from 'src/utils/pocketbase-helpers';
 import { debug } from 'src/utils/debug';
 import HolesManager from 'components/HolesManager.vue';
+import LocalRulesManager from 'components/LocalRulesManager.vue';
 import LocationPicker from 'components/LocationPicker.vue';
 import type { Category } from 'src/components/models';
 
@@ -267,6 +276,7 @@ const coursesStore = useCoursesStore();
 const loading = ref(false);
 const editDialog = ref(false);
 const isNew = ref(false);
+const expandedLocalRules = ref<string | null>(null);
 
 const categories = ref<Category[]>([]);
 
@@ -445,6 +455,14 @@ const openEditDialog = (baan: Course) => {
   existingHeader.value = baan.header || '';
   debug('Form data after setting:', formData.value);
   editDialog.value = true;
+};
+
+const toggleLocalRules = (baanId: string) => {
+  if (expandedLocalRules.value === baanId) {
+    expandedLocalRules.value = null;
+  } else {
+    expandedLocalRules.value = baanId;
+  }
 };
 
 const formatWebsiteUrl = (url: string) => {

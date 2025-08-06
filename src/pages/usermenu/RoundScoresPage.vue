@@ -477,14 +477,7 @@
                 <div class="text-h5 text-weight-bold q-px-md">
                   {{ scoreForm.score_player || 3 }}
                 </div>
-                <q-btn
-                  round
-                  color="primary"
-                  icon="add"
-                  size="md"
-                  @click="increaseScore"
-                  :disable="scoreForm.score_player >= 10"
-                />
+                <q-btn round color="primary" icon="add" size="md" @click="increaseScore" />
               </div>
 
               <!-- GIR toggle -->
@@ -518,14 +511,7 @@
                       <div class="text-h6 text-weight-bold q-px-sm">
                         {{ scoreForm.putts }}
                       </div>
-                      <q-btn
-                        round
-                        color="grey-6"
-                        icon="add"
-                        size="sm"
-                        @click="increasePutts"
-                        :disable="scoreForm.putts >= 10"
-                      />
+                      <q-btn round color="grey-6" icon="add" size="sm" @click="increasePutts" />
                     </div>
                   </div>
                 </div>
@@ -546,14 +532,7 @@
                       <div class="text-h6 text-weight-bold q-px-sm">
                         {{ scoreForm.chips }}
                       </div>
-                      <q-btn
-                        round
-                        color="grey-6"
-                        icon="add"
-                        size="sm"
-                        @click="increaseChips"
-                        :disable="scoreForm.chips >= 10"
-                      />
+                      <q-btn round color="grey-6" icon="add" size="sm" @click="increaseChips" />
                     </div>
                   </div>
                 </div>
@@ -958,9 +937,7 @@ const closeScoreSlideIn = () => {
 
 // Verhoog score met 1
 const increaseScore = () => {
-  if (scoreForm.value.score_player < 10) {
-    scoreForm.value.score_player++;
-  }
+  scoreForm.value.score_player++;
 };
 
 // Verlaag score met 1
@@ -980,9 +957,7 @@ const onGirToggle = (value: boolean) => {
 
 // Putts functies
 const increasePutts = () => {
-  if (scoreForm.value.putts < 10) {
-    scoreForm.value.putts++;
-  }
+  scoreForm.value.putts++;
 };
 
 const decreasePutts = () => {
@@ -993,9 +968,7 @@ const decreasePutts = () => {
 
 // Chips functies
 const increaseChips = () => {
-  if (scoreForm.value.chips < 10) {
-    scoreForm.value.chips++;
-  }
+  scoreForm.value.chips++;
 };
 
 const decreaseChips = () => {
@@ -1071,6 +1044,20 @@ const scoreMarkerError = computed(() => {
 const totalScorePlayer = computed(() => {
   // Som van alle scores van de speler in deze ronde
   if (!round.value?.expand?.player?.id || holes.value.length === 0) return null;
+
+  // Voor event rondes: gebruik direct de huidige ronde
+  if (isEventRound.value) {
+    const scores = allScores.value.filter(
+      (s) => s.round === round.value?.id && s.score_player != null,
+    );
+    if (scores.length === 0) return null;
+    return scores.reduce(
+      (sum, s) => sum + ((typeof s.score_player === 'number' ? s.score_player : 3) - 3),
+      0,
+    );
+  }
+
+  // Voor andere rondes: gebruik findPlayerRound
   const spelerRound = findPlayerRound(round.value.expand.player.id);
   if (!spelerRound) return null;
   const scores = allScores.value.filter(
@@ -1102,6 +1089,14 @@ const totalScoreMarker = computed(() => {
 // Haal de score van de speler op voor een specifieke hole
 const getPlayerScoreForHole = (holeId: string) => {
   if (!round.value?.expand?.player?.id) return '-';
+
+  // Voor event rondes: gebruik direct de huidige ronde
+  if (isEventRound.value) {
+    const scoreRec = allScores.value.find((s) => s.round === round.value?.id && s.hole === holeId);
+    return scoreRec?.score_player ?? '-';
+  }
+
+  // Voor andere rondes: gebruik findPlayerRound
   const spelerRound = findPlayerRound(round.value.expand.player.id);
   if (!spelerRound) return '-';
   const scoreRec = allScores.value.find((s) => s.round === spelerRound.id && s.hole === holeId);

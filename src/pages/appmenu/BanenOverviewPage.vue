@@ -4,66 +4,62 @@
       <div class="text-h4">{{ $customT('courses.title') }}</div>
     </div>
 
-    <!-- Landenfilter: vlaggen naast elkaar -->
-    <div class="row q-gutter-sm q-mb-md" v-if="countryList.length > 0">
-      <!-- "Alle landen" optie -->
-      <div
-        class="cursor-pointer flex flex-center"
-        :style="{
-          border: selectedCountry === null ? '2px solid #1976d2' : '2px solid transparent',
-          padding: '2px',
-          width: '34px',
-          height: '24px',
-        }"
-        @click="toggleCountryFilter(null)"
-      >
-        <q-icon name="public" size="20px" color="primary" />
-      </div>
-
-      <!-- Landen vlaggen -->
-      <div
-        v-for="country in countryList"
-        :key="country.id"
-        class="cursor-pointer flex flex-center"
-        :style="{
-          border: selectedCountry === country.id ? '2px solid #1976d2' : '2px solid transparent',
-          padding: '2px',
-          width: '34px',
-          height: '24px',
-        }"
-        @click="toggleCountryFilter(country.id)"
-      >
-        <img
-          v-if="country.flag"
-          :src="'data:image/png;base64,' + country.flag"
-          :alt="country.name"
-          width="30"
-          height="20"
-          :title="country.name"
-          style="display: block; object-fit: cover; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08)"
-          @error="handleFlagError"
-        />
-        <div
-          v-else
-          class="flex flex-center"
-          style="
-            width: 30px;
-            height: 20px;
-            background: #f0f0f0;
-            border-radius: 2px;
-            font-size: 10px;
-            color: #666;
-          "
+    <!-- Zoekveld voor banen -->
+    <div class="row q-mb-md">
+      <div class="col-12">
+        <q-input
+          v-model="searchQuery"
+          :placeholder="$customT('courses.searchPlaceholder')"
+          outlined
+          dense
+          clearable
+          class="full-width"
         >
-          {{ country.name.substring(0, 2).toUpperCase() }}
-        </div>
+          <template v-slot:prepend>
+            <q-icon name="search" />
+          </template>
+        </q-input>
       </div>
     </div>
 
     <!-- Banenlijst, gefilterd op land indien geselecteerd -->
     <div class="row q-col-gutter-md">
       <div v-for="baan in filteredBanen" :key="baan.id" class="col-12 col-sm-6 col-md-4">
-        <q-card class="cursor-pointer" @click="navigateToBaan(baan.id)">
+        <q-card class="cursor-pointer" @click="navigateToBaan(baan.id)" style="position: relative">
+          <!-- Landen vlaggetje in de hoek -->
+          <div style="position: absolute; top: 8px; right: 8px; z-index: 1">
+            <img
+              v-if="getCountryFlag(baan.country)"
+              :src="'data:image/png;base64,' + getCountryFlag(baan.country)"
+              :alt="getCountryName(baan.country)"
+              width="20"
+              height="14"
+              :title="getCountryName(baan.country)"
+              style="
+                display: block;
+                object-fit: cover;
+                border-radius: 2px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              "
+              @error="handleFlagError"
+            />
+            <div
+              v-else
+              class="flex items-center justify-center"
+              style="
+                width: 20px;
+                height: 14px;
+                background: #f0f0f0;
+                border-radius: 2px;
+                font-size: 8px;
+                color: #666;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              "
+            >
+              {{ getCountryName(baan.country).substring(0, 2).toUpperCase() }}
+            </div>
+          </div>
+
           <q-card-section class="row items-center">
             <q-avatar size="48px" class="q-mr-md">
               <img :src="getLogoUrl(baan)" />
@@ -77,7 +73,7 @@
                   {{ formatDistance(getDistance(baan.gps, userLocation)) }}
                 </span>
               </div>
-              <!-- Categorie tekst -->
+              <!-- Categorie -->
               <div v-if="baan.expand?.category?.name" class="text-caption text-grey-6 q-mt-xs">
                 {{ baan.expand.category.name }}
               </div>
@@ -92,8 +88,8 @@
       <q-icon name="golf_course" size="64px" color="grey-4" />
       <div class="text-h6 text-grey-6 q-mt-md">
         {{
-          selectedCountry
-            ? $customT('courses.noCoursesInCountry')
+          searchQuery.trim()
+            ? $customT('courses.noCoursesFound')
             : $customT('courses.noCoursesFound')
         }}
       </div>
@@ -114,14 +110,26 @@ const { t: $customT } = useI18n();
 const router = useRouter();
 const banen = ref<Course[]>([]);
 const countries = ref<Record<string, Country>>({});
-const countryList = ref<Country[]>([]);
-const selectedCountry = ref<string | null>(null);
+const searchQuery = ref('');
 const userLocation = ref<{ latitude: number; longitude: number } | null>(null);
 const locationStore = useLocationStore();
 
 // Haal de naam van het land op basis van het id
 const getCountryName = (countryId: string) => {
   return countries.value[countryId]?.name || countryId;
+};
+
+// Haal de vlag van het land op basis van het id
+const getCountryFlag = (countryId: string) => {
+  return countries.value[countryId]?.flag || '';
+};
+
+// Handle vlag loading errors
+const handleFlagError = (event: Event) => {
+  console.warn('Flag image failed to load:', event);
+  const img = event.target as HTMLImageElement;
+  img.style.display = 'none';
+  img.nextElementSibling?.classList.remove('hidden');
 };
 
 // Formatteer afstand in leesbare vorm
@@ -142,25 +150,20 @@ const sortedBanen = computed(() => {
   });
 });
 
-// Filter de banen op geselecteerd land
+// Filter de banen op zoekquery
 const filteredBanen = computed(() => {
   const lijst = sortedBanen.value;
-  if (!selectedCountry.value) return lijst;
-  return lijst.filter((baan) => baan.country === selectedCountry.value);
+  if (!searchQuery.value.trim()) return lijst;
+
+  const query = searchQuery.value.toLowerCase().trim();
+  return lijst.filter((baan) => {
+    const name = baan.name.toLowerCase();
+    const city = baan.city.toLowerCase();
+    const countryName = getCountryName(baan.country).toLowerCase();
+
+    return name.includes(query) || city.includes(query) || countryName.includes(query);
+  });
 });
-
-// Toggle filter: klik op vlag activeert of deactiveert filter
-const toggleCountryFilter = (countryId: string | null) => {
-  selectedCountry.value = countryId;
-};
-
-const handleFlagError = (event: Event) => {
-  console.warn('Flag image failed to load:', event);
-  // Optioneel: vervang de afbeelding met een fallback
-  const img = event.target as HTMLImageElement;
-  img.style.display = 'none';
-  img.nextElementSibling?.classList.remove('hidden');
-};
 
 const getLogoUrl = (baan: Course) => {
   if (baan.logo) {
@@ -279,16 +282,11 @@ async function fetchUserLocationAndBanen() {
       countries.value[land.id] = land;
     });
 
-    // Verzamel unieke country-ids uit de banen
-    const uniqueCountryIds = Array.from(new Set(banen.value.map((b) => b.country).filter(Boolean)));
-
-    // Filter de landen die bij de banen horen
-    countryList.value = landen.filter((land) => uniqueCountryIds.includes(land.id));
-
     // Voeg eventueel landen toe die niet in de landenlijst zitten (fallback)
+    const uniqueCountryIds = Array.from(new Set(banen.value.map((b) => b.country).filter(Boolean)));
     uniqueCountryIds.forEach((id) => {
       if (!countries.value[id]) {
-        countryList.value.push({ id, name: id, flag: '' });
+        countries.value[id] = { id, name: id, flag: '' };
       }
     });
   } catch {
