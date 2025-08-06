@@ -83,7 +83,9 @@
       <q-card style="min-width: 350px">
         <q-card-section class="row items-center">
           <div class="text-h6">
-            {{ editingRound ? $customT('eventRounds.editRound') : $customT('eventRounds.newRound') }}
+            {{
+              editingRound ? $customT('eventRounds.editRound') : $customT('eventRounds.newRound')
+            }}
           </div>
         </q-card-section>
 
@@ -142,7 +144,9 @@
           <div class="text-h6">{{ $customT('eventRounds.deleteRound') }}</div>
         </q-card-section>
         <q-card-section>
-          <p>{{ $customT('eventRounds.deleteRoundConfirm', { eventName: selectedRound?.name }) }}</p>
+          <p>
+            {{ $customT('eventRounds.deleteRoundConfirm', { eventName: selectedRound?.name }) }}
+          </p>
           <p class="text-caption">{{ $customT('eventRounds.deleteRoundWarning') }}</p>
         </q-card-section>
         <q-card-actions align="right">
@@ -192,7 +196,8 @@
         </q-card-section>
         <q-card-section>
           <div v-if="participantsLoading" class="q-mb-md">
-            <q-spinner color="primary" size="2em" /> {{ $customT('eventRounds.loadingParticipants') }}
+            <q-spinner color="primary" size="2em" />
+            {{ $customT('eventRounds.loadingParticipants') }}
           </div>
           <div v-else>
             <q-option-group
@@ -229,12 +234,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 
 const route = useRoute();
 // const router = useRouter(); // Niet gebruikt
 const $q = useQuasar();
+const { t: $customT } = useI18n();
 const pb = usePocketbase();
 const authStore = useAuthStore();
 
@@ -636,6 +643,15 @@ const linkConfirmedRegistrations = async (eventRound) => {
       }
     }
     if (createdCount > 0) {
+      // Toon melding over telefoon op stil zetten
+      $q.notify({
+        color: 'info',
+        message: $customT('common.silencePhoneMessage'),
+        icon: 'volume_off',
+        timeout: 8000,
+        position: 'top',
+      });
+
       $q.notify({
         color: 'positive',
         message: `${createdCount} rondes aangemaakt voor bevestigde inschrijvingen`,
@@ -708,6 +724,15 @@ const confirmStartRound = async () => {
         createdCount++;
       }
       if (createdCount > 0) {
+        // Toon melding over telefoon op stil zetten
+        $q.notify({
+          color: 'info',
+          message: $customT('common.silencePhoneMessage'),
+          icon: 'volume_off',
+          timeout: 8000,
+          position: 'top',
+        });
+
         $q.notify({
           color: 'positive',
           message: `${createdCount} scorekaarten aangemaakt`,

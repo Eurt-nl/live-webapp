@@ -18,10 +18,23 @@ export function usePracticeRoundDialog() {
   // Open de dialog na ophalen en filteren van banen
   async function openPracticeRoundDialog() {
     console.log('DEBUG: openPracticeRoundDialog (begin)', showPracticeDialog.value);
+
+    // Automatische locatie refresh voordat banen worden gefilterd
+    try {
+      console.log('DEBUG: Refreshing location before filtering courses');
+      await locationStore.refreshLocation();
+    } catch (error) {
+      console.error('DEBUG: Error refreshing location:', error);
+    }
+
     // Gebruik de centrale locatie uit de store
     const loc = await locationStore.getOrFetchLocation();
     const latitude = loc?.latitude ?? null;
     const longitude = loc?.longitude ?? null;
+
+    // Debug informatie voor locatie
+    console.log('DEBUG: Location from store:', loc);
+    console.log('DEBUG: Stored location in localStorage:', localStorage.getItem('userLocation'));
     // Landcode via Nominatim (cache in localStorage)
     let countryCode = localStorage.getItem('userCountryCode');
     if (!countryCode && latitude && longitude) {
@@ -76,6 +89,16 @@ export function usePracticeRoundDialog() {
         });
       filteredCourses.value = allCourses;
       defaultCourseId.value = ''; // Gebruiker moet zelf kiezen
+
+      // Debug informatie voor default course ID
+      console.log('DEBUG: Setting defaultCourseId to:', defaultCourseId.value);
+
+      // Debug informatie voor gefilterde banen
+      console.log(
+        'DEBUG: Filtered courses:',
+        allCourses.map((c) => ({ id: c.id, name: c.name, gps: c.gps })),
+      );
+      console.log('DEBUG: User location:', { latitude, longitude });
     } else {
       filteredCourses.value = [];
       defaultCourseId.value = '';

@@ -45,17 +45,27 @@
                 </div>
                 -->
                 <div class="col-12">
-                  <q-btn
-                    color="secondary"
-                    class="full-width"
-                    :label="$customT('home.startPracticeRound')"
-                    @click="
-                      () => {
-                        console.log('DEBUG: start practice round button clicked');
-                        openPracticeRoundDialog();
-                      }
-                    "
-                  />
+                  <div class="row q-gutter-sm">
+                    <q-btn
+                      color="secondary"
+                      class="col"
+                      :label="$customT('home.startPracticeRound')"
+                      @click="
+                        () => {
+                          console.log('DEBUG: start practice round button clicked');
+                          openPracticeRoundDialog();
+                        }
+                      "
+                    />
+                    <q-btn
+                      color="primary"
+                      icon="refresh"
+                      @click="refreshLocation"
+                      class="col-auto"
+                      :loading="refreshingLocation"
+                      :title="$customT('home.refreshLocation')"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -248,6 +258,7 @@ const {
 const showInfoDialog = ref(false);
 const allEvents = ref([]);
 const loading = ref(false);
+const refreshingLocation = ref(false);
 
 // Computed property voor events in de buurt
 const nearbyEvents = computed(() => {
@@ -327,6 +338,27 @@ function formatTime(timeString: string): string {
   });
 }
 
+// Functie om locatie te verversen
+async function refreshLocation() {
+  refreshingLocation.value = true;
+  try {
+    await locationStore.refreshLocation();
+    $q.notify({
+      color: 'positive',
+      message: $customT('home.locationRefreshed'),
+      icon: 'check',
+    });
+  } catch (error) {
+    $q.notify({
+      color: 'negative',
+      message: $customT('home.locationRefreshError'),
+      icon: 'error',
+    });
+  } finally {
+    refreshingLocation.value = false;
+  }
+}
+
 // Functie om een event ronde te starten
 async function startEventRound(event: Record<string, unknown>) {
   try {
@@ -356,6 +388,16 @@ async function startEventRound(event: Record<string, unknown>) {
     };
     const newRound = await pb.collection('rounds').create(roundData);
     roundsStore.addRound(newRound);
+
+    // Toon melding over telefoon op stil zetten
+    $q.notify({
+      color: 'info',
+      message: $customT('common.silencePhoneMessage'),
+      icon: 'volume_off',
+      timeout: 8000,
+      position: 'top',
+    });
+
     $q.notify({
       color: 'positive',
       message: $customT('home.eventRoundStarted', { eventName: event.name }),
@@ -483,6 +525,19 @@ function getEventIcon(event: Record<string, unknown>): string {
 onMounted(async () => {
   // Haal events en alle rondes parallel op via de store
   await Promise.all([loadEvents(), roundsStore.fetchRounds()]);
+
+  // Automatische locatie refresh bij het openen van de app
+  try {
+    console.log('DEBUG: Automatically refreshing location on app start');
+    await locationStore.refreshLocation();
+    if (locationStore.userLocation) {
+      console.log('DEBUG: Location refreshed successfully:', locationStore.userLocation);
+    } else {
+      console.log('DEBUG: Location refresh failed or not available');
+    }
+  } catch (error) {
+    console.error('DEBUG: Error refreshing location:', error);
+  }
 
   // Voeg event listener toe voor handmatig locatie ophalen
   window.addEventListener('get-user-location', () => {

@@ -278,15 +278,23 @@
               </q-card-actions>
             </q-card>
           </q-dialog>
-          <!-- Ondertekenen knop, alleen zichtbaar als alles akkoord is en niet read-only -->
-          <div class="row q-mt-md justify-end" v-if="!isReadOnly && canSignOff">
+          <!-- Ondertekenen knop, alleen zichtbaar als alles akkoord is, niet read-only en GEEN oefenronde -->
+          <div class="row q-mt-md justify-end" v-if="!isReadOnly && canSignOff && !isPracticeRound">
             <q-btn color="positive" :label="$customT('scores.sign')" @click="signDialog = true" />
           </div>
           <!-- Tussenstand event -->
           <div v-if="eventStandings.length > 0" class="q-mt-xl">
-            <div class="text-h6 q-mb-sm cursor-pointer" @click="showStandings = !showStandings">
-              {{ $customT('scores.standings') }}
-              <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="text-h6 cursor-pointer" @click="showStandings = !showStandings">
+                {{ $customT('scores.standings') }}
+                <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
+              </div>
+              <q-toggle
+                v-model="filterByCategory"
+                :label="$customT('scores.filterByCategory')"
+                color="primary"
+                size="sm"
+              />
             </div>
             <div v-show="showStandings">
               <div
@@ -361,8 +369,8 @@
           <q-btn flat color="primary" :label="$customT('scores.back')" @click="router.back()" />
         </div>
       </q-pull-to-refresh>
-      <!-- Score dialog, alleen als niet read-only -->
-      <q-dialog v-model="scoreDialog" v-if="!isReadOnly">
+      <!-- Score dialog, alleen als niet read-only - TIJDELIJK UITGESCHAKELD -->
+      <q-dialog v-model="scoreDialog" v-if="false && !isReadOnly">
         <q-card style="min-width: 350px">
           <q-card-section>
             <div class="text-h6">{{ $customT('scores.hole') }} {{ selectedHole?.hole }}</div>
@@ -426,6 +434,164 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+
+      <!-- Nieuw: Slide-in paneel voor score-invoer -->
+      <q-drawer
+        v-model="scoreSlideIn"
+        side="right"
+        :width="320"
+        :breakpoint="600"
+        bordered
+        :persistent="true"
+        class="score-slide-in"
+      >
+        <q-card flat class="full-height">
+          <q-card-section class="bg-primary text-white">
+            <div class="row items-center justify-between">
+              <div>
+                <div class="text-h6">{{ $customT('scores.hole') }} {{ selectedHole?.hole }}</div>
+                <div class="text-subtitle2">
+                  {{ $customT('scores.par') }} {{ selectedHole?.par }}
+                </div>
+                <div class="text-caption">
+                  {{ $customT('scores.distance') }}: {{ selectedHole?.hole_length }}m
+                </div>
+              </div>
+              <q-btn flat round icon="close" @click="closeScoreSlideIn" class="text-white" />
+            </div>
+          </q-card-section>
+
+          <q-card-section class="q-pa-md">
+            <q-form @submit="saveScoreFromSlideIn" class="q-gutter-md">
+              <!-- Score-invoer met +/- knoppen -->
+              <div class="text-subtitle1 q-mb-sm">{{ $customT('scores.playerScore') }}</div>
+              <div class="row items-center justify-center q-gutter-sm">
+                <q-btn
+                  round
+                  color="primary"
+                  icon="remove"
+                  size="md"
+                  @click="decreaseScore"
+                  :disable="scoreForm.score_player <= 1"
+                />
+                <div class="text-h5 text-weight-bold q-px-md">
+                  {{ scoreForm.score_player || 3 }}
+                </div>
+                <q-btn
+                  round
+                  color="primary"
+                  icon="add"
+                  size="md"
+                  @click="increaseScore"
+                  :disable="scoreForm.score_player >= 10"
+                />
+              </div>
+
+              <!-- GIR toggle -->
+              <div class="q-mt-md">
+                <q-toggle
+                  v-model="scoreForm.gir"
+                  :label="$customT('scores.greenInRegulation')"
+                  color="positive"
+                  size="sm"
+                  @update:model-value="onGirToggle"
+                />
+              </div>
+
+              <!-- Statistieken -->
+              <div class="q-mt-md">
+                <div class="text-subtitle1 q-mb-sm">{{ $customT('scores.statistics') }}</div>
+
+                <!-- Putts met +/- knoppen -->
+                <div class="row items-center q-mb-sm">
+                  <div class="col-4">{{ $customT('scores.putts') }}</div>
+                  <div class="col-8">
+                    <div class="row items-center justify-center q-gutter-xs">
+                      <q-btn
+                        round
+                        color="grey-6"
+                        icon="remove"
+                        size="sm"
+                        @click="decreasePutts"
+                        :disable="scoreForm.putts <= 0"
+                      />
+                      <div class="text-h6 text-weight-bold q-px-sm">
+                        {{ scoreForm.putts }}
+                      </div>
+                      <q-btn
+                        round
+                        color="grey-6"
+                        icon="add"
+                        size="sm"
+                        @click="increasePutts"
+                        :disable="scoreForm.putts >= 10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chips met +/- knoppen -->
+                <div class="row items-center q-mb-sm">
+                  <div class="col-4">{{ $customT('scores.chips') }}</div>
+                  <div class="col-8">
+                    <div class="row items-center justify-center q-gutter-xs">
+                      <q-btn
+                        round
+                        color="grey-6"
+                        icon="remove"
+                        size="sm"
+                        @click="decreaseChips"
+                        :disable="scoreForm.chips <= 0"
+                      />
+                      <div class="text-h6 text-weight-bold q-px-sm">
+                        {{ scoreForm.chips }}
+                      </div>
+                      <q-btn
+                        round
+                        color="grey-6"
+                        icon="add"
+                        size="sm"
+                        @click="increaseChips"
+                        :disable="scoreForm.chips >= 10"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notitie -->
+              <div class="q-mt-md">
+                <q-input
+                  v-model="scoreForm.note"
+                  :label="$customT('scores.note')"
+                  type="textarea"
+                  autogrow
+                  outlined
+                  dense
+                />
+              </div>
+
+              <!-- Actie knoppen -->
+              <div class="row q-gutter-sm q-mt-lg">
+                <q-btn
+                  flat
+                  :label="$customT('scores.cancel')"
+                  color="grey"
+                  @click="closeScoreSlideIn"
+                  class="col"
+                />
+                <q-btn
+                  color="primary"
+                  :label="isUpdate ? $customT('scores.update') : $customT('scores.save')"
+                  @click="saveScoreFromSlideIn"
+                  :loading="saving[selectedHole?.id]"
+                  class="col"
+                />
+              </div>
+            </q-form>
+          </q-card-section>
+        </q-card>
+      </q-drawer>
       <!-- Ondertekenen dialog -->
       <q-dialog v-model="signDialog">
         <q-card style="min-width: 350px">
@@ -445,7 +611,8 @@
                 />
               </div>
             </div>
-            <div class="row items-center">
+            <!-- Marker ondertekening alleen tonen als het GEEN oefenronde is -->
+            <div v-if="!isPracticeRound" class="row items-center">
               <div class="col">{{ $customT('scores.signMarkerScore') }}</div>
               <div class="col-auto">
                 <q-select
@@ -560,7 +727,14 @@ const { t: $customT } = useI18n(); // Centrale store voor rondes
 // Hole: een hole op de baan
 // RoundScore: score per hole per ronde
 
-type User = { id: string; name: string };
+type User = {
+  id: string;
+  name: string;
+  category?: string;
+  expand?: {
+    category?: { name: string };
+  };
+};
 type Round = {
   id: string;
   player: string;
@@ -585,6 +759,9 @@ type RoundScore = {
   score_player?: number;
   score_marker?: number;
   note?: string;
+  gir?: boolean;
+  putts?: number;
+  chips?: number;
 };
 
 // -----------------------------
@@ -595,12 +772,16 @@ const round = ref<Round | null>(null); // De huidige ronde
 const holes = ref<Hole[]>([]); // Alle holes van de baan
 const loading = ref(true); // Laadstatus voor spinner
 const scoreDialog = ref(false); // Of het score-invoerscherm open is
+const scoreSlideIn = ref(false); // Of het slide-in paneel open is
 const selectedHole = ref<Hole | null>(null); // Geselecteerde hole voor invoer
 const saving = ref<{ [holeId: string]: boolean }>({}); // Loading-status per hole
 const scoreForm = ref({
-  score_player: null, // Ingevoerde score speler
+  score_player: 3, // Ingevoerde score speler (standaard 3)
   score_marker: null, // Ingevoerde score marker
   note: '', // Eventuele notitie
+  gir: false, // Green in Regulation
+  putts: 0, // Aantal putts
+  chips: 0, // Aantal chips
 });
 
 // Bepalen of het een oefenronde is (geen marker nodig)
@@ -624,6 +805,7 @@ const allRounds = ref<Round[]>([]); // Alle rondes in het event
 const showPlayerScores = ref(false); // Toggle voor speler-scoreoverzicht
 const showMarkerScores = ref(false); // Toggle voor marker-scoreoverzicht
 const showStandings = ref(false); // Toggle voor tussenstand
+const filterByCategory = ref(false); // Toggle voor filteren op eigen categorie
 const signDialog = ref(false); // Of het onderteken-dialog open is
 const signPlayerOption = ref('Ja'); // Keuze speler bij ondertekenen
 const signMarkerOption = ref('Ja'); // Keuze marker bij ondertekenen
@@ -759,11 +941,73 @@ const openScoreDialog = (hole: Hole) => {
     (s) => s.round === route.params.id && s.hole === String(hole.id),
   );
   scoreForm.value = {
-    score_player: myRecord?.score_player ?? null,
+    score_player: myRecord?.score_player ?? 3,
     score_marker: myRecord?.score_marker ?? null,
     note: myRecord?.note ?? '',
+    gir: myRecord?.gir ?? false,
+    putts: myRecord?.putts ?? 0,
+    chips: myRecord?.chips ?? 0,
   };
-  scoreDialog.value = true;
+  scoreSlideIn.value = true;
+};
+
+// Sluit het slide-in paneel
+const closeScoreSlideIn = () => {
+  scoreSlideIn.value = false;
+};
+
+// Verhoog score met 1
+const increaseScore = () => {
+  if (scoreForm.value.score_player < 10) {
+    scoreForm.value.score_player++;
+  }
+};
+
+// Verlaag score met 1
+const decreaseScore = () => {
+  if (scoreForm.value.score_player > 1) {
+    scoreForm.value.score_player--;
+  }
+};
+
+// GIR toggle handler
+const onGirToggle = (value: boolean) => {
+  if (value) {
+    // Als GIR true is, stel putts automatisch in op score_player - 1
+    scoreForm.value.putts = scoreForm.value.score_player - 1;
+  }
+};
+
+// Putts functies
+const increasePutts = () => {
+  if (scoreForm.value.putts < 10) {
+    scoreForm.value.putts++;
+  }
+};
+
+const decreasePutts = () => {
+  if (scoreForm.value.putts > 0) {
+    scoreForm.value.putts--;
+  }
+};
+
+// Chips functies
+const increaseChips = () => {
+  if (scoreForm.value.chips < 10) {
+    scoreForm.value.chips++;
+  }
+};
+
+const decreaseChips = () => {
+  if (scoreForm.value.chips > 0) {
+    scoreForm.value.chips--;
+  }
+};
+
+// Sla score op vanuit slide-in paneel
+const saveScoreFromSlideIn = async () => {
+  await saveScore();
+  closeScoreSlideIn();
 };
 
 // Bepaal of het een update of create is voor de score
@@ -953,9 +1197,24 @@ const loadData = async () => {
     loading.value = true;
     // Haal de huidige ronde op
     const roundResult = await pb.collection('rounds').getOne(route.params.id as string, {
-      expand: 'player,marker,course,status,category,event_round,event_round.event,event',
+      expand:
+        'player,player.category,marker,marker.category,course,status,category,event_round,event_round.event,event',
     });
+
+    // Debug de volledige roundResult om te zien wat er wordt opgehaald
+    debug('Full roundResult:', roundResult);
     round.value = roundResult as unknown as Round;
+
+    // Debug informatie voor de huidige ronde
+    debug('Current round debug:');
+    debug('Round course ID:', roundResult.course);
+    debug('Round course expand:', roundResult.expand?.course);
+    debug('Round course name:', roundResult.expand?.course?.name);
+    debug('Round category:', roundResult.category);
+    debug('Round category expand:', roundResult.expand?.category);
+    debug('Round category name:', roundResult.expand?.category?.name);
+    debug('Player category:', roundResult.expand?.player?.category);
+    debug('Player category name:', roundResult.expand?.player?.expand?.category?.name);
     // Bepaal het eventId voor filtering
     let eventId = roundResult.expand?.event_round?.expand?.event?.id;
     if (!eventId && roundResult.expand?.event_round?.event) {
@@ -981,9 +1240,27 @@ const loadData = async () => {
     // Haal alle rondes van het event op
     const roundsResult = await pb.collection('rounds').getList(1, 200, {
       filter: roundsFilter,
-      expand: 'player,event_round,event_round.event,event',
+      expand: 'player,player.category,category,event_round,event_round.event,event',
     });
     allRounds.value = roundsResult.items as unknown as Round[];
+
+    // Debug informatie voor rondes
+    debug('Rounds debug:');
+    debug('Filter used:', roundsFilter);
+    debug('Total rounds found:', roundsResult.items.length);
+    debug(
+      'Rounds details:',
+      roundsResult.items.map((r) => ({
+        id: r.id,
+        player: r.player,
+        category: r.category,
+        categoryExpand: r.expand?.category,
+        categoryName: r.expand?.category?.name,
+        event: r.event,
+        event_round: r.event_round,
+        playerName: r.expand?.player?.name,
+      })),
+    );
     // Haal alle holes van de baan op
     const holesResult = await pb.collection('course_detail').getList(1, 50, {
       filter: `course = "${roundResult.course}"`,
@@ -1048,8 +1325,8 @@ const saveScore = async () => {
       if (
         scoreForm.value.score_player == null ||
         scoreForm.value.score_marker == null ||
-        scoreForm.value.score_player === '' ||
-        scoreForm.value.score_marker === ''
+        scoreForm.value.score_player === 0 ||
+        scoreForm.value.score_marker === 0
       ) {
         $q.notify({
           color: 'negative',
@@ -1061,7 +1338,7 @@ const saveScore = async () => {
       }
     } else if (isEventRound.value) {
       // Voor event rondes: alleen speler score verplicht
-      if (scoreForm.value.score_player == null || scoreForm.value.score_player === '') {
+      if (scoreForm.value.score_player == null || scoreForm.value.score_player === 0) {
         $q.notify({
           color: 'negative',
           message: $customT('notifications.fillPlayerScore'),
@@ -1080,6 +1357,9 @@ const saveScore = async () => {
       score_player: scoreForm.value.score_player,
       score_marker: scoreForm.value.score_marker,
       note: scoreForm.value.note,
+      gir: scoreForm.value.gir,
+      putts: scoreForm.value.putts,
+      chips: scoreForm.value.chips,
       created_by: authStore.user?.id,
     };
     let result;
@@ -1140,37 +1420,6 @@ const onRefresh = async (done: () => void) => {
 // -----------------------------
 onMounted(async () => {
   await loadData();
-  // Debug: vergelijk scores voor de eerste 3 holes
-  for (let i = 0; i < 3 && i < holes.value.length; i++) {
-    const holeId = holes.value[i].id;
-    const myUserId = authStore.user?.id;
-    const myRound = allRounds.value.find((r) => r.player === myUserId);
-    const markerRound = allRounds.value.find((r) => r.marker === myUserId);
-    const markerId = round.value?.expand?.marker?.id;
-    const scoreMarkerValue = markerId ? getScoreMarkerForPlayer(holeId, markerId) : undefined;
-    const scorePlayerValue = markerRound
-      ? allScores.value.find((s) => s.round === markerRound?.id && s.hole === String(holeId))
-          ?.score_player
-      : undefined;
-    const checkScorePlayer = scoreMarkerValue !== scorePlayerValue;
-    debug.log(`[DEBUG] Hole ${i + 1} check:`);
-    debug.log('score_player (markerScoreRec.score_player):', scorePlayerValue);
-    debug.log('score_marker (getScoreMarkerForPlayer):', scoreMarkerValue);
-    debug.log('score_marker !== score_player:', checkScorePlayer);
-    const scorePlayerValue2 = myRound
-      ? allScores.value.find((s) => s.round === myRound?.id && s.hole === String(holeId))
-          ?.score_player
-      : undefined;
-    const scoreMarkerValue2 = markerRound
-      ? allScores.value.find((s) => s.round === markerRound?.id && s.hole === String(holeId))
-          ?.score_marker
-      : undefined;
-    const checkScoreMarker = scorePlayerValue2 !== scoreMarkerValue2;
-    debug.log('score_player (myScoreRec.score_player):', scorePlayerValue2);
-    debug.log('score_marker (markerScoreRec.score_marker):', scoreMarkerValue2);
-    debug.log('score_player !== score_marker:', checkScoreMarker);
-    debug.log('getScoreMarkerForPlayer:', scoreMarkerValue);
-  }
 });
 
 // -----------------------------
@@ -1198,18 +1447,54 @@ const eventStandings = computed(() => {
       const rEr = r.expand?.event_round;
       const rEventRoundId =
         rEr && typeof rEr === 'object' && 'id' in rEr ? (rEr as { id: string }).id : null;
-      return rEventRoundId === eventRoundId && r.expand?.event_round?.expand?.event?.id === eventId;
+      const matchesEvent =
+        rEventRoundId === eventRoundId && r.expand?.event_round?.expand?.event?.id === eventId;
+      // Filter op categorie als de toggle aan staat
+      if (filterByCategory.value) {
+        const currentPlayerCategory = round.value?.expand?.player?.category;
+        const otherPlayerCategory = r.expand?.player?.category;
+        debug('Comparing player categories (event_round):', {
+          current: currentPlayerCategory,
+          other: otherPlayerCategory,
+          match: otherPlayerCategory === currentPlayerCategory,
+        });
+        return matchesEvent && otherPlayerCategory === currentPlayerCategory;
+      }
+      return matchesEvent;
     });
   } else if (directEventId) {
     // Nieuwe systeem: directe event rondes
     eventId = directEventId;
-    eventRounds = allRounds.value.filter((r) => r.event === directEventId);
+    eventRounds = allRounds.value.filter((r) => {
+      const matchesEvent = r.event === directEventId;
+      // Filter op categorie als de toggle aan staat
+      if (filterByCategory.value) {
+        const currentPlayerCategory = round.value?.expand?.player?.category;
+        const otherPlayerCategory = r.expand?.player?.category;
+        debug('Comparing player categories (direct event):', {
+          current: currentPlayerCategory,
+          other: otherPlayerCategory,
+          match: otherPlayerCategory === currentPlayerCategory,
+        });
+        return matchesEvent && otherPlayerCategory === currentPlayerCategory;
+      }
+      return matchesEvent;
+    });
   }
 
   if (!eventId || !eventRounds.length) return [];
 
   // Gebruik een Set om unieke speler-IDs te krijgen uit de eventRounds
   const playerIds = [...new Set(eventRounds.map((r) => r.player))];
+
+  // Debug informatie
+  debug('Event standings debug:');
+  debug('Total eventRounds:', eventRounds.length);
+  debug('Player IDs found:', playerIds);
+  debug('Filter by category:', filterByCategory.value);
+  debug('Current player category:', round.value?.expand?.player?.category);
+  debug('Current player category name:', round.value?.expand?.player?.expand?.category?.name);
+
   const standings = playerIds.map((pid) => {
     const playerRounds = eventRounds.filter((r) => r.player === pid);
     const roundIds = playerRounds.map((r) => r.id);
@@ -1221,6 +1506,16 @@ const eventStandings = computed(() => {
       0,
     );
     const name = playerRounds[0]?.expand?.player?.name || '-';
+
+    // Debug per speler
+    debug(`Player ${pid} (${name}):`, {
+      rounds: playerRounds.length,
+      scores: scores.length,
+      total: total,
+      playerCategory: playerRounds[0]?.expand?.player?.category,
+      playerCategoryName: playerRounds[0]?.expand?.player?.expand?.category?.name,
+    });
+
     return {
       id: pid,
       name,
@@ -1228,7 +1523,15 @@ const eventStandings = computed(() => {
       holesPlayed: scores.length,
     };
   });
-  standings.sort((a, b) => a.score - b.score);
+  // Sorteer eerst op aantal holes gespeeld (van hoog naar laag), dan op score (van laag naar hoog)
+  standings.sort((a, b) => {
+    // Eerst sorteren op aantal holes gespeeld (van hoog naar laag)
+    if (a.holesPlayed !== b.holesPlayed) {
+      return b.holesPlayed - a.holesPlayed;
+    }
+    // Bij gelijk aantal holes: sorteren op score (van laag naar hoog)
+    return a.score - b.score;
+  });
   return standings.map((row, idx) => ({ ...row, rank: idx + 1 }));
 });
 
@@ -1245,17 +1548,49 @@ const markerId = computed(() => {
 
 // Slice van standings rondom de marker/speler
 const markerStandingsSlice = computed(() => {
+  // Debug informatie voor slice
+  debug('MarkerStandingsSlice debug:');
+  debug('markerId:', markerId.value);
+  debug('Total standings:', eventStandings.value.length);
+  debug(
+    'Standings:',
+    eventStandings.value.map((s) => ({ id: s.id, name: s.name, rank: s.rank })),
+  );
+
   // Toon alleen de bovenste en relevante regels rondom de marker/speler
-  if (!markerId.value) return eventStandings.value.slice(0, 5); // Toon top 5 als geen marker/speler
+  if (!markerId.value) {
+    debug('No markerId, showing top 5');
+    return eventStandings.value.slice(0, 5); // Toon top 5 als geen marker/speler
+  }
   const standings = eventStandings.value;
   const idx = standings.findIndex((row) => row.id === markerId.value);
-  if (idx === -1) return standings.slice(0, 5); // Toon top 5 als speler niet gevonden
+  debug('Found player at index:', idx);
+
+  if (idx === -1) {
+    debug('Player not found, showing top 5');
+    return standings.slice(0, 5); // Toon top 5 als speler niet gevonden
+  }
+
+  // Als er 5 of minder spelers zijn, toon ze allemaal
+  if (standings.length <= 5) {
+    debug('5 or fewer players, showing all');
+    return standings;
+  }
+
+  // Voor meer dan 4 spelers: toon slice rondom de speler
   const slice = [standings[0]];
   const start = Math.max(1, idx - 2);
   const end = Math.min(standings.length, idx + 3);
+  debug('Slice range:', { start, end, idx });
+
   for (let i = start; i < end; i++) {
     if (i !== 0) slice.push(standings[i]);
   }
+
+  debug(
+    'Final slice:',
+    slice.map((s) => ({ id: s.id, name: s.name, rank: s.rank })),
+  );
   return slice;
 });
 
@@ -1286,17 +1621,6 @@ function getEventName(round: Round | null): string {
   return 'Event onbekend';
 }
 
-// Haal de markerscore op voor een speler (voor vergelijking)
-function getScoreMarkerForPlayer(holeId: string, markerId: string): number | undefined {
-  // Zoek de score_marker van een marker voor een bepaalde hole
-  const roundWithMarker = allRounds.value.find((r) => r.marker === markerId);
-  if (!roundWithMarker) return undefined;
-  const scoreRec = allScores.value.find(
-    (s) => s.round === roundWithMarker?.id && s.hole === String(holeId),
-  );
-  return scoreRec?.score_marker;
-}
-
 // -----------------------------
 // Ondertekenen en statusbeheer
 // -----------------------------
@@ -1306,9 +1630,14 @@ const canSignOff = computed(() => {
   if (!holes.value.length) return false;
   for (const hole of holes.value) {
     const spelerScore = getPlayerScoreForHole(hole.id);
-    const markerScore = getMarkerScoreForHole(hole.id);
-    if (spelerScore === '-' || markerScore === '-') return false;
-    if (isScoreDisputed(hole.id)) return false;
+    if (spelerScore === '-') return false;
+
+    // Voor oefenrondes: geen marker score controle
+    if (!isPracticeRound.value) {
+      const markerScore = getMarkerScoreForHole(hole.id);
+      if (markerScore === '-') return false;
+      if (isScoreDisputed(hole.id)) return false;
+    }
   }
   return true;
 });
@@ -1593,6 +1922,14 @@ watch(
   },
   { immediate: true },
 );
+
+// Debug watch voor filterByCategory
+watch(
+  () => filterByCategory.value,
+  (newValue) => {
+    debug('Filter by category changed to:', newValue);
+  },
+);
 </script>
 
 <style scoped>
@@ -1650,5 +1987,41 @@ watch(
   align-items: center;
   margin-top: 0;
   margin-bottom: 0;
+}
+
+/* Slide-in paneel styling */
+.score-slide-in {
+  z-index: 2000;
+}
+
+.score-slide-in .q-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.score-slide-in .q-card__section:last-child {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Responsive styling voor slide-in */
+@media (max-width: 600px) {
+  .score-slide-in {
+    width: 100% !important;
+  }
+}
+
+/* Compacte styling voor slide-in */
+.score-slide-in .q-card__section {
+  padding: 16px;
+}
+
+.score-slide-in .text-h5 {
+  font-size: 1.5rem;
+}
+
+.score-slide-in .text-h6 {
+  font-size: 1.25rem;
 }
 </style>

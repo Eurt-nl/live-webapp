@@ -1,7 +1,5 @@
 # Pitch-Putt App (my-pnpapp)
 
-A Quasar Project
-
 ## Install the dependencies
 ```bash
 yarn

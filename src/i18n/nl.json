@@ -198,6 +198,9 @@
   "home": {
     "whatToDo": "Wat wil je doen",
     "startPracticeRound": "Oefenronde starten",
+    "refreshLocation": "Ververs locatie",
+    "locationRefreshed": "Locatie bijgewerkt",
+    "locationRefreshError": "Fout bij verversen locatie",
     "welcomeGuest": "Welkom bij Pitch & Putt",
     "guestMessage": "Log in of maak een account aan om te beginnen met spelen",
     "nearbyEvents": "Events in de buurt",
@@ -293,7 +296,9 @@
     "edit": "Bewerken",
     "add": "Toevoegen",
     "back": "Terug",
-    "scrollToTop": "Naar boven"
+    "scrollToTop": "Naar boven",
+    "silencePhone": "Zet je telefoon op stil tijdens de ronde",
+    "silencePhoneMessage": "Herinnering: Zet je telefoon op stil tijdens de ronde om andere spelers niet te storen."
   },
   "practiceRound": {
     "newRound": "Nieuwe oefenronde",
@@ -467,6 +472,7 @@
     "cancelEventRound": "Event ronde annuleren",
     "confirmCancelEventRound": "Weet je zeker dat je deze event ronde wilt annuleren?",
     "standings": "Tussenstand",
+    "filterByCategory": "Alleen eigen categorie",
     "skinsStandings": "Tussenstand Skins",
     "roundNotFound": "Ronde niet gevonden",
     "back": "Terug",
@@ -493,7 +499,12 @@
     "scoreOverview": "Score overzicht",
     "flight": "Flight",
     "flightNotSpecified": "Niet gespecificeerd",
-    "noNotes": "Geen notities"
+    "noNotes": "Geen notities",
+    "greenInRegulation": "Green in Regulation (GIR)",
+    "statistics": "Statistieken",
+    "putts": "Putts",
+    "chips": "Chips",
+    "minZero": "Minimaal 0"
   },
   "marker": {
     "linkAsMarker": "Koppel jezelf als marker",

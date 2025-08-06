@@ -129,6 +129,9 @@
   "home": {
     "whatToDo": "What do you want to do",
     "startPracticeRound": "Start practice round",
+    "refreshLocation": "Refresh location",
+    "locationRefreshed": "Location updated",
+    "locationRefreshError": "Error refreshing location",
     "welcomeGuest": "Welcome to Pitch & Putt",
     "guestMessage": "Log in or create an account to start playing",
     "nearbyEvents": "Events nearby",
@@ -319,7 +322,9 @@
     "edit": "Edit",
     "add": "Add",
     "back": "Back",
-    "scrollToTop": "To top"
+    "scrollToTop": "To top",
+    "silencePhone": "Silence your phone during the round",
+    "silencePhoneMessage": "Reminder: Please silence your phone during the round to avoid disturbing other players."
   },
   "practiceRound": {
     "newRound": "New practice round",
@@ -472,6 +477,7 @@
     "cancelEventRound": "Cancel event round",
     "confirmCancelEventRound": "Are you sure you want to cancel this event round?",
     "standings": "Standings",
+    "filterByCategory": "Only own category",
     "skinsStandings": "Skins standings",
     "roundNotFound": "Round not found",
     "back": "Back",
@@ -498,7 +504,12 @@
     "scoreOverview": "Score overview",
     "flight": "Flight",
     "flightNotSpecified": "Not specified",
-    "noNotes": "No notes"
+    "noNotes": "No notes",
+    "greenInRegulation": "Green in Regulation (GIR)",
+    "statistics": "Statistics",
+    "putts": "Putts",
+    "chips": "Chips",
+    "minZero": "Minimum 0"
   },
   "marker": {
     "linkAsMarker": "Link yourself as marker",

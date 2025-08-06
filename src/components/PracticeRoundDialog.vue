@@ -43,7 +43,12 @@
           />
           <!-- Knoppen -->
           <div class="row justify-end q-gutter-sm">
-            <q-btn flat :label="$customT('practiceRound.cancel')" color="primary" @click="closeDialog" />
+            <q-btn
+              flat
+              :label="$customT('practiceRound.cancel')"
+              color="primary"
+              @click="closeDialog"
+            />
             <q-btn
               type="submit"
               color="primary"
@@ -147,18 +152,22 @@ watch(
         // Standaard: huidige datum/tijd invullen
         const defaultDate = getNowForInput();
         // Zet default course uit props
-        newRound.value = { course: '', date: defaultDate, notes: '' };
+        newRound.value = { course: props.defaultCourseId || '', date: defaultDate, notes: '' };
+
+        // Debug informatie voor default course
+        console.log('DEBUG: Default course ID from props:', props.defaultCourseId);
+        console.log('DEBUG: Initial newRound value:', newRound.value);
       } catch (error) {
-        console.error('Error loading round types:', error)
+        console.error('Error loading round types:', error);
         $q.notify({
           color: 'negative',
           message: $customT('practiceRound.errorLoad'),
-          icon: 'error'
-        })
-        loading.value = false
-        return // Early return after error to prevent setting loading false twice
+          icon: 'error',
+        });
+        loading.value = false;
+        return; // Early return after error to prevent setting loading false twice
       }
-      loading.value = false
+      loading.value = false;
     }
   },
   { immediate: false },
@@ -197,6 +206,13 @@ async function createRound() {
     if (!conceptStatus) throw new Error($customT('practiceRound.errorConceptStatus'));
     if (!practiceType) throw new Error($customT('practiceRound.errorPracticeType'));
     if (!newRound.value.course) throw new Error('Geen course geselecteerd!');
+
+    // Debug informatie voor de geselecteerde baan
+    console.log('DEBUG: Selected course in dialog:', newRound.value.course);
+    console.log('DEBUG: Available courses:', props.courses);
+    const selectedCourse = props.courses.find((c) => c.id === newRound.value.course);
+    console.log('DEBUG: Selected course details:', selectedCourse);
+
     const roundData = {
       course: newRound.value.course,
       player: userId,
@@ -208,7 +224,20 @@ async function createRound() {
       is_active: true, // Nieuwe oefenronde is actief
       is_finalized: false, // Nog niet afgerond
     };
+
+    // Debug informatie voor roundData
+    console.log('DEBUG: Round data to be saved:', roundData);
     const created = await pb.collection('rounds').create(roundData);
+
+    // Toon melding over telefoon op stil zetten
+    $q.notify({
+      color: 'info',
+      message: $customT('common.silencePhoneMessage'),
+      icon: 'volume_off',
+      timeout: 8000,
+      position: 'top',
+    });
+
     $q.notify({ color: 'positive', message: $customT('practiceRound.success'), icon: 'check' });
     emit('round-created');
     emit('update:modelValue', false);

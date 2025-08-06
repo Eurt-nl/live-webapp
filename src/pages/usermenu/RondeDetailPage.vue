@@ -10,7 +10,12 @@
     <div v-else-if="round" class="q-gutter-md">
       <div class="row justify-between items-center">
         <div class="text-h4">{{ round.expand?.category?.name }}</div>
-        <q-chip :color="getStatusColor(round.expand?.status?.name)" text-color="white">
+        <!-- Toon alleen status chip als de status niet 'geannuleerd' is -->
+        <q-chip
+          v-if="round.expand?.status?.name?.toLowerCase() !== 'geannuleerd'"
+          :color="getStatusColor(round.expand?.status?.name)"
+          text-color="white"
+        >
           {{ round.expand?.status?.name }}
         </q-chip>
       </div>
@@ -32,11 +37,14 @@
             </div>
             <div class="col-12 col-sm-6">
               <div class="text-subtitle2">{{ $customT('practiceRound.dateTime') }}</div>
-              <div>{{ formatDate(round.date) }} {{ round.time }}</div>
+              <div>{{ formatDate(round.date) }}</div>
             </div>
-            <div class="col-12 col-sm-6">
+            <div
+              class="col-12 col-sm-6"
+              v-if="round.flight && round.flight !== $customT('scores.flightNotSpecified')"
+            >
               <div class="text-subtitle2">{{ $customT('scores.flight') }}</div>
-              <div>{{ round.flight || $customT('scores.flightNotSpecified') }}</div>
+              <div>{{ round.flight }}</div>
             </div>
             <div class="col-12 col-sm-6">
               <div class="text-subtitle2">{{ $customT('practiceRound.notes') }}</div>
