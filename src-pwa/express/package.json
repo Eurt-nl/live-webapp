@@ -1,0 +1,29 @@
+{
+  "name": "rafi-server-proxy",
+  "version": "1.0.0",
+  "description": "Server proxy voor Rafi AI assistant met FIPPA regels",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.1.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "pitch-putt",
+    "rafi",
+    "ai",
+    "fippa",
+    "rules"
+  ],
+  "author": "Pitch & Putt.live",
+  "license": "MIT"
+}

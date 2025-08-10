@@ -7,6 +7,29 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.5.0",
+    date: "2025-08-10",
+    type: "minor",
+    changes: [
+      "feat: Rafi AI assistant server-proxy geïmplementeerd",
+      "feat: FIPPA regels integratie met OpenAI API",
+      "feat: Express server met anti-misbruik bescherming",
+      "feat: Proxy configuratie voor development omgeving",
+      "feat: Multi-language support voor out-of-scope berichten",
+      "feat: Local rules integratie met FIPPA regels",
+      "feat: Development scripts voor eenvoudige server start",
+      "feat: Health check en reload endpoints",
+      "feat: Rate limiting en CORS beveiliging",
+      "feat: ES module syntax voor Express server"
+    ]
+  },
+  {
+    version: "0.4.2",
+    date: "2025-08-06",
+    type: "patch",
+    changes: ["fix: RAFI avatar hernoemd naar rafi-avatar.png voor betere server compatibiliteit"]
+  },
+  {
     version: "0.4.1",
     date: "2025-08-06",
     type: "patch",

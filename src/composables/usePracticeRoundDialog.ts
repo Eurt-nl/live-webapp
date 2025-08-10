@@ -6,9 +6,9 @@ import { useLocationStore } from 'stores/location';
 
 // Centrale composable voor oefenronde-dialog
 export function usePracticeRoundDialog() {
-  const $q = useQuasar();
+  const { pb } = usePocketbase();
   const { t: $customT } = useI18n();
-  const pb = usePocketbase();
+  const $q = useQuasar();
   const locationStore = useLocationStore();
 
   const showPracticeDialog = ref(false);

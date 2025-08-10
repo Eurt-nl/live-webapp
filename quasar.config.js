@@ -92,6 +92,21 @@ export default configure((ctx) => {
       port: 9000,
       host: '0.0.0.0',
       open: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+      // Fix voor passive event listener waarschuwing
+      setupMiddlewares(middlewares, devServer) {
+        devServer.app.use((req, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+          next();
+        });
+        return middlewares;
+      },
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework

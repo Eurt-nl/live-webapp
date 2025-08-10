@@ -23,7 +23,22 @@ export const POCKETBASE_URL = getPocketBaseUrl();
 
 // PocketBase instantie
 import PocketBase from 'pocketbase';
-export const pb = new PocketBase(POCKETBASE_URL);
+
+let pb: PocketBase;
+
+try {
+  pb = new PocketBase(POCKETBASE_URL);
+  console.log('PocketBase initialized successfully with URL:', POCKETBASE_URL);
+} catch (error) {
+  console.error('Failed to initialize PocketBase:', error);
+  throw new Error('Failed to initialize PocketBase');
+}
+
+// Controleer of pb correct is geïnitialiseerd
+if (!pb) {
+  console.error('PocketBase instance is null or undefined');
+  throw new Error('PocketBase instance is not available');
+}
 
 // Configureer de redirect URL voor password reset
 // Dit zorgt ervoor dat de reset link naar de juiste pagina verwijst

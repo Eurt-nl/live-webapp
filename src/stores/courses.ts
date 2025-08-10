@@ -11,7 +11,7 @@ export const useCoursesStore = defineStore('courses', () => {
   const error = ref(null);
 
   // PocketBase instance
-  const pb = usePocketbase();
+  const { pb } = usePocketbase();
   const authStore = useAuthStore();
 
   // Laad de banen van de huidige gebruiker

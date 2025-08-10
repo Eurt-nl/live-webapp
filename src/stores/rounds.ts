@@ -9,7 +9,7 @@ export const useRoundsStore = defineStore('rounds', () => {
   // State: lijst met alle rondes van de gebruiker
   const rounds = ref([]);
   const loading = ref(false);
-  const pb = usePocketbase();
+  const { pb } = usePocketbase();
   const authStore = useAuthStore();
 
   // Haal alle rondes van de gebruiker op uit PocketBase

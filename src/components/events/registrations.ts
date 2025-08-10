@@ -2,9 +2,8 @@ import { ref } from 'vue';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import type { Registration } from 'src/components/models';
 
-const pb = usePocketbase();
-
 export function useRegistrations() {
+  const { pb } = usePocketbase();
   const registrations = ref<Registration[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);

@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "Pitch & Putt.live",
-    "isLive": "is live!"
+    "isLive": "is live!",
+    "language": "en"
   },
   "navigation": {
     "home": "Home",
@@ -10,7 +11,8 @@
     "events": "Events",
     "back": "Back",
     "close": "Close",
-    "comingSoon": "Coming Soon"
+    "comingSoon": "Coming Soon",
+    "profile": "Profile"
   },
   "courses": {
     "title": "Courses",
@@ -97,6 +99,48 @@
     "ruleGeneral": "General",
     "delete": "Delete",
     "searchPlaceholder": "Search by course name, city or country..."
+  },
+  "rafi": {
+    "title": "Rafi - Pitch & Putt Assistant",
+    "header": {
+      "course": "Course",
+      "distance": "distance",
+      "localRulesActive": "Local rules active",
+      "noCourseFound": "No course found",
+      "noLocalRules": "No local rules",
+      "noLocation": "Location not available",
+      "shareLocation": "Share location"
+    },
+    "chat": {
+      "placeholder": "Ask your question about Pitch & Putt rules...",
+      "send": "Send",
+      "loading": "Rafi is thinking...",
+      "error": "An error occurred",
+      "retry": "Try again"
+    },
+    "geolocation": {
+      "notSupported": "Geolocation is not supported by your browser",
+      "permissionDenied": "Geolocation access denied. Allow access to find the nearest course.",
+      "unavailable": "Geolocation is unavailable",
+      "timeout": "Geolocation timeout - try again",
+      "unknownError": "Unknown geolocation error"
+    },
+    "courses": {
+      "fetchError": "Error fetching courses",
+      "findError": "Error finding nearest course"
+    },
+    "localRules": {
+      "fetchError": "Error fetching local rules"
+    },
+    "api": {
+      "error": "Error communicating with Rafi"
+    },
+    "messages": {
+      "noCourseNearby": "No course found within 3 km of your location. Ask your question manually or try a different location.",
+      "courseFound": "Course found",
+      "meters": "meter",
+      "metersPlural": "meters"
+    }
   },
   "menu": {
     "profile": "Profile",

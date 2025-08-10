@@ -99,6 +99,11 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
       },
       {
+        path: '/rafi',
+        name: 'rafi',
+        component: () => import('pages/RafiPage.vue'),
+      },
+      {
         path: '/events/:id/rounds',
         name: 'event-rounds',
         component: () => import('pages/usermenu/EventRoundsPage.vue'),
@@ -138,7 +143,10 @@ const routes: RouteRecordRaw[] = [
       { path: 'register', component: () => import('pages/auth/RegisterPage.vue') },
       { path: 'forgot-password', component: () => import('pages/auth/ForgotPasswordPage.vue') },
       { path: 'reset-password', component: () => import('pages/auth/ResetPasswordPage.vue') },
-      { path: 'confirm-password-reset/:token', component: () => import('pages/auth/ResetPasswordPage.vue') },
+      {
+        path: 'confirm-password-reset/:token',
+        component: () => import('pages/auth/ResetPasswordPage.vue'),
+      },
     ],
   },
   {

@@ -57,15 +57,19 @@
         </q-item> -->
       </q-list>
 
-      <!-- AI Referee - Binnenkort -->
+      <!-- Rafi AI Assistant -->
       <q-separator />
-      <div class="q-pa-md text-center">
-        <div class="text-caption text-grey-6 q-mb-sm">{{ $customT('navigation.comingSoon') }}</div>
-        <q-avatar size="80px" class="q-mb-sm">
-          <img src="/rafi-avatar.png" alt="AI Referee" />
-        </q-avatar>
-        <div class="text-subtitle2">AI Referee</div>
-      </div>
+      <q-item to="/rafi" clickable>
+        <q-item-section avatar>
+          <q-avatar size="40px">
+            <img src="/rafi-avatar.png" alt="Rafi" />
+          </q-avatar>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ $customT('rafi.title') }}</q-item-label>
+          <q-item-label caption>{{ $customT('navigation.comingSoon') }}</q-item-label>
+        </q-item-section>
+      </q-item>
     </q-drawer>
 
     <q-drawer

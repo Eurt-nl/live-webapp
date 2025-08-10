@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "Pitch & Putt.live",
-    "isLive": "is live!"
+    "isLive": "is live!",
+    "language": "nl"
   },
   "navigation": {
     "home": "Home",
@@ -10,7 +11,8 @@
     "events": "Events",
     "back": "Terug",
     "close": "Sluiten",
-    "comingSoon": "Binnenkort"
+    "comingSoon": "Binnenkort",
+    "profile": "Profiel"
   },
   "courses": {
     "title": "Banen",
@@ -97,6 +99,48 @@
     "ruleGeneral": "Algemeen",
     "delete": "Verwijderen",
     "searchPlaceholder": "Zoek op baan naam, plaats of land..."
+  },
+  "rafi": {
+    "title": "Rafi - Pitch & Putt Assistent",
+    "header": {
+      "course": "Baan",
+      "distance": "afstand",
+      "localRulesActive": "Lokale regels actief",
+      "noCourseFound": "Geen baan gevonden",
+      "noLocalRules": "Geen lokale regels",
+      "noLocation": "Locatie niet beschikbaar",
+      "shareLocation": "Locatie delen"
+    },
+    "chat": {
+      "placeholder": "Stel je vraag over Pitch & Putt regels...",
+      "send": "Versturen",
+      "loading": "Rafi denkt na...",
+      "error": "Er is een fout opgetreden",
+      "retry": "Opnieuw proberen"
+    },
+    "geolocation": {
+      "notSupported": "Geolocatie wordt niet ondersteund door je browser",
+      "permissionDenied": "Geolocatie toegang geweigerd. Sta toegang toe om de dichtstbijzijnde baan te vinden.",
+      "unavailable": "Geolocatie is niet beschikbaar",
+      "timeout": "Geolocatie timeout - probeer opnieuw",
+      "unknownError": "Onbekende geolocatie fout"
+    },
+    "courses": {
+      "fetchError": "Fout bij het ophalen van banen",
+      "findError": "Fout bij het zoeken naar dichtstbijzijnde baan"
+    },
+    "localRules": {
+      "fetchError": "Fout bij het ophalen van lokale regels"
+    },
+    "api": {
+      "error": "Fout bij het communiceren met Rafi"
+    },
+    "messages": {
+      "noCourseNearby": "Er is geen baan gevonden binnen 3 km van je locatie. Stel je vraag handmatig in of probeer een andere locatie.",
+      "courseFound": "Baan gevonden",
+      "meters": "meter",
+      "metersPlural": "meters"
+    }
   },
   "players": {
     "title": "Spelers",

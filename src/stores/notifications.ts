@@ -5,7 +5,7 @@ import { useAuthStore } from './auth';
 import { ClientResponseError } from 'pocketbase';
 
 export const useNotificationsStore = defineStore('notifications', () => {
-  const pb = usePocketbase();
+  const { pb } = usePocketbase();
   const authStore = useAuthStore();
   const hasUnread = ref(false);
   let isUnmounted = false;

@@ -230,7 +230,7 @@ import { usePracticeRoundDialog } from 'src/composables/usePracticeRoundDialog';
 
 const $q = useQuasar();
 const router = useRouter();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const locationStore = useLocationStore();
 const roundsStore = useRoundsStore();
@@ -493,19 +493,6 @@ function getEventIcon(event: Record<string, unknown>): string {
 onMounted(async () => {
   // Haal events en alle rondes parallel op via de store
   await Promise.all([loadEvents(), roundsStore.fetchRounds()]);
-
-  // Automatische locatie refresh bij het openen van de app
-  try {
-    console.log('DEBUG: Automatically refreshing location on app start');
-    await locationStore.refreshLocation();
-    if (locationStore.userLocation) {
-      console.log('DEBUG: Location refreshed successfully:', locationStore.userLocation);
-    } else {
-      console.log('DEBUG: Location refresh failed or not available');
-    }
-  } catch (error) {
-    console.error('DEBUG: Error refreshing location:', error);
-  }
 
   // Voeg event listener toe voor handmatig locatie ophalen
   window.addEventListener('get-user-location', () => {
