@@ -5,14 +5,9 @@
 
 // PocketBase server URL - gebruik environment variables voor verschillende omgevingen
 const getPocketBaseUrl = (): string => {
-  // In development (npm run dev) gebruik de live server
-  if (process.env.NODE_ENV === 'development') {
-    return 'https://pb.pitch-putt.live';
-  }
-
-  // In production (npm run build) gebruik de live server
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://pb.pitch-putt.live';
+  // Gebruik environment variable als die beschikbaar is
+  if (import.meta.env.VITE_PB_URL) {
+    return import.meta.env.VITE_PB_URL;
   }
 
   // Fallback naar live server URL
@@ -24,32 +19,47 @@ export const POCKETBASE_URL = getPocketBaseUrl();
 // PocketBase instantie
 import PocketBase from 'pocketbase';
 
-let pb: PocketBase;
+let pb: PocketBase | null = null;
 
+// Functie om PocketBase te initialiseren
+const initializePocketBase = (): PocketBase => {
+  if (!pb) {
+    try {
+      pb = new PocketBase(POCKETBASE_URL);
+      console.log('PocketBase initialized successfully with URL:', POCKETBASE_URL);
+    } catch (error) {
+      console.error('Failed to initialize PocketBase:', error);
+      throw new Error('Failed to initialize PocketBase');
+    }
+  }
+  
+  if (!pb) {
+    console.error('PocketBase instance is null or undefined');
+    throw new Error('PocketBase instance is not available');
+  }
+  
+  return pb;
+};
+
+// Initialiseer PocketBase
 try {
-  pb = new PocketBase(POCKETBASE_URL);
-  console.log('PocketBase initialized successfully with URL:', POCKETBASE_URL);
+  pb = initializePocketBase();
 } catch (error) {
-  console.error('Failed to initialize PocketBase:', error);
-  throw new Error('Failed to initialize PocketBase');
-}
-
-// Controleer of pb correct is geïnitialiseerd
-if (!pb) {
-  console.error('PocketBase instance is null or undefined');
-  throw new Error('PocketBase instance is not available');
+  console.error('Failed to initialize PocketBase during module load:', error);
+  // We laten pb null blijven en zullen het later opnieuw proberen
 }
 
 // Configureer de redirect URL voor password reset
 // Dit zorgt ervoor dat de reset link naar de juiste pagina verwijst
 const getRedirectUrl = (): string => {
-  if (process.env.NODE_ENV === 'development') {
-    // Gebruik de huidige window.location om de juiste poort te bepalen
-    if (typeof window !== 'undefined') {
-      const currentPort = window.location.port;
-      return `https://localhost:${currentPort}/#/auth/reset-password`;
-    }
-    // Fallback naar geconfigureerde poort
+  // Gebruik de huidige window.location om de juiste URL te bepalen
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin;
+    return `${currentOrigin}/#/auth/reset-password`;
+  }
+  
+  // Fallback URLs
+  if (import.meta.env.DEV) {
     return 'https://localhost:9000/#/auth/reset-password';
   }
   return 'https://pitch-putt.live/#/auth/reset-password';

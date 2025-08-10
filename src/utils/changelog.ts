@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.6.0",
+    date: "2025-08-10",
+    type: "minor",
+    changes: ["feat: Rafi AI assistant server-proxy geïmplementeerd"]
+  },
+  {
     version: "0.5.0",
     date: "2025-08-10",
     type: "minor",
