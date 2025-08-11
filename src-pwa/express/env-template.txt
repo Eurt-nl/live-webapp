@@ -1,0 +1,19 @@
+# Environment variables template voor Rafi Server
+# Kopieer dit naar .env en vul de waarden in
+
+# Server configuratie
+PORT=3000
+NODE_ENV=production
+
+# OpenAI configuratie
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+
+# CORS configuratie
+ALLOWED_ORIGIN=https://your-domain.com
+
+# Rate limiting
+RATE_LIMIT_MAX_PER_MIN=10
+
+# FIPPA Rules configuratie
+RULES_VERSION=1.0.0 

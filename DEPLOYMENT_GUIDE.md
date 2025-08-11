@@ -1,200 +1,264 @@
-# Deployment & PWA Build Handleiding
+# Deployment Guide
 
-## 📋 Snelle Commando's
+## Overzicht
 
-### 1. **GitHub bijwerken**
+Deze guide beschrijft hoe je de Pitch & Putt Live app en de Rafi AI server kunt deployen. **Voor eigen VPS gebruikers wordt de VPS deployment sterk aanbevolen.**
 
-```bash
-# Voeg alle wijzigingen toe
-git add .
+## Frontend Deployment
 
-# Commit met beschrijvende boodschap
-git commit -m "feat: slide-in score invoer met +/- knoppen voor putts/chips"
-
-# Push naar GitHub
-git push origin main
-```
-
-### 2. **PWA Build maken**
+### 1. Build de PWA
 
 ```bash
-# PWA build genereren
-quasar build -m pwa
-
-# Build testen (optioneel)
-quasar serve
+npm run build:pwa
 ```
 
-### 3. **Deploy naar server**
+### 2. Deploy naar hosting provider
+
+De gebouwde PWA staat in `dist/pwa/` en kan worden gedeployed naar:
+
+- Netlify
+- Vercel
+- GitHub Pages
+- Of elke andere statische hosting provider
+
+## Rafi Server Deployment
+
+### Probleem: HTTP 405 Method Not Allowed
+
+De Rafi server moet apart worden gedeployed om de AI functionaliteit te laten werken. Zonder de server krijg je een 405 fout bij het gebruik van de Rafi chat.
+
+## 🏆 Aanbevolen: VPS Deployment (met Caddy)
+
+**Voor gebruikers met een eigen VPS is dit de beste oplossing:**
+
+### Snelle VPS Deployment
 
 ```bash
-# Kopieer build bestanden naar server
-# (Vervang 'server-path' met je eigen server pad)
-scp -r dist/pwa/* user@server:/path/to/webapp/
+# Deploy naar je VPS (vervang user@your-vps.com)
+npm run deploy:vps user@your-vps.com
 ```
 
----
+### Handmatige VPS Setup
 
-## 🔄 Volledige Workflow
+Zie de uitgebreide guide: [`src-pwa/express/VPS_DEPLOYMENT.md`](src-pwa/express/VPS_DEPLOYMENT.md)
 
-### **Stap 1: Code controleren**
+**Voordelen van VPS deployment:**
+
+- ✅ Volledige controle over je server
+- ✅ Geen externe afhankelijkheden
+- ✅ Lagere kosten op lange termijn
+- ✅ Betere privacy en beveiliging
+- ✅ Geen rate limiting van externe diensten
+
+## 🔄 Alternatief: Externe Diensten
+
+### Optie 1: Deploy naar Vercel
+
+1. **Maak een nieuwe Vercel project aan**
 
 ```bash
-# Controleer status
-git status
+# Ga naar de express server directory
+cd src-pwa/express
 
-# Bekijk wijzigingen
-git diff
+# Maak een package.json aan als deze niet bestaat
+npm init -y
+
+# Installeer dependencies
+npm install express cors dotenv express-rate-limit
 ```
 
-### **Stap 2: Testen**
+2. **Maak een vercel.json configuratie**
+
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/index.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
+```
+
+3. **Deploy naar Vercel**
 
 ```bash
-# Start development server
-quasar dev
+# Installeer Vercel CLI
+npm i -g vercel
 
-# Test in browser op https://localhost:9001/
+# Deploy
+vercel
+
+# Volg de instructies en stel environment variables in
 ```
 
-### **Stap 3: Commit & Push**
+4. **Stel environment variables in**
+
+In de Vercel dashboard:
+
+- `OPENAI_API_KEY`: Je OpenAI API key
+- `OPENAI_MODEL`: gpt-4o-mini (of gewenste model)
+- `ALLOWED_ORIGIN`: \* (of specifieke domain)
+- `RATE_LIMIT_MAX_PER_MIN`: 10
+
+### Optie 2: Deploy naar Railway
+
+1. Maak een Railway account aan
+2. Connect je GitHub repository
+3. Stel de root directory in naar `src-pwa/express`
+4. Voeg environment variables toe
+5. Deploy
+
+### Optie 3: Deploy naar Heroku
+
+1. Maak een Heroku app aan
+2. Stel de buildpack in naar Node.js
+3. Voeg environment variables toe
+4. Deploy
+
+## Environment Variables
+
+### Frontend (.env)
 
 ```bash
-# Voeg wijzigingen toe
-git add .
-
-# Commit met conventional commit format
-git commit -m "feat: slide-in score invoer met +/- knoppen voor putts/chips"
-
-# Push naar GitHub
-git push origin main
+VITE_PB_URL=https://pb.pitch-putt.live
+VITE_API_BASE_URL=https://your-domain.com/api
+VITE_RAFI_LOGGING=false
 ```
 
-### **Stap 4: PWA Build**
+### Backend (Server Environment Variables)
 
 ```bash
-# Maak productie build
-quasar build -m pwa
-
-# Build wordt opgeslagen in: dist/pwa/
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+ALLOWED_ORIGIN=*
+RATE_LIMIT_MAX_PER_MIN=10
+RULES_VERSION=1.0.0
+NODE_ENV=production
 ```
 
-### **Stap 5: Deploy**
+## Testing na Deployment
+
+### 1. Test de Rafi Server
 
 ```bash
-# Kopieer bestanden naar server
-# (Pas server details aan)
-scp -r dist/pwa/* user@your-server.com:/var/www/html/
+# Health check
+curl https://your-domain.com/api/health
+
+# Test Rafi API
+curl -X POST https://your-domain.com/api/rafi \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Wat is de maximale hole lengte?",
+    "courseId": "test_course_id",
+    "courseName": "Test Baan",
+    "localRules": [],
+    "lang": "nl"
+  }'
 ```
 
----
+### 2. Test de Frontend
 
-## 📝 Conventional Commits
+1. Open de gedeployde app
+2. Ga naar de Rafi pagina
+3. Test de chat functionaliteit
+4. Controleer of er geen 405 fouten zijn
 
-Gebruik deze format voor commit berichten:
+## Troubleshooting
 
-- `feat:` - Nieuwe functionaliteit
-- `fix:` - Bug fix
-- `docs:` - Documentatie wijzigingen
-- `style:` - Code formatting
-- `refactor:` - Code refactoring
-- `test:` - Test toevoegingen
-- `chore:` - Build/tool wijzigingen
+### HTTP 405 Method Not Allowed
 
-**Voorbeelden:**
+**Oorzaak**: De Rafi server is niet gedeployed of niet bereikbaar.
+
+**Oplossing**:
+
+1. Controleer of de Rafi server draait
+2. Controleer de `VITE_API_BASE_URL` in de frontend
+3. Test de server endpoints handmatig
+4. Controleer CORS configuratie
+
+### CORS Errors
+
+**Oorzaak**: De server staat geen requests toe van de frontend domain.
+
+**Oplossing**:
+
+1. Stel `ALLOWED_ORIGIN` in op het juiste domain
+2. Of gebruik `*` voor development
+
+### OpenAI API Errors
+
+**Oorzaak**: Ongeldige API key of quota bereikt.
+
+**Oplossing**:
+
+1. Controleer de `OPENAI_API_KEY`
+2. Controleer je OpenAI account quota
+3. Test de API key handmatig
+
+## Monitoring
+
+### Logs
+
+- **Vercel**: Automatische logging in dashboard
+- **Railway**: Logs beschikbaar in dashboard
+- **Heroku**: `heroku logs --tail`
+- **VPS**: `pm2 logs` of `journalctl -u rafi-server`
+
+### Health Checks
+
+De server heeft een `/api/health` endpoint die je kunt gebruiken voor monitoring:
 
 ```bash
-git commit -m "feat: slide-in score invoer met +/- knoppen"
-git commit -m "fix: score validatie in slide-in paneel"
-git commit -m "style: compactere layout voor score invoer"
+curl https://your-domain.com/api/health
 ```
 
----
+## Security
 
-## 🚀 PWA Build Details
+### Best Practices
 
-### **Build output:**
+1. **API Key**: Nooit in frontend code
+2. **Rate Limiting**: Voorkom misbruik
+3. **CORS**: Beperk toegestane origins
+4. **Input Validation**: Valideer alle input
+5. **Error Handling**: Geen gevoelige info in errors
 
-- **Locatie:** `dist/pwa/`
-- **Bestanden:** HTML, CSS, JS, assets, manifest.json, service worker
-- **Grootte:** ~2-5MB (afhankelijk van assets)
+### Environment Variables
 
-### **PWA features:**
+- Gebruik altijd environment variables voor gevoelige data
+- Nooit hardcoded API keys
+- Gebruik verschillende keys voor development/production
 
-- ✅ Offline functionaliteit
-- ✅ App installatie mogelijk
-- ✅ Service worker caching
-- ✅ Manifest voor app-achtige ervaring
+## Kosten
 
-### **Build optimalisaties:**
+### OpenAI API
 
-- Code splitting
-- Asset minificatie
-- Tree shaking
-- Service worker caching
+- **gpt-4o-mini**: ~$0.15 per 1M input tokens
+- **gpt-4o**: ~$5 per 1M input tokens
+- **Rate limiting**: 10 requests per minuut per IP
 
----
+### Hosting
 
-## 🔧 Troubleshooting
+- **VPS**: Vanaf $5/maand (aanbevolen)
+- **Vercel**: Gratis tier beschikbaar
+- **Railway**: $5/maand voor hobby tier
+- **Heroku**: $7/maand voor hobby tier
 
-### **Build errors:**
+## Support
 
-```bash
-# Clean install
-rm -rf node_modules package-lock.json
-npm install
+Voor vragen over deployment:
 
-# Rebuild
-quasar build -m pwa
-```
-
-### **Git issues:**
-
-```bash
-# Reset laatste commit (voorzichtig!)
-git reset --soft HEAD~1
-
-# Force push (alleen als nodig)
-git push --force-with-lease origin main
-```
-
-### **Server deployment:**
-
-```bash
-# Check server status
-ssh user@server "systemctl status nginx"
-
-# Restart webserver
-ssh user@server "sudo systemctl restart nginx"
-```
-
----
-
-## 📱 PWA Testing
-
-### **Lokaal testen:**
-
-```bash
-# Start preview server
-quasar serve
-
-# Open: http://localhost:4173/
-```
-
-### **PWA checklist:**
-
-- [ ] App kan geïnstalleerd worden
-- [ ] Werkt offline
-- [ ] Service worker actief
-- [ ] Manifest correct geladen
-- [ ] Icons zichtbaar
-
----
-
-## 🎯 Snelle Commando's (Copy/Paste)
-
-```bash
-# Volledige deployment in één keer
-git add . && git commit -m "feat: slide-in score invoer met +/- knoppen" && git push origin main && quasar build -m pwa
-```
-
-**Resultaat:** Code gepusht naar GitHub + PWA build klaar in `dist/pwa/`
+1. Controleer de logs
+2. Test endpoints handmatig
+3. Controleer environment variables
+4. Raadpleeg de troubleshooting sectie

@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.6.1",
+    date: "2025-08-10",
+    type: "patch",
+    changes: ["fix: PocketBase initialisatie probleem in live omgeving opgelost"]
+  },
+  {
     version: "0.6.0",
     date: "2025-08-10",
     type: "minor",

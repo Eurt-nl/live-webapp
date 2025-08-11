@@ -133,7 +133,8 @@
       "fetchError": "Fout bij het ophalen van lokale regels"
     },
     "api": {
-      "error": "Fout bij het communiceren met Rafi"
+      "error": "Fout bij communiceren met Rafi",
+      "serviceUnavailable": "Rafi service is momenteel niet beschikbaar. Probeer het later opnieuw."
     },
     "messages": {
       "noCourseNearby": "Er is geen baan gevonden binnen 3 km van je locatie. Stel je vraag handmatig in of probeer een andere locatie.",

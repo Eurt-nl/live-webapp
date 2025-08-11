@@ -1,17 +1,6 @@
 <template>
   <!-- Floating feedback knop, alleen zichtbaar op mobiel -->
-  <div
-    v-if="$q.platform.is.mobile"
-    :style="fabStyle"
-    class="feedback-fab"
-    @mousedown="startDrag"
-    @touchstart="startDrag"
-    @mousemove="onDrag"
-    @touchmove="onDrag"
-    @mouseup="endDrag"
-    @touchend="endDrag"
-    @mouseleave="endDrag"
-  >
+  <div v-if="$q.platform.is.mobile" :style="fabStyle" class="feedback-fab" ref="fabRef">
     <q-btn round color="info" icon="feedback" @click.stop="handleFabClick" />
   </div>
 
@@ -48,7 +37,7 @@
 // -----------------------------
 // Imports
 // -----------------------------
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
@@ -69,6 +58,7 @@ const position = reactive({
 });
 const dragging = ref(false);
 const dragOffset = reactive({ x: 0, y: 0 });
+const fabRef = ref<HTMLElement>();
 
 // Dynamische style voor de FAB
 const fabStyle = computed(() => ({
@@ -83,6 +73,11 @@ const fabStyle = computed(() => ({
 // Drag functionaliteit
 // -----------------------------
 function startDrag(e: MouseEvent | TouchEvent) {
+  // Voorkom default scroll gedrag voor touch events
+  if (e instanceof TouchEvent) {
+    e.preventDefault();
+  }
+
   dragging.value = true;
   let clientX, clientY;
   if (e instanceof TouchEvent) {
@@ -99,6 +94,12 @@ function startDrag(e: MouseEvent | TouchEvent) {
 
 function onDrag(e: MouseEvent | TouchEvent) {
   if (!dragging.value) return;
+
+  // Voorkom default scroll gedrag voor touch events
+  if (e instanceof TouchEvent) {
+    e.preventDefault();
+  }
+
   let clientX, clientY;
   if (e instanceof TouchEvent) {
     clientX = e.touches[0].clientX;
@@ -120,6 +121,54 @@ function endDrag() {
   dragging.value = false;
   document.body.style.userSelect = '';
 }
+
+// -----------------------------
+// Event listeners setup en cleanup
+// -----------------------------
+function setupEventListeners() {
+  if (!fabRef.value) return;
+
+  const element = fabRef.value;
+
+  // Mouse events
+  element.addEventListener('mousedown', startDrag);
+  element.addEventListener('mousemove', onDrag);
+  element.addEventListener('mouseup', endDrag);
+  element.addEventListener('mouseleave', endDrag);
+
+  // Touch events met passive optie voor betere performance
+  element.addEventListener('touchstart', startDrag, { passive: false });
+  element.addEventListener('touchmove', onDrag, { passive: false });
+  element.addEventListener('touchend', endDrag, { passive: true });
+}
+
+function cleanupEventListeners() {
+  if (!fabRef.value) return;
+
+  const element = fabRef.value;
+
+  // Mouse events
+  element.removeEventListener('mousedown', startDrag);
+  element.removeEventListener('mousemove', onDrag);
+  element.removeEventListener('mouseup', endDrag);
+  element.removeEventListener('mouseleave', endDrag);
+
+  // Touch events
+  element.removeEventListener('touchstart', startDrag);
+  element.removeEventListener('touchmove', onDrag);
+  element.removeEventListener('touchend', endDrag);
+}
+
+// Lifecycle hooks
+onMounted(() => {
+  // Setup event listeners na DOM mount
+  setupEventListeners();
+});
+
+onUnmounted(() => {
+  // Cleanup event listeners
+  cleanupEventListeners();
+});
 
 // -----------------------------
 // Dialog en feedback
@@ -170,7 +219,11 @@ async function handleFabClick() {
     screenshotFile.value = new File([blob], 'screenshot.png', { type: 'image/png' });
     dialogOpen.value = true;
   } catch {
-    $q.notify({ color: 'negative', message: $customT('notifications.screenshotError'), icon: 'error' });
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.screenshotError'),
+      icon: 'error',
+    });
   }
 }
 
@@ -191,12 +244,20 @@ async function sendFeedback() {
     formData.append('link', window.location.href);
 
     await pb.collection('notifications').create(formData);
-    $q.notify({ color: 'positive', message: $customT('notifications.feedbackSent'), icon: 'check' });
+    $q.notify({
+      color: 'positive',
+      message: $customT('notifications.feedbackSent'),
+      icon: 'check',
+    });
     dialogOpen.value = false;
     feedbackText.value = '';
     screenshotFile.value = null;
   } catch {
-    $q.notify({ color: 'negative', message: $customT('notifications.feedbackError'), icon: 'error' });
+    $q.notify({
+      color: 'negative',
+      message: $customT('notifications.feedbackError'),
+      icon: 'error',
+    });
   } finally {
     sending.value = false;
   }

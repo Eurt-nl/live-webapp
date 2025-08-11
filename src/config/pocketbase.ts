@@ -32,12 +32,12 @@ const initializePocketBase = (): PocketBase => {
       throw new Error('Failed to initialize PocketBase');
     }
   }
-  
+
   if (!pb) {
     console.error('PocketBase instance is null or undefined');
     throw new Error('PocketBase instance is not available');
   }
-  
+
   return pb;
 };
 
@@ -57,7 +57,7 @@ const getRedirectUrl = (): string => {
     const currentOrigin = window.location.origin;
     return `${currentOrigin}/#/auth/reset-password`;
   }
-  
+
   // Fallback URLs
   if (import.meta.env.DEV) {
     return 'https://localhost:9000/#/auth/reset-password';
