@@ -103,11 +103,12 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getFileUrl } from 'src/utils/pocketbase-helpers';
 import type { Course, Country } from 'src/components/models';
-import pb from 'src/config/pocketbase';
+import { usePocketbase } from 'src/composables/usePocketbase';
 import { useLocationStore } from 'stores/location';
 
 const { t: $customT } = useI18n();
 const router = useRouter();
+const { pb } = usePocketbase();
 const banen = ref<Course[]>([]);
 const countries = ref<Record<string, Country>>({});
 const searchQuery = ref('');

@@ -134,7 +134,7 @@ ChartJS.register(
 const $q = useQuasar();
 
 const authStore = useAuthStore();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 // Definieer een type voor een ronde-statistiek
 interface RoundStat {

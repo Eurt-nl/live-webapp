@@ -59,12 +59,13 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import pb from 'src/config/pocketbase';
+import { usePocketbase } from 'src/composables/usePocketbase';
 import { getAvatarUrl } from 'src/utils/avatar-utils';
 import { debug } from 'src/utils/debug';
 
 const { t: $customT } = useI18n();
 const route = useRoute();
+const { pb } = usePocketbase();
 const speler = ref(null);
 const categories = ref({});
 const showAvatarDialog = ref(false);

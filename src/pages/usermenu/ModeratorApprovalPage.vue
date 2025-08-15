@@ -110,7 +110,7 @@ const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const loading = ref(true);
 const processing = ref(false);

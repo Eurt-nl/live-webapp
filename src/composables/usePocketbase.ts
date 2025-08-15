@@ -1,4 +1,4 @@
-import pb, { POCKETBASE_URL } from 'src/config/pocketbase';
+import pb, { POCKETBASE_URL, getPocketBase } from 'src/config/pocketbase';
 import PocketBase from 'pocketbase';
 
 export const usePocketbase = () => {
@@ -14,19 +14,38 @@ export const usePocketbase = () => {
     }
   };
 
-  // Probeer de bestaande pb instantie te gebruiken
-  let pocketBaseInstance = pb;
+  // Probeer verschillende methoden om een werkende PocketBase instantie te krijgen
+  let pocketBaseInstance: PocketBase | null = null;
 
-  // Als pb niet beschikbaar is, probeer opnieuw te initialiseren
+  // Methode 1: Probeer de bestaande pb instantie
+  if (pb && typeof pb.collection === 'function') {
+    pocketBaseInstance = pb;
+    console.log('Using existing PocketBase instance');
+  }
+
+  // Methode 2: Probeer getPocketBase als pb niet werkt
   if (!pocketBaseInstance) {
-    console.warn('PocketBase instance not available, attempting to re-initialize...');
+    try {
+      const configPb = getPocketBase();
+      if (configPb && typeof configPb.collection === 'function') {
+        pocketBaseInstance = configPb;
+        console.log('Using PocketBase instance from config');
+      }
+    } catch (error) {
+      console.warn('Failed to get PocketBase from config:', error);
+    }
+  }
+
+  // Methode 3: Maak een nieuwe instantie als beide bovenstaande methoden falen
+  if (!pocketBaseInstance) {
+    console.warn('No working PocketBase instance found, creating new one...');
     pocketBaseInstance = initializePocketBase();
   }
 
-  // Controleer of de collection methode beschikbaar is
-  if (typeof pocketBaseInstance.collection !== 'function') {
-    console.error('PocketBase collection method is not available');
-    throw new Error('PocketBase collection method is not available');
+  // Finale controle
+  if (!pocketBaseInstance || typeof pocketBaseInstance.collection !== 'function') {
+    console.error('Failed to get a working PocketBase instance');
+    throw new Error('PocketBase is not available');
   }
 
   return { pb: pocketBaseInstance };

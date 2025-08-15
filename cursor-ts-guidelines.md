@@ -33,3 +33,4 @@ Voor i18n in Vue templates en scripts:
 - Voorbeeld script: `const { t: $customT } = useI18n(); $customT('common.save')`
 
 **BELANGRIJK**: Gebruik NOOIT `$t` of `t` - dit veroorzaakt fouten! Gebruik altijd `$customT`.
+

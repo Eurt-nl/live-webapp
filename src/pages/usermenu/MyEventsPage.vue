@@ -168,7 +168,7 @@ const $q = useQuasar();
 const { t: $customT } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const events = ref([]);
 const loading = ref(false);

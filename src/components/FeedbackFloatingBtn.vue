@@ -46,7 +46,7 @@ import html2canvas from 'html2canvas';
 
 const $q = useQuasar();
 const authStore = useAuthStore();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const { t: $customT } = useI18n();
 
 // -----------------------------

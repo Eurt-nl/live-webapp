@@ -92,13 +92,14 @@ import { useQuasar } from 'quasar';
 import { debug } from 'src/utils/debug';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import pb from 'src/config/pocketbase';
+import { usePocketbase } from 'src/composables/usePocketbase';
 import { getAvatarUrl } from 'src/utils/avatar-utils';
 import type { Country } from 'src/components/models';
 
 const $q = useQuasar();
 const router = useRouter();
 const { t: $customT } = useI18n();
+const { pb } = usePocketbase();
 const loading = ref(true);
 const spelers = ref([]);
 const searchQuery = ref('');

@@ -1,8 +1,26 @@
 import type { RecordModel } from 'pocketbase';
-import pb from '../config/pocketbase';
+import { usePocketbase } from '../composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import type { Course } from 'src/components/models';
 import { debug } from './debug';
+
+/**
+ * Configureer de redirect URL voor password reset
+ * Dit zorgt ervoor dat de reset link naar de juiste pagina verwijst
+ */
+export const getPasswordResetRedirectUrl = (): string => {
+  // Gebruik de huidige window.location om de juiste URL te bepalen
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin;
+    return `${currentOrigin}/#/auth/reset-password`;
+  }
+
+  // Fallback URLs
+  if (import.meta.env.DEV) {
+    return 'https://localhost:9000/#/auth/reset-password';
+  }
+  return 'https://pitch-putt.live/#/auth/reset-password';
+};
 
 /**
  * Genereert een volledige URL voor een PocketBase bestand
@@ -13,6 +31,7 @@ import { debug } from './debug';
  */
 export const getFileUrl = (collectionName: string, recordId: string, fileName: string): string => {
   try {
+    const { pb } = usePocketbase();
     const authStore = useAuthStore();
 
     // Zorg ervoor dat de token is ingesteld
@@ -67,6 +86,7 @@ export const getThumbUrl = (
   thumbSize: string = '100x100',
 ): string => {
   try {
+    const { pb } = usePocketbase();
     const url = pb.files.getURL({ record: recordId, filename: fileName }, collectionName, {
       thumb: thumbSize,
     });
@@ -92,6 +112,7 @@ export const getFileUrlWithParams = (
   params: Record<string, string>,
 ): string => {
   try {
+    const { pb } = usePocketbase();
     const url = pb.files.getURL({ record: recordId, filename: fileName }, collectionName, params);
     return url;
   } catch (error) {
@@ -104,6 +125,7 @@ export const getRecords = async <T extends RecordModel>(
   collection: string,
   options?: Record<string, unknown>,
 ): Promise<T[]> => {
+  const { pb } = usePocketbase();
   const resultList = await pb.collection(collection).getList(1, 20, options);
   return resultList.items as T[];
 };
@@ -112,6 +134,7 @@ export const getRecord = async <T extends RecordModel>(
   collection: string,
   id: string,
 ): Promise<T> => {
+  const { pb } = usePocketbase();
   return await pb.collection(collection).getOne<T>(id);
 };
 
@@ -119,6 +142,7 @@ export const createRecord = async <T extends RecordModel>(
   collection: string,
   data: Record<string, unknown>,
 ): Promise<T> => {
+  const { pb } = usePocketbase();
   return await pb.collection(collection).create<T>(data);
 };
 
@@ -127,14 +151,17 @@ export const updateRecord = async <T extends RecordModel>(
   id: string,
   data: Record<string, unknown>,
 ): Promise<T> => {
+  const { pb } = usePocketbase();
   return await pb.collection(collection).update<T>(id, data);
 };
 
 export const deleteRecord = async (collection: string, id: string): Promise<void> => {
+  const { pb } = usePocketbase();
   await pb.collection(collection).delete(id);
 };
 
 export const getCourses = async (options?: Record<string, unknown>): Promise<Course[]> => {
+  const { pb } = usePocketbase();
   const resultList = await pb.collection('courses').getList(1, 20, {
     ...options,
     expand: 'owner,moderators,category',
@@ -143,12 +170,14 @@ export const getCourses = async (options?: Record<string, unknown>): Promise<Cou
 };
 
 export const getCourse = async (id: string): Promise<Course> => {
+  const { pb } = usePocketbase();
   return await pb.collection('courses').getOne<Course>(id, {
     expand: 'owner,moderators,category',
   });
 };
 
 export const createCourse = async (data: Omit<Course, 'id'>): Promise<Course> => {
+  const { pb } = usePocketbase();
   return await pb.collection('courses').create<Course>(data);
 };
 
@@ -156,5 +185,6 @@ export const updateCourse = async (
   id: string,
   data: Partial<Omit<Course, 'id'>>,
 ): Promise<Course> => {
+  const { pb } = usePocketbase();
   return await pb.collection('courses').update<Course>(id, data);
 };

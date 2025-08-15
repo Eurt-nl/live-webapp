@@ -259,7 +259,7 @@ const props = defineProps<{
 // }>();
 
 const $q = useQuasar();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 // I18n moet na andere composables worden aangeroepen
 const { t: $customT } = useI18n();

@@ -693,7 +693,7 @@ import { useI18n } from 'vue-i18n';
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const roundsStore = useRoundsStore();
 const { t: $customT } = useI18n(); // Centrale store voor rondes

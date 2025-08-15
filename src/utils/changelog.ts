@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.7.0",
+    date: "2025-08-11",
+    type: "minor",
+    changes: ["feat: VPS deployment setup voor Rafi server met Caddy"]
+  },
+  {
     version: "0.6.1",
     date: "2025-08-10",
     type: "patch",

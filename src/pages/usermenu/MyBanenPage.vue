@@ -268,7 +268,7 @@ import type { Category } from 'src/components/models';
 const $q = useQuasar();
 const { t: $customT } = useI18n();
 const router = useRouter();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const coursesStore = useCoursesStore();
 

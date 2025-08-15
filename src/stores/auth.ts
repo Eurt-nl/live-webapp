@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
-import pb, { PASSWORD_RESET_REDIRECT_URL } from 'src/config/pocketbase';
+import { usePocketbase } from 'src/composables/usePocketbase';
 import { isProfileComplete } from 'src/utils/profile-utils';
+import { getPasswordResetRedirectUrl } from 'src/utils/pocketbase-helpers';
 import { useCoursesStore } from './courses';
 
 export interface User {
@@ -29,14 +30,12 @@ export interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
-  pb: typeof pb;
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
     token: null,
-    pb: pb,
   }),
 
   getters: {
@@ -48,10 +47,11 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(email: string, password: string) {
       try {
-        const authData = await this.pb.collection('users').authWithPassword(email, password);
+        const { pb } = usePocketbase();
+        const authData = await pb.collection('users').authWithPassword(email, password);
 
         // Haal user data op met role expand
-        const userWithRole = await this.pb.collection('users').getOne(authData.record.id, {
+        const userWithRole = await pb.collection('users').getOne(authData.record.id, {
           expand: 'role',
         });
 
@@ -86,7 +86,8 @@ export const useAuthStore = defineStore('auth', {
       birthyear: number;
     }) {
       try {
-        await this.pb.collection('users').create(data);
+        const { pb } = usePocketbase();
+        await pb.collection('users').create(data);
         return true;
       } catch (error) {
         console.error('Registration error:', error);
@@ -96,7 +97,8 @@ export const useAuthStore = defineStore('auth', {
 
     async requestPasswordReset(email: string) {
       try {
-        await this.pb.collection('users').requestPasswordReset(email, PASSWORD_RESET_REDIRECT_URL);
+        const { pb } = usePocketbase();
+        await pb.collection('users').requestPasswordReset(email, getPasswordResetRedirectUrl());
         return true;
       } catch (error) {
         console.error('Password reset request error:', error);
@@ -106,7 +108,8 @@ export const useAuthStore = defineStore('auth', {
 
     async confirmPasswordReset(token: string, email: string, password: string) {
       try {
-        await this.pb.collection('users').confirmPasswordReset(token, password, password);
+        const { pb } = usePocketbase();
+        await pb.collection('users').confirmPasswordReset(token, password, password);
         return true;
       } catch (error) {
         console.error('Password reset confirmation error:', error);
@@ -125,6 +128,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         if (!this.user) throw new Error('Geen gebruiker ingelogd');
 
+        const { pb } = usePocketbase();
         const formData = new FormData();
         formData.append('name', data.name);
         formData.append('birthyear', data.birthyear.toString());
@@ -142,7 +146,7 @@ export const useAuthStore = defineStore('auth', {
           country: data.country,
         });
 
-        const updatedUser = await this.pb.collection('users').update(this.user.id, formData);
+        const updatedUser = await pb.collection('users').update(this.user.id, formData);
         console.log('Updated user:', updatedUser);
 
         this.user = updatedUser as User;
@@ -154,7 +158,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      this.pb.authStore.clear();
+      try {
+        const { pb } = usePocketbase();
+        pb.authStore.clear();
+      } catch (error) {
+        console.warn('Could not clear PocketBase auth store:', error);
+      }
       localStorage.removeItem('pb_auth');
       this.user = null;
       this.token = null;
@@ -162,22 +171,24 @@ export const useAuthStore = defineStore('auth', {
 
     async checkAuth() {
       try {
+        const { pb } = usePocketbase();
+
         // Probeer eerst de token uit localStorage te halen
         const storedAuth = localStorage.getItem('pb_auth');
         if (storedAuth) {
           const { token, model } = JSON.parse(storedAuth);
           if (token && model) {
-            this.pb.authStore.save(token, model);
+            pb.authStore.save(token, model);
           }
         }
 
         // Controleer of we een geldige auth store hebben
-        if (this.pb.authStore.isValid && this.pb.authStore.model?.id) {
-          const user = await this.pb.collection('users').getOne(this.pb.authStore.model.id, {
+        if (pb.authStore.isValid && pb.authStore.model?.id) {
+          const user = await pb.collection('users').getOne(pb.authStore.model.id, {
             expand: 'role',
           });
-          this.user = { ...user, token: this.pb.authStore.token } as User;
-          this.token = this.pb.authStore.token;
+          this.user = { ...user, token: pb.authStore.token } as User;
+          this.token = pb.authStore.token;
 
           // Haal direct de banen van de gebruiker op na auth check
           const coursesStore = useCoursesStore();

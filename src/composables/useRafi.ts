@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import { usePocketbase } from './usePocketbase';
 import { useI18n } from 'vue-i18n';
-import { CompactLocalRule } from './useLocalRules';
+import type { CompactLocalRule } from './useLocalRules';
 import { getApiUrl, isLoggingEnabled } from '../config/rafi';
 
 export interface RafiRequest {

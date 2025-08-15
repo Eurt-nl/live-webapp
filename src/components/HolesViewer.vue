@@ -64,7 +64,7 @@ const props = defineProps<{
 }>();
 
 const $q = useQuasar();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const holes = ref([]);
 const loading = ref(false);

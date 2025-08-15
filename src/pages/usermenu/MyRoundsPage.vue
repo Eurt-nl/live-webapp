@@ -159,7 +159,7 @@ const { t: $customT } = useI18n();
 const router = useRouter();
 
 const authStore = useAuthStore();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const rounds = ref([]);
 const courses = ref([]);
@@ -237,6 +237,10 @@ const updatePastRoundStatus = async (round) => {
 
 const loadData = async () => {
   try {
+    // Debug: controleer PocketBase instantie
+    console.log('Debug - PocketBase instantie:', pb);
+    console.log('Debug - PocketBase collection methode:', typeof pb.collection);
+
     loading.value = true;
 
     // Haal eerst de basis data op
@@ -338,6 +342,11 @@ const handleRoundClick = (round: {
 const updateExpiredRounds = async () => {
   try {
     debug('Start updateExpiredRounds');
+    console.log('Debug - PocketBase instantie in updateExpiredRounds:', pb);
+    console.log(
+      'Debug - PocketBase collection methode in updateExpiredRounds:',
+      typeof pb.collection,
+    );
 
     // Haal alle benodigde statussen op
     const [activeStatus, cancelledStatus, completedStatus] = await Promise.all([

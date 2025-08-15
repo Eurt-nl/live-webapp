@@ -236,7 +236,7 @@ const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 
 // Registratie-composable voor inschrijvingen ophalen en muteren

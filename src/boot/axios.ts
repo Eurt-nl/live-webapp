@@ -1,15 +1,10 @@
 import axios from 'axios';
 
-// Configure axios met dezelfde environment-based URL logica als PocketBase
+// Configure axios met environment-based URL logica
 const getApiUrl = (): string => {
-  // In development (npm run dev) gebruik de live server
-  if (process.env.NODE_ENV === 'development') {
-    return 'https://pb.pitch-putt.live';
-  }
-
-  // In production (npm run build) gebruik de live server
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://pb.pitch-putt.live';
+  // Gebruik environment variable als die beschikbaar is
+  if (import.meta.env.VITE_PB_URL) {
+    return import.meta.env.VITE_PB_URL;
   }
 
   // Fallback naar live server URL

@@ -46,7 +46,7 @@ const emit = defineEmits<{
   (e: 'update:holes', holes: Hole[]): void;
 }>();
 
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const { t: $customT } = useI18n();
 const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<L.Map | null>(null);

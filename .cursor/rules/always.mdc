@@ -1,158 +1,176 @@
 ---
 alwaysApply: true
 ---
-This rule defines the default structure and technology stack for this project, which is a Quasar-based Progressive Web App using Vue 3, TypeScript and PocketBase as backend. Useful when generating files, setting up pages, or creating collections.
-Rules:
-    • This project is a Progressive Web App (PWA) built with Quasar Framework, Vue 3 and TypeScript.
-    • Use PocketBase as the backend.
-    • Use Capacitor only for PWA-specific features, not for native mobile development.
-    • Use notifications, even without a state management library.
-    • Do not use Pinia unless multiple components require access to shared state (e.g. notifications or user info).
 
-Defines how AppMenu and UserMenu should be structured and separated. Useful when generating views or organizing feature folders.
+# Projectbasis (Quasar PWA + Vue 3 + TS + PocketBase)
+Deze regels definiëren de standaard structuur en stack voor dit project: een Quasar‑gebaseerde Progressive Web App met Vue 3, TypeScript en PocketBase als backend. Gebruik deze leidraad bij het genereren van bestanden, opzet van pagina’s en collections.
+
 Rules:
-    • The layout uses a QDrawer on the left for AppMenu and on the right for UserMenu.
-    • Files must be organized in folders that match the menu structure (AppMenu and UserMenu).
-    • AppMenu components are for displaying informational (read-only) views.
-    • UserMenu components are used for creating, editing, and deleting records (CRUD).
-    • Store PocketBase collections in separate files and group them via an index.ts file.
+  • Dit project is een PWA gebouwd met Quasar Framework, Vue 3 en TypeScript.
+  • PocketBase is de backend.
+  • Capacitor wordt alléén gebruikt voor PWA‑specifieke features, niet voor native apps.
+  • Notificaties zijn toegestaan zonder aparte state‑lib.
+  • Gebruik Pinia alleen wanneer meerdere componenten gedeelde state nodig hebben (bijv. notificaties of user info).
+
+# Menu‑architectuur (AppMenu vs UserMenu)
+Definieert hoe AppMenu en UserMenu zijn gescheiden. Handig voor views en feature‑mappen.
+
+Rules:
+  • Layout gebruikt links een QDrawer voor AppMenu en rechts een QDrawer voor UserMenu.
+  • Bestanden in mappen plaatsen die de menustructuur volgen (`@/pages/appmenu`, `@/pages/usermenu`).
+  • AppMenu‑componenten zijn informatief (read‑only).
+  • UserMenu‑componenten zijn voor CRUD.
+  • PocketBase collection‑clients in losse files houden en via `index.ts` groeperen.
 Tags: @/layouts, @/pages/appmenu, @/pages/usermenu
 
-All generated code must include clear comments for both logic and layout, to help Cursor and other developers understand the structure.
+# Commentaarplicht
+Alle gegenereerde code moet duidelijke comments bevatten voor zowel logica als layout, zodat Cursor en andere devs de structuur begrijpen.
 
 ---
 
-Enforce standardized i18n usage in Vue files:
+# Architectuurregels (anti‑duplicatie, hard)
+Doel: één waarheid per concern, geen parallelle implementaties.
+
+## Service Worker
+  • We gebruiken **uitsluitend** Quasar **PWA GenerateSW** (zie `quasar.config.js > pwa.workboxPluginMode = 'GenerateSW'`).  
+  • **Verboden om eigen SW‑bestanden/registraties toe te voegen** (zoals `public/sw.js`, `src-pwa/sw.js`, `src-pwa/custom-service-worker.ts`, of extra `register-service-worker.{js,ts}`). Verwijder bestaande duplicaten en verwijzingen. 
+
+## PocketBase toegangspad
+  • UI (pages/components/stores) praten **altijd** via de composable:  
+    `const { pb } = usePocketbase();`  
+  • Het is **verboden** om `src/config/pocketbase` direct te importeren buiten de composable — dit voorkomt dubbele entrypoints en maakt het later eenvoudiger om Realtime (subscribe) toe te voegen. 
+
+## HTTP‑clients & endpoints
+  • Base‑URL’s komen uit **env** (Vite/Quasar), niet hardcoded. Werk dus niet met vaste URLs in `axios` of vergelijkbare clients. Controleer `src/boot/axios.ts` en normaliseer naar env‑variabelen. 
+
+## File‑URL helpers
+  • Bouw **nooit** handmatig bestands‑URL’s in components. Gebruik één centrale helper (`src/utils/pocketbase-helpers.ts`) en hergebruik die overal. 
+
+---
+
+# i18n‑standaardisatie (Vue + vue‑i18n)
+**Enforce standardized i18n usage in Vue files**
+
 Rules:
-    • Always use `useI18n` imported from 'vue-i18n' in any file that uses translations.
-    • Always destructure `t` as `$customT` using: `const { t: $customT } = useI18n();`.
-    • In <template> sections, translations must always use `$customT('key')`. `$t('key')` is forbidden.
-    • In <script> sections, translations must always use `$customT('key')`. Bare `t('key')` calls are forbidden.
-    • Never import `$customT` directly from any module.
-    • If `$customT` is missing in a file with translations, add `const { t: $customT } = useI18n();` in <script setup>.
-    • Automatically rewrite any `$t(` or `t(` calls to `$customT(` when generating or modifying code.
-    • Ensure `src/types/vue.d.ts` includes proper type augmentation for `$customT`.
-    • Validate that keys passed to `$customT` exist in both `nl.json` and `en.json` and flag missing keys.
+  • Importeer altijd `useI18n` uit `vue-i18n` in bestanden die vertalingen gebruiken.  
+  • Destructureer altijd `t` als `$customT`:  
+    `const { t: $customT } = useI18n();`  
+  • In `<template>` en `<script>` gebruik je **altijd** `$customT('key')`. `$t('key')` en bare `t('key')` zijn **verboden**.  
+  • Importeer `$customT` nooit direct uit modules.  
+  • Ontbreekt `$customT` in een file met vertalingen? Voeg de destructure toe in `<script setup>`.  
+  • Auto‑rewrite bij generatie: vervang `$t(` en `t(` door `$customT(`.  
+  • Zorg dat `src/types/vue.d.ts` correcte type‑augmentatie voor `$customT` bevat.  
+  • Valideer dat keys bestaan in **zowel** `nl.json` als `en.json` en meld ontbrekende keys.
 Tags: @/boot/i18n, @/i18n, @/types/vue
 
----
-
-Rule: Automatically update changelog, bump version, and tag releases
-
-When committing changes:
-1. Extract the commit message (first line only).
-2. Parse the commit type (feat, fix, chore, docs, refactor) from the conventional commit format.
-3. Map commit types to changelog types:
-    - feat → minor
-    - fix → patch
-    - chore/docs/refactor → patch
-    - Any commit with "BREAKING CHANGE" in its body or type "major" → major
-4. Open src/utils/changelog.ts:
-    • Insert a new entry at the TOP of the `changelog` array in this format:
-      {
-        version: "<incremented version number>",
-        date: "<YYYY-MM-DD>",
-        type: "<mapped changelog type>",
-        changes: ["<commit message text>"]
-      }
-5. Increment the version based on semver rules:
-    - major: X+1.0.0
-    - minor: X.Y+1.0
-    - patch: X.Y.Z+1
-6. Update package.json:
-    • Replace the "version" field with the new incremented version.
-    • Ensure JSON formatting uses 2 spaces indentation.
-7. Tagging (automated GitHub release):
-    • Create a Git tag matching the new version (e.g., v1.3.0).
-    • Push the tag to the remote repository.
-8. Ensure src/utils/changelog.ts remains valid TypeScript and preserves the `ChangelogEntry` interface.
-9. If src/utils/changelog.ts does not exist, create it with:
-    export const changelog: ChangelogEntry[] = [ ... ];
-
-Constraints:
-    • Always insert new entries at index 0 (top of array).
-    • Never modify or reorder older entries.
-    • Keep changelog and package.json versions in sync.
-    • Use ISO date format (YYYY-MM-DD).
-    • Automatically push a Git tag for each version bump.
-Tags: @/utils/changelog.ts, package.json, Git tags
-
-Rule: Always apply i18n translations with English as fallback
-
-Context:
-This Quasar PWA uses Vue 3, TypeScript, and vue-i18n for translations. All user-facing text must be translated using $customT with keys defined in nl.json (Dutch) and en.json (English fallback). You (the developer) will give instructions in Dutch, but the fallback language in the app is English.
+**Always apply i18n translations with English as fallback**
 
 Enforcement:
-1. When generating or modifying any Vue component:
-    • Detect any hardcoded user-facing strings in templates, scripts, buttons, labels, placeholders, dialogs, notifications, etc.
-    • Automatically replace them with `$customT('translation.key')` references.
-    • Add the corresponding translation keys to both `nl.json` and `en.json` if they do not exist:
-        - nl.json: Dutch translation (based on the prompt or context).
-        - en.json: English translation as fallback.
-    • Use a consistent key naming convention based on context:
-        - Example: `userMenu.version.current` or `auth.login.title`.
-
-2. Language-specific behavior:
-    • Always treat English as the fallback language (even though instructions are in Dutch).
-    • When a new key is added, automatically:
-        - Translate to Dutch (nl.json) based on the developer's instruction language.
-        - Translate to English (en.json) as fallback.
-    • Validate that every key added to nl.json also exists in en.json and vice versa.
-
-3. Code generation requirements:
-    • In templates: Always use `{{ $customT('key') }}` for text content.
-    • In script sections: Use `$customT('key')` for messages (e.g., `$q.notify`).
-    • Do NOT leave any hardcoded strings in code; they must all be converted to i18n keys.
-
-4. File updates:
-    • Ensure `src/boot/i18n.ts` is always properly configured with fallbackLocale set to 'en'.
-    • When adding new keys, update both `src/i18n/nl.json` and `src/i18n/en.json`.
-    • If a key already exists, reuse it instead of duplicating.
-
-5. Validation:
-    • Before completing any code generation, scan the modified files for untranslated hardcoded strings and automatically convert them.
-    • Ensure translations are grouped logically in both JSON files (e.g., by component or feature).
-
-Constraints:
-    • Developer instructions are given in Dutch, but fallback must remain English.
-    • Maintain correct JSON formatting in both translation files.
-    • Never output untranslated UI text directly in components.
+  1) Bij genereren/wijzigen van components:
+     • Detecteer user‑facing strings (templates, scripts, buttons, labels, placeholders, dialogs, notifications, …).  
+     • Vervang ze door `$customT('translation.key')`.  
+     • Voeg ontbrekende keys toe aan **beide** `nl.json` en `en.json`.  
+     • Gebruik consistente naamgeving, bv. `userMenu.version.current`, `auth.login.title`.
+  2) Taalgedrag:
+     • Fallback is altijd **Engels**.  
+     • Nieuwe keys krijgen NL (app‑taal) en EN (fallback).
+  3) Code:
+     • In templates: `{{ $customT('key') }}`.  
+     • In scripts (o.a. `$q.notify`): `$customT('key')`.  
+     • Geen hardcoded UI‑strings achterlaten.  
+  4) Bestanden:
+     • `src/boot/i18n.ts` staat fallbackLocale op `'en'`.  
+     • Update `src/i18n/nl.json` en `src/i18n/en.json` bij nieuwe keys.  
+     • Reuse bestaande keys, niet dupliceren.  
+  5) Validatie:
+     • Scan gewijzigde files op harde strings en convert automatisch.  
+     • Orden keys logisch per component/feature. 
 Tags: @/i18n, @/boot/i18n, @/pages, @/components
 
-Rule: Enforce PocketBase date/time format (YYYY-MM-DD HH:mm:ss)
+---
+
+# Changelog, version bump & tagging (conventional commits)
+**Rule: Automatically update changelog, bump version, and tag releases**
+
+Workflow bij commits:
+  1) Haal de commit‑titel (eerste regel).  
+  2) Parse type (feat, fix, chore, docs, refactor) volgens conventional commits.  
+  3) Mapping:
+     • feat → **minor**  
+     • fix/chore/docs/refactor → **patch**  
+     • `BREAKING CHANGE` of type `major` → **major**  
+  4) Open `src/utils/changelog.ts` en voeg **bovenaan** toe:
+     ```ts
+     {
+       version: "<semver>",
+       date: "<YYYY-MM-DD>",
+       type: "<major|minor|patch>",
+       changes: ["<commit title>"]
+     }
+     ```
+  5) Semver bump:
+     • major: X+1.0.0  
+     • minor: X.Y+1.0  
+     • patch: X.Y.Z+1  
+  6) Update `package.json` `"version"` exact gelijk aan changelog.  
+  7) Maak Git‑tag `v<version>` en push die.  
+  8) Behoud geldige TS in `src/utils/changelog.ts` en de `ChangelogEntry` interface.  
+  9) Bestaat `src/utils/changelog.ts` niet? Aanmaken met `export const changelog: ChangelogEntry[] = [];`  
+Constraints:
+  • Nieuwe entries **altijd** op index 0.  
+  • Oudere entries blijven onaangeroerd.  
+  • Versies in changelog en `package.json` **in sync**.  
+  • Datum in ISO‑formaat (YYYY‑MM‑DD).  
+  • Altijd de tag pushen. 
+Tags: @/utils/changelog.ts, package.json, Git tags
+
+---
+
+# PocketBase datum/tijd‑formaat (YYYY‑MM‑DD HH:mm:ss)
+**Rule: Enforce PocketBase date/time format**
 
 Context:
-This project uses PocketBase, which expects date and time fields in the format "YYYY-MM-DD HH:mm:ss" (e.g., 2025-07-29 16:35:17). Cursor must ensure that any code dealing with date/time parsing, formatting, or saving to PocketBase uses this format consistently.
+  • PocketBase velden/filters gebruiken het formaat `"YYYY-MM-DD HH:mm:ss"` (24u, geen ms, geen `T`/`Z`).  
+  • Alle code die datums opslaat of filtert hanteert dit formaat.
 
 Enforcement:
-1. When generating or modifying any code that handles dates/times (e.g., storing to PocketBase, API calls, displaying timestamps):
-    • Automatically format dates using "YYYY-MM-DD HH:mm:ss".
-    • Never use ISO strings (e.g., "2025-07-30T12:37:32.995Z") or include timezone markers (`T` or `Z`).
-    • Always convert using JavaScript/TypeScript utilities (e.g., `Date` or `dayjs`/`date-fns` if available).
-
-2. Implementation details:
-    • When using `toISOString()`, strip the `T` and `Z` and replace them:
-        Example:  
-        ```ts
-        const formatted = new Date().toISOString().replace('T', ' ').replace(/\..+/, '');
-        ```
-        Result: "2025-07-29 16:35:17"
-    • Alternatively, explicitly build the format:
-        ```ts
-        const d = new Date();
-        const formatted = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-        ```
-
-3. PocketBase usage:
-    • Any `create()`, `update()`, or query filters involving dates must use "YYYY-MM-DD HH:mm:ss".
-    • Ensure that UI inputs (e.g., datetime pickers) are converted into this format before saving.
-
-4. Validation:
-    • Before finalizing code, scan for ISO-style datetime strings (`T` or `Z`) and auto-rewrite them to the PocketBase format.
-    • Ensure tests or examples always demonstrate PocketBase-compatible formatting.
-
+  1) Bij genereren/wijzigen van code met datums/tijden:
+     • **Altijd** formatteren naar `"YYYY-MM-DD HH:mm:ss"`.  
+     • Geen ISO strings of `T`/`Z`.  
+     • Converteer met JS/TS of libs (bv. dayjs/date‑fns) naar exact formaat.
+  2) Implementatiehints:
+     ```ts
+     const formatted = new Date().toISOString().replace('T', ' ').replace(/\..+/, '');
+     // resultaat: "2025-08-13 12:34:56"
+     ```
+     of
+     ```ts
+     const d = new Date();
+     const formatted = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+     ```
+  3) PocketBase usage:
+     • Elke `create()`, `update()`, en **filter** met datums gebruikt dit formaat.  
+     • UI‑inputs (datetime pickers) moeten vóór opslag geconverteerd worden.
+  4) Validatie:
+     • Scan op ISO‑achtige strings (`T` of `Z`) en rewrite automatisch.  
+     • Voorbeelden/tests tonen PocketBase‑compatibel formaat.
 Constraints:
-    • Output format must always be "YYYY-MM-DD HH:mm:ss" with 24-hour time.
-    • No milliseconds, no timezone indicators, no "T" separator.
-    • Maintain consistent formatting in all database operations, API calls, and UI displays.
+  • Altijd `"YYYY-MM-DD HH:mm:ss"`, 24‑uurs.  
+  • Geen milliseconden, geen tijdzone‑markeringen.  
 Tags: @/utils/datetime, PocketBase, date formatting
+
+---
+
+# ESLint‑enforcer (anti‑duplicatie)
+Om de PB‑toegangspad‑regel te handhaven, moet ESLint directe imports verbieden:
+
+```ts
+// eslint.config.js – voeg toe aan rules
+'no-restricted-imports': ['error', {
+  paths: [
+    {
+      name: 'src/config/pocketbase',
+      message: 'Gebruik usePocketbase() in UI/stores. Direct importeren is verboden.'
+    }
+  ]
+}]

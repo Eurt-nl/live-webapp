@@ -78,7 +78,7 @@
 
           <div v-if="selectedBericht?.image" class="q-mt-md">
             <img
-              :src="`${POCKETBASE_URL}/api/files/notifications/${selectedBericht.id}/${selectedBericht.image}`"
+              :src="getFileUrl('notifications', selectedBericht.id, selectedBericht.image)"
               alt="Screenshot"
               style="max-width: 100%; border: 1px solid #ccc; border-radius: 4px"
             />
@@ -159,11 +159,11 @@ import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore, type User } from 'stores/auth';
 import { useNotificationsStore } from 'stores/notifications';
 import { debug } from 'src/utils/debug';
-import { POCKETBASE_URL } from 'src/config/pocketbase';
+import { getFileUrl } from 'src/utils/pocketbase-helpers';
 
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const notificationsStore = useNotificationsStore();
 

@@ -230,7 +230,7 @@ const props = defineProps<{
 
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const localRules = ref<LocalRule[]>([]);
 const holes = ref<Array<{ id: string; hole: number }>>([]);

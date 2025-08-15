@@ -1,6 +1,6 @@
 {
   "name": "pitch-putt-live-app",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "App voor Pitch-Putt.live",
   "productName": "Pitch-Putt.live app",
   "author": "Renze Hasper <rh.hasper@me.com>",
@@ -24,7 +24,8 @@
     "dev:full": "node scripts/start-dev.js",
     "deploy:rafi": "node scripts/deploy-rafi-server.js",
     "deploy:vps": "./scripts/deploy-vps.sh",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "deploy:frontend": "./scripts/deploy-frontend.sh",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write src/",
     "test": "echo \"No test specified\" && exit 0"
   },

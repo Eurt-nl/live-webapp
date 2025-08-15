@@ -42,6 +42,8 @@ export default configure((ctx) => {
       vueRouterMode: 'hash', // available values: 'hash', 'history'
       // transpile: false,
       // publicPath: '/',
+      // Force cache busting
+      filenameHashing: true,
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
@@ -158,15 +160,26 @@ export default configure((ctx) => {
       workboxOptions: {
         skipWaiting: true,
         clientsClaim: true,
-        // Force cache update voor i18n bestanden
+        // Force cache update voor alle assets
         runtimeCaching: [
           {
             urlPattern: /.*\.js$/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'js-cache',
+              cacheName: 'js-cache-v2',
               expiration: {
                 maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24 uur
+              },
+            },
+          },
+          {
+            urlPattern: /.*\.css$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'css-cache-v2',
+              expiration: {
+                maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 24 uur
               },
             },
@@ -184,7 +197,7 @@ export default configure((ctx) => {
         orientation: 'portrait',
         background_color: '#ffffff',
         theme_color: '#003776',
-        version: '2.0.0', // Force cache update
+        version: '2.1.0', // Force cache update
         icons: [
           {
             src: 'icons/icon-128x128.png',

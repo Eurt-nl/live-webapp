@@ -92,7 +92,7 @@ const dialogModel = computed({
 const $q = useQuasar();
 const { t: $customT } = useI18n();
 const authStore = useAuthStore();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const router = useRouter();
 
 const loading = ref(false);

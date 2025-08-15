@@ -228,7 +228,7 @@ import type { Category } from 'src/components/models';
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const { t: $customT } = useI18n();
 

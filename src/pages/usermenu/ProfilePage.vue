@@ -159,7 +159,7 @@ const $router = useRouter();
 const authStore = useAuthStore();
 const fileInput = ref<HTMLInputElement | null>(null);
 const profileForm = ref<{ validate: () => Promise<boolean> } | null>(null);
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const name = ref('');
 const email = ref('');

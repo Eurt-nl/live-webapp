@@ -336,8 +336,8 @@ const sendMessage = async () => {
   // Bereid Rafi request voor
   const request: RafiRequest = {
     question,
-    courseId: nearestCourse.value!.courseId,
-    courseName: nearestCourse.value!.courseName,
+    courseId: nearestCourse.value.courseId,
+    courseName: nearestCourse.value.courseName,
     localRules: compactRulesForPrompt(localRules.value),
     lang: $customT('app.language') || 'nl',
   };
@@ -356,11 +356,11 @@ const sendMessage = async () => {
     // Log chat (als ingeschakeld)
     await rafiLogger.logChat({
       userId: pb.authStore.model?.id,
-      courseId: nearestCourse.value!.courseId,
+      courseId: nearestCourse.value.courseId,
       question,
       answer: response.answer,
       usedRules: response.usedRules,
-      distance: nearestCourse.value!.distance,
+      distance: nearestCourse.value.distance,
       clientMeta: getClientMeta(),
     });
   }

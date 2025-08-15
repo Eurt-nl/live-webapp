@@ -41,6 +41,14 @@ const initializePocketBase = (): PocketBase => {
   return pb;
 };
 
+// Functie om een nieuwe PocketBase instantie te krijgen
+export const getPocketBase = (): PocketBase => {
+  if (!pb) {
+    return initializePocketBase();
+  }
+  return pb;
+};
+
 // Initialiseer PocketBase
 try {
   pb = initializePocketBase();
@@ -66,10 +74,12 @@ const getRedirectUrl = (): string => {
 };
 
 // Stel de redirect URL in voor password reset
-pb.authStore.onChange(() => {
-  // Deze hook wordt aangeroepen wanneer de auth store verandert
-  // We kunnen hier eventueel extra logica toevoegen
-});
+if (pb) {
+  pb.authStore.onChange(() => {
+    // Deze hook wordt aangeroepen wanneer de auth store verandert
+    // We kunnen hier eventueel extra logica toevoegen
+  });
+}
 
 // Exporteer de redirect URL voor gebruik in andere delen van de app
 export const PASSWORD_RESET_REDIRECT_URL = getRedirectUrl();

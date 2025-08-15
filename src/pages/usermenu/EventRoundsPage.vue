@@ -242,7 +242,7 @@ const route = useRoute();
 // const router = useRouter(); // Niet gebruikt
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 
 const event = ref(null);

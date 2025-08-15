@@ -63,7 +63,7 @@ import { debug } from 'src/utils/debug';
 const router = useRouter();
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 
 const events = ref([]);
 const loading = ref(true);

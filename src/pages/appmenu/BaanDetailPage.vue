@@ -228,7 +228,7 @@ import { debug } from 'src/utils/debug';
 const route = useRoute();
 const $q = useQuasar();
 const { t: $customT } = useI18n();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 
 const baan = ref<Course | null>(null);

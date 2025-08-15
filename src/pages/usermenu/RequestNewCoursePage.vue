@@ -132,7 +132,7 @@ import { debug } from 'src/utils/debug';
 const $q = useQuasar();
 const { t: $customT } = useI18n();
 const router = useRouter();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 
 // Form data

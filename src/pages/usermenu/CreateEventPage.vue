@@ -154,7 +154,7 @@ import { debug } from 'src/utils/debug';
 const router = useRouter();
 const route = useRoute();
 const $q = useQuasar();
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const { t: $customT } = useI18n();
 

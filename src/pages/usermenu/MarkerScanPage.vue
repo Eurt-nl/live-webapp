@@ -110,7 +110,7 @@ import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import { QrcodeStream } from 'vue-qrcode-reader';
 
-const pb = usePocketbase();
+const { pb } = usePocketbase();
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
