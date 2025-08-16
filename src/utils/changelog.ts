@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.7.1",
+    date: "2025-08-15",
+    type: "patch",
+    changes: ["fix: resolve PWA cache issues and ClientResponseError import"]
+  },
+  {
     version: "0.7.0",
     date: "2025-08-11",
     type: "minor",

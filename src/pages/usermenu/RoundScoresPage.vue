@@ -285,9 +285,22 @@
           <!-- Tussenstand event -->
           <div v-if="eventStandings.length > 0" class="q-mt-xl">
             <div class="row items-center justify-between q-mb-sm">
-              <div class="text-h6 cursor-pointer" @click="showStandings = !showStandings">
-                {{ $customT('scores.standings') }}
-                <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
+              <div class="row items-center">
+                <div class="text-h6 cursor-pointer" @click="showStandings = !showStandings">
+                  {{ $customT('scores.standings') }}
+                  <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
+                </div>
+                <!-- Realtime indicator -->
+                <div v-if="isRealtimeEnabled" class="q-ml-sm">
+                  <q-chip
+                    dense
+                    color="positive"
+                    text-color="white"
+                    icon="wifi"
+                    size="sm"
+                    label="Live updates"
+                  />
+                </div>
               </div>
               <q-toggle
                 v-model="filterByCategory"
@@ -679,7 +692,7 @@
 // Imports en initialisatie
 // -----------------------------
 // Importeer Vue, Quasar, router, PocketBase en eigen stores/composables
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { usePocketbase } from 'src/composables/usePocketbase';
@@ -697,6 +710,13 @@ const { pb } = usePocketbase();
 const authStore = useAuthStore();
 const roundsStore = useRoundsStore();
 const { t: $customT } = useI18n(); // Centrale store voor rondes
+
+// -----------------------------
+// Websocket/realtime state
+// -----------------------------
+// State voor realtime subscriptions
+const subscriptions = ref<Array<() => void>>([]);
+const isRealtimeEnabled = ref(false);
 
 // -----------------------------
 // Type-definities
@@ -1288,12 +1308,16 @@ const loadData = async () => {
       );
       if (playerRec) playerRecords.value[String(hole.id)] = playerRec;
     });
-  } catch {
-    $q.notify({
-      color: 'negative',
-      message: $customT('notifications.loadDataError'),
-      icon: 'error',
-    });
+  } catch (error) {
+    debug('Error loading data:', error);
+    // Alleen notificatie tonen als het geen realtime update is
+    if (!isRealtimeEnabled.value) {
+      $q.notify({
+        color: 'negative',
+        message: $customT('notifications.loadDataError'),
+        icon: 'error',
+      });
+    }
   } finally {
     loading.value = false;
   }
@@ -1411,10 +1435,201 @@ const onRefresh = async (done: () => void) => {
 };
 
 // -----------------------------
+// Websocket/realtime functionaliteit
+// -----------------------------
+// Start realtime subscriptions voor live tussenstand updates
+const startRealtimeSubscriptions = () => {
+  if (!round.value || isRealtimeEnabled.value) return;
+
+  debug('Starting realtime subscriptions for standings updates');
+  isRealtimeEnabled.value = true;
+
+  try {
+    // Subscribe op round_scores collection voor score updates
+    void pb.collection('round_scores').subscribe('*', (data) => {
+      debug('Realtime score update received:', data);
+
+      // Alleen verwerken als het relevante scores zijn voor dit event
+      if (data.record && isRelevantScoreUpdate(data.record)) {
+        debug('Relevant score update detected, updating data efficiently');
+        // Gebruik try-catch om errors te voorkomen
+        try {
+          // Gebruik efficiënte update in plaats van volledige refresh
+          updateScoreData(data.record);
+        } catch (error) {
+          debug('Error during realtime data update:', error);
+          // Geen notificatie tonen bij realtime errors om gebruikers niet te storen
+        }
+
+        // Verwijder notificatie voor score updates - dit leidt alleen maar af
+        // if (data.action === 'create' || data.action === 'update') {
+        //   $q.notify({
+        //     color: 'info',
+        //     message: 'Nieuwe score update ontvangen',
+        //     icon: 'update',
+        //     timeout: 3000,
+        //     position: 'top',
+        //   });
+        // }
+      }
+    });
+
+    // Subscribe op rounds collection voor ronde status updates
+    void pb.collection('rounds').subscribe('*', (data) => {
+      debug('Realtime round update received:', data);
+
+      // Alleen verwerken als het relevante rondes zijn voor dit event
+      if (data.record && isRelevantRoundUpdate(data.record)) {
+        debug('Relevant round update detected, updating data efficiently');
+        // Gebruik try-catch om errors te voorkomen
+        try {
+          // Gebruik efficiënte update in plaats van volledige refresh
+          updateRoundData(data.record);
+        } catch (error) {
+          debug('Error during realtime data update:', error);
+          // Geen notificatie tonen bij realtime errors om gebruikers niet te storen
+        }
+      }
+    });
+
+    debug('Realtime subscriptions started successfully');
+  } catch (error) {
+    debug('Error starting realtime subscriptions:', error);
+    isRealtimeEnabled.value = false;
+  }
+};
+
+// Stop alle realtime subscriptions
+const stopRealtimeSubscriptions = () => {
+  debug('Stopping realtime subscriptions');
+  subscriptions.value.forEach((unsubscribe) => unsubscribe());
+  subscriptions.value = [];
+  isRealtimeEnabled.value = false;
+};
+
+// Controleer of een score update relevant is voor de huidige tussenstand
+const isRelevantScoreUpdate = (scoreRecord: Record<string, unknown>): boolean => {
+  if (!round.value || !scoreRecord) return false;
+
+  // Voor event rondes: check of de score bij hetzelfde event hoort
+  if (isEventRound.value) {
+    const scoreRound = allRounds.value.find((r) => r.id === scoreRecord.round);
+    return scoreRound?.event === round.value.event;
+  }
+
+  // Voor event_round rondes: check of de score bij dezelfde event_round hoort
+  const er = round.value?.expand?.event_round;
+  const eventRoundId =
+    er && typeof er === 'object' && 'id' in er ? (er as { id: string }).id : null;
+  if (eventRoundId) {
+    const scoreRound = allRounds.value.find((r) => r.id === scoreRecord.round);
+    return scoreRound?.event_round === eventRoundId;
+  }
+
+  return false;
+};
+
+// Efficiënte update functie voor realtime score updates
+const updateScoreData = (scoreRecord: Record<string, unknown>) => {
+  if (!scoreRecord) return;
+
+  const scoreId = scoreRecord.id as string;
+  const roundId = scoreRecord.round as string;
+  const holeId = scoreRecord.hole as string;
+
+  // Update bestaande score of voeg nieuwe toe
+  const existingIndex = allScores.value.findIndex((s) => s.id === scoreId);
+
+  if (existingIndex >= 0) {
+    // Update bestaande score
+    allScores.value[existingIndex] = {
+      ...allScores.value[existingIndex],
+      ...scoreRecord,
+    } as RoundScore;
+  } else {
+    // Voeg nieuwe score toe
+    allScores.value.push(scoreRecord as RoundScore);
+  }
+
+  // Update markerRecords en playerRecords voor snelle lookup
+  if (scoreRecord.score_player != null) {
+    markerRecords.value[holeId] = allScores.value.find(
+      (s) => s.hole === holeId && s.score_player != null,
+    ) as RoundScore;
+  }
+
+  if (scoreRecord.score_marker != null) {
+    playerRecords.value[holeId] = allScores.value.find(
+      (s) => s.hole === holeId && s.score_marker != null,
+    ) as RoundScore;
+  }
+
+  debug('Score data updated efficiently:', { scoreId, roundId, holeId });
+};
+
+// Controleer of een ronde update relevant is voor de huidige tussenstand
+const isRelevantRoundUpdate = (roundRecord: Record<string, unknown>): boolean => {
+  if (!round.value || !roundRecord) return false;
+
+  // Voor event rondes: check of het dezelfde event is
+  if (isEventRound.value) {
+    return roundRecord.event === round.value.event;
+  }
+
+  // Voor event_round rondes: check of het dezelfde event_round is
+  const er = round.value?.expand?.event_round;
+  const eventRoundId =
+    er && typeof er === 'object' && 'id' in er ? (er as { id: string }).id : null;
+  if (eventRoundId) {
+    return roundRecord.event_round === eventRoundId;
+  }
+
+  return false;
+};
+
+// Efficiënte update functie voor realtime ronde updates
+const updateRoundData = (roundRecord: Record<string, unknown>) => {
+  if (!roundRecord) return;
+
+  const roundId = roundRecord.id as string;
+
+  // Update bestaande ronde of voeg nieuwe toe
+  const existingIndex = allRounds.value.findIndex((r) => r.id === roundId);
+
+  if (existingIndex >= 0) {
+    // Update bestaande ronde
+    allRounds.value[existingIndex] = {
+      ...allRounds.value[existingIndex],
+      ...roundRecord,
+    } as Round;
+  } else {
+    // Voeg nieuwe ronde toe
+    allRounds.value.push(roundRecord as Round);
+  }
+
+  // Update huidige ronde als het dezelfde is
+  if (round.value?.id === roundId) {
+    round.value = {
+      ...round.value,
+      ...roundRecord,
+    } as Round;
+  }
+
+  debug('Round data updated efficiently:', { roundId });
+};
+
+// -----------------------------
 // Lifecycle: bij laden van de pagina
 // -----------------------------
 onMounted(async () => {
   await loadData();
+  // Start realtime subscriptions na het laden van data
+  startRealtimeSubscriptions();
+});
+
+// Cleanup bij verlaten van de pagina
+onUnmounted(() => {
+  stopRealtimeSubscriptions();
 });
 
 // -----------------------------
