@@ -135,7 +135,7 @@ const requestLocation = async () => {
   try {
     await locationStore.refreshLocation()
     const location = await locationStore.getOrFetchLocation()
-    
+
     if (location) {
       await fetchWeather()
       $q.notify({
@@ -173,7 +173,7 @@ const fetchWeather = async () => {
     // Format coordinates to max 4 decimal places as per API requirement
     const lat = Number(userLocation.value.latitude.toFixed(4))
     const lon = Number(userLocation.value.longitude.toFixed(4))
-    
+
     const response = await fetch(
       `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
       {
@@ -188,11 +188,11 @@ const fetchWeather = async () => {
     }
 
     const data = await response.json()
-    
+
     // Extract current weather from the first timeseries entry
     const currentWeather = data.properties.timeseries[0]
     const details = currentWeather.data.instant.details
-    
+
     weatherData.value = {
       temperature: Math.round(details.air_temperature),
       feelsLike: Math.round(details.air_temperature_feels_like),
@@ -234,7 +234,7 @@ const getWeatherDescription = (symbolCode: string): string => {
     'sleet': $customT('weather.sleet'),
     'fog': $customT('weather.fog')
   }
-  
+
   return descriptions[symbolCode] || $customT('weather.unknown')
 }
 
@@ -260,7 +260,7 @@ const getWeatherIcon = (symbolCode: string): string => {
     'sleet': 'ac_unit',
     'fog': 'foggy'
   }
-  
+
   return icons[symbolCode] || 'wb_sunny'
 }
 
@@ -289,11 +289,11 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .weather-widget {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: white;
+  color: #333;
   
   .weather-content {
-    color: white;
+    color: #333;
   }
   
   .weather-detail {
@@ -301,20 +301,20 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     padding: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    background: #f5f5f5;
     border-radius: 8px;
   }
   
   .q-card__section {
-    color: white;
+    color: #333;
   }
   
   .text-h6, .text-h4, .text-body1, .text-body2, .text-caption {
-    color: white;
+    color: #333;
   }
   
   .text-grey {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: #666 !important;
   }
 }
 </style>

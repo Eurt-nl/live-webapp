@@ -25,13 +25,6 @@
         />
       </div>
 
-      <!-- Weer widget -->
-      <div class="row q-mb-md">
-        <div class="col-12">
-          <WeatherWidget />
-        </div>
-      </div>
-
       <!-- Sectie voor ingelogde gebruikers -->
       <div v-if="authStore.isAuthenticated" class="row q-col-gutter-md full-width custom-gutter">
         <div class="col-12">
@@ -97,6 +90,12 @@
                 <div v-else class="text-center text-grey q-mt-md">
                   {{ $customT('home.noNearbyEvents') }}
                 </div>
+              </div>
+
+              <!-- Weer widget: alleen voor ingelogde gebruikers -->
+              <div class="q-mt-md">
+                <q-separator class="q-my-md" />
+                <WeatherWidget />
               </div>
             </q-card-section>
           </q-card>
