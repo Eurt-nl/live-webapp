@@ -25,6 +25,13 @@
         />
       </div>
 
+      <!-- Weer widget -->
+      <div class="row q-mb-md">
+        <div class="col-12">
+          <WeatherWidget />
+        </div>
+      </div>
+
       <!-- Sectie voor ingelogde gebruikers -->
       <div v-if="authStore.isAuthenticated" class="row q-col-gutter-md full-width custom-gutter">
         <div class="col-12">
@@ -227,6 +234,7 @@ import { debug } from 'src/utils/debug';
 import { useLocationStore } from 'stores/location';
 import { useRoundsStore } from 'stores/rounds';
 import { usePracticeRoundDialog } from 'src/composables/usePracticeRoundDialog';
+import WeatherWidget from 'src/components/WeatherWidget.vue';
 
 const $q = useQuasar();
 const router = useRouter();

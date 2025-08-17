@@ -98,6 +98,30 @@
     "delete": "Delete",
     "searchPlaceholder": "Search by course name, city or country..."
   },
+  "weather": {
+    "title": "Weather",
+    "locationRequired": "Location is required to show weather",
+    "shareLocation": "Share location",
+    "loading": "Loading weather...",
+    "fetchError": "Error fetching weather",
+    "retry": "Retry",
+    "locationSuccess": "Location retrieved successfully",
+    "locationDenied": "Location access denied",
+    "locationError": "Error retrieving location",
+    "feelsLike": "Feels like",
+    "lastUpdated": "Last updated",
+    "clearsky": "Clear sky",
+    "fair": "Fair",
+    "partlycloudy": "Partly cloudy",
+    "cloudy": "Cloudy",
+    "rainshowers": "Rain showers",
+    "rain": "Rain",
+    "heavyrain": "Heavy rain",
+    "snow": "Snow",
+    "sleet": "Sleet",
+    "fog": "Fog",
+    "unknown": "Unknown"
+  },
   "rafi": {
     "title": "Rafi - Pitch & Putt Assistant",
     "header": {

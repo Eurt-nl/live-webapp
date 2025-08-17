@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.12.0",
+    date: "2025-08-17",
+    type: "minor",
+    changes: ["feat: weer widget toegevoegd aan homepage met MET Norway Weather API"]
+  },
+  {
+    version: "0.11.0",
+    date: "2025-08-17",
+    type: "minor",
+    changes: ["feat: verbeterde local rules en slimme Rafi prompt logica"]
+  },
+  {
     version: "0.10.0",
     date: "2025-08-17",
     type: "minor",
