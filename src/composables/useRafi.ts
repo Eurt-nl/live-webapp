@@ -50,8 +50,8 @@ export function useRafi() {
       });
 
       if (!response.ok) {
-        // Als de server niet beschikbaar is (404/405), toon een vriendelijke melding
-        if (response.status === 404 || response.status === 405) {
+        // Als de server niet beschikbaar is (404/405/500), toon een vriendelijke melding
+        if (response.status === 404 || response.status === 405 || response.status === 500) {
           error.value = $customT('rafi.api.serviceUnavailable');
           isLoading.value = false;
           return null;
@@ -66,7 +66,12 @@ export function useRafi() {
       return data;
     } catch (err) {
       console.error('Rafi API error:', err);
-      error.value = $customT('rafi.api.error');
+      // Check of het een network error is of een server error
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        error.value = $customT('rafi.api.serviceUnavailable');
+      } else {
+        error.value = $customT('rafi.api.error');
+      }
       isLoading.value = false;
       return null;
     }

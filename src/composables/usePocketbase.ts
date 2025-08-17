@@ -1,6 +1,10 @@
 import pb, { POCKETBASE_URL, getPocketBase } from 'src/config/pocketbase';
 import PocketBase from 'pocketbase';
 
+// Singleton pattern om over-initialisatie te voorkomen
+let pocketBaseInstance: PocketBase | null = null;
+let isInitializing = false;
+
 export const usePocketbase = () => {
   // Functie om PocketBase opnieuw te initialiseren als het niet beschikbaar is
   const initializePocketBase = (): PocketBase => {
@@ -14,32 +18,36 @@ export const usePocketbase = () => {
     }
   };
 
-  // Probeer verschillende methoden om een werkende PocketBase instantie te krijgen
-  let pocketBaseInstance: PocketBase | null = null;
+  // Gebruik singleton pattern om over-initialisatie te voorkomen
+  if (!pocketBaseInstance && !isInitializing) {
+    isInitializing = true;
 
-  // Methode 1: Probeer de bestaande pb instantie
-  if (pb && typeof pb.collection === 'function') {
-    pocketBaseInstance = pb;
-    console.log('Using existing PocketBase instance');
-  }
-
-  // Methode 2: Probeer getPocketBase als pb niet werkt
-  if (!pocketBaseInstance) {
-    try {
-      const configPb = getPocketBase();
-      if (configPb && typeof configPb.collection === 'function') {
-        pocketBaseInstance = configPb;
-        console.log('Using PocketBase instance from config');
-      }
-    } catch (error) {
-      console.warn('Failed to get PocketBase from config:', error);
+    // Methode 1: Probeer de bestaande pb instantie
+    if (pb && typeof pb.collection === 'function') {
+      pocketBaseInstance = pb;
+      console.log('Using existing PocketBase instance');
     }
-  }
 
-  // Methode 3: Maak een nieuwe instantie als beide bovenstaande methoden falen
-  if (!pocketBaseInstance) {
-    console.warn('No working PocketBase instance found, creating new one...');
-    pocketBaseInstance = initializePocketBase();
+    // Methode 2: Probeer getPocketBase als pb niet werkt
+    if (!pocketBaseInstance) {
+      try {
+        const configPb = getPocketBase();
+        if (configPb && typeof configPb.collection === 'function') {
+          pocketBaseInstance = configPb;
+          console.log('Using PocketBase instance from config');
+        }
+      } catch (error) {
+        console.warn('Failed to get PocketBase from config:', error);
+      }
+    }
+
+    // Methode 3: Maak een nieuwe instantie als beide bovenstaande methoden falen
+    if (!pocketBaseInstance) {
+      console.warn('No working PocketBase instance found, creating new one...');
+      pocketBaseInstance = initializePocketBase();
+    }
+
+    isInitializing = false;
   }
 
   // Finale controle

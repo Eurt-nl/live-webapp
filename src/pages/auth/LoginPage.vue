@@ -12,6 +12,7 @@
             :label="$customT('auth.email')"
             id="email"
             name="email"
+            autocomplete="email"
             :rules="[
               (val) => !!val || $customT('auth.emailRequired'),
               (val) => /.+@.+\..+/.test(val) || $customT('auth.invalidEmail'),
@@ -25,6 +26,7 @@
             :label="$customT('auth.password')"
             id="password"
             name="password"
+            autocomplete="current-password"
             :rules="[(val) => !!val || $customT('auth.passwordRequired')]"
             lazy-rules
           />

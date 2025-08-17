@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Caching Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 API Caching Test</h1>
+    
+    <div id="sw-status" class="test-result info">
+        <strong>Service Worker Status:</strong> <span id="sw-active">Checking...</span>
+    </div>
+    
+    <div>
+        <button onclick="testApiRequest()">🌐 Test API Request</button>
+        <button onclick="checkCache()">🗄️ Check Cache</button>
+        <button onclick="clearResults()">🧹 Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        let requestCount = 0;
+        
+        // Check service worker status
+        async function checkServiceWorker() {
+            const statusEl = document.getElementById('sw-active');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration && registration.active) {
+                        statusEl.textContent = '✅ Active';
+                        statusEl.style.color = 'green';
+                    } else {
+                        statusEl.textContent = '⚠️ Not active';
+                        statusEl.style.color = 'orange';
+                    }
+                } catch (error) {
+                    statusEl.textContent = '❌ Error: ' + error.message;
+                    statusEl.style.color = 'red';
+                }
+            } else {
+                statusEl.textContent = '❌ Not supported';
+                statusEl.style.color = 'red';
+            }
+        }
+        
+        // Test API request
+        async function testApiRequest() {
+            requestCount++;
+            const startTime = Date.now();
+            
+            addResult('info', `🔄 API Request #${requestCount} - Starting...`);
+            
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Test-Request': requestCount.toString()
+                    }
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    duration: duration,
+                    headers: headers,
+                    url: response.url,
+                    timestamp: new Date().toISOString()
+                };
+                
+                addResult('success', `✅ API Request #${requestCount} - Success`, result);
+                
+                // Check if response came from cache
+                const fromCache = response.headers.get('x-cache') || 
+                                 response.headers.get('cf-cache-status') ||
+                                 (duration < 10 ? 'likely cached' : 'likely network');
+                
+                addResult('info', `📊 Response source: ${fromCache} (${duration}ms)`);
+                
+            } catch (error) {
+                addResult('error', `❌ API Request #${requestCount} - Failed`, error);
+            }
+        }
+        
+        // Check cache contents
+        async function checkCache() {
+            addResult('info', '🗄️ Checking cache contents...');
+            
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    addResult('info', `📋 Available caches: ${cacheNames.join(', ')}`);
+                    
+                    for (const cacheName of cacheNames) {
+                        const cache = await caches.open(cacheName);
+                        const requests = await cache.keys();
+                        
+                        const apiRequests = requests.filter(req => 
+                            req.url.includes('/api/') || req.url.includes('localhost:3000')
+                        );
+                        
+                        addResult('info', `📦 Cache "${cacheName}": ${requests.length} total, ${apiRequests.length} API requests`);
+                        
+                        if (apiRequests.length > 0) {
+                            addResult('error', `⚠️ Found ${apiRequests.length} cached API requests in "${cacheName}"`);
+                            apiRequests.forEach(req => {
+                                addResult('error', `   - ${req.url}`);
+                            });
+                        }
+                    }
+                } catch (error) {
+                    addResult('error', '❌ Error checking cache', error);
+                }
+            } else {
+                addResult('error', '❌ Cache API not supported');
+            }
+        }
+        
+        // Add result to display
+        function addResult(type, message, data = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            
+            let content = `<strong>${message}</strong>`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            resultDiv.innerHTML = content;
+            resultsDiv.appendChild(resultDiv);
+            
+            // Auto-scroll to bottom
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        // Clear results
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkServiceWorker();
+            
+            // Check service worker every 2 seconds
+            setInterval(checkServiceWorker, 2000);
+        });
+    </script>
+</body>
+</html>

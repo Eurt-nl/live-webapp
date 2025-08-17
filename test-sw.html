@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Worker Test</title>
+</head>
+<body>
+    <h1>Service Worker Test</h1>
+    <div id="status">Loading...</div>
+    <button onclick="testApi()">Test API</button>
+    <div id="results"></div>
+
+    <script>
+        async function checkServiceWorker() {
+            const status = document.getElementById('status');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration && registration.active) {
+                        status.textContent = 'Service Worker: ACTIVE';
+                        status.style.color = 'green';
+                        console.log('Service Worker active:', registration.active);
+                    } else {
+                        status.textContent = 'Service Worker: NOT ACTIVE';
+                        status.style.color = 'red';
+                    }
+                } catch (error) {
+                    status.textContent = 'Service Worker Error: ' + error.message;
+                    status.style.color = 'red';
+                }
+            } else {
+                status.textContent = 'Service Worker: NOT SUPPORTED';
+                status.style.color = 'red';
+            }
+        }
+
+        async function testApi() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing API request...</p>';
+            
+            try {
+                const start = Date.now();
+                const response = await fetch('/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const end = Date.now();
+                
+                const duration = end - start;
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                results.innerHTML = `
+                    <h3>API Test Results:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Duration:</strong> ${duration}ms</p>
+                    <p><strong>Headers:</strong></p>
+                    <pre>${JSON.stringify(headers, null, 2)}</pre>
+                    <p><strong>Response source:</strong> ${duration < 10 ? 'likely cached' : 'likely network'}</p>
+                `;
+                
+                console.log('API Response:', {
+                    status: response.status,
+                    duration,
+                    headers,
+                    url: response.url
+                });
+                
+            } catch (error) {
+                results.innerHTML = `<p style="color: red;">API Error: ${error.message}</p>`;
+                console.error('API Error:', error);
+            }
+        }
+
+        // Check service worker on load
+        checkServiceWorker();
+        
+        // Listen for service worker messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('SW Message:', event.data);
+            });
+        }
+    </script>
+</body>
+</html>

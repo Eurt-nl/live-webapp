@@ -162,6 +162,15 @@ export default configure((ctx) => {
         clientsClaim: true,
         // Force cache update voor alle assets
         runtimeCaching: [
+          // API routes: altijd network-only om gecachte Rafi responses te voorkomen
+          // Server stuurt al Cache-Control: no-store, maar SW moet niet interfereren
+          {
+            urlPattern: /^\/api\/.*/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'api-cache',
+            },
+          },
           {
             urlPattern: /.*\.js$/,
             handler: 'NetworkFirst',

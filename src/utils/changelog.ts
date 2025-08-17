@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.8.1",
+    date: "2025-08-17",
+    type: "patch",
+    changes: ["PWA: force network-only for /api/** to avoid cached Rafi responses"]
+  },
+  {
+    version: "0.8.0",
+    date: "2025-08-16",
+    type: "minor",
+    changes: ["feat: optimaliseer realtime score updates en verbeter UX"]
+  },
+  {
     version: "0.7.1",
     date: "2025-08-15",
     type: "patch",
