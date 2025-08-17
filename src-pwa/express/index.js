@@ -234,6 +234,8 @@ INSTRUCTIES:
 - Gebruik de bovenstaande FIPPA regels als basis voor je antwoorden
 - Citeer waar zinvol artikel/kop uit FIPPA of hole/titel uit local rules
 - Gebruik lokale regels als aanvulling op de officiële regels wanneer deze beschikbaar zijn
+- Gebruik alleen relevante lokale regels (algemene regels + hole-specifieke regels als de vraag over specifieke holes gaat)
+- Als de vraag over een specifieke hole gaat maar geen hole nummer wordt genoemd, vraag dan om verduidelijking
 - Geef geen tactisch advies of persoonlijke meningen
 - Verzin geen regels of informatie die niet bestaan
 - Antwoord in de taal van de gebruiker (${language})
@@ -260,21 +262,91 @@ function buildUserPrompt(question, localRules, courseName) {
     prompt += `Baan: ${courseName}\n`;
   }
 
-  // Local rules: compacte lijst (per regel een one-liner + hole/titel/type)
+  // Analyseer de vraag om te bepalen welke regels relevant zijn
+  const questionLower = question.toLowerCase();
+  const mentionedHoles = extractHoleNumbers(questionLower);
+
+  // Filter regels op basis van de vraag
+  let relevantRules = [];
+
   if (localRules && localRules.length > 0) {
-    prompt += '\nLokale regels voor deze baan:\n';
-    localRules.forEach((rule) => {
-      const holeInfo = rule.hole ? ` (Hole ${rule.hole})` : '';
+    // Voeg altijd algemene regels toe
+    const generalRules = localRules.filter(
+      (rule) => !rule.holeNumbers || rule.holeNumbers.length === 0,
+    );
+    relevantRules.push(...generalRules);
+
+    // Voeg hole-specifieke regels toe als er holes genoemd worden
+    if (mentionedHoles.length > 0) {
+      const holeSpecificRules = localRules.filter(
+        (rule) =>
+          rule.holeNumbers && rule.holeNumbers.some((holeNum) => mentionedHoles.includes(holeNum)),
+      );
+      relevantRules.push(...holeSpecificRules);
+    }
+  }
+
+  // Local rules: compacte lijst (per regel een one-liner + hole/titel/type)
+  if (relevantRules.length > 0) {
+    prompt += '\nRelevante lokale regels voor deze baan:\n';
+    relevantRules.forEach((rule) => {
+      const holeInfo =
+        rule.holeNumbers && rule.holeNumbers.length > 0
+          ? ` (Hole ${rule.holeNumbers.join(', ')})`
+          : '';
       const titleInfo = rule.title ? ` [${rule.title}]` : '';
       const typeInfo = rule.type && rule.type.length > 0 ? ` [${rule.type.join(', ')}]` : '';
       prompt += `- ${rule.description}${holeInfo}${titleInfo}${typeInfo}\n`;
     });
     prompt += '\n';
   } else {
-    prompt += '\nGeen extra lokale regels voor deze baan.\n\n';
+    prompt += '\nGeen relevante lokale regels voor deze baan.\n\n';
+  }
+
+  // Instructie voor hole-specifieke vragen
+  if (
+    mentionedHoles.length === 0 &&
+    localRules &&
+    localRules.some((rule) => rule.holeNumbers && rule.holeNumbers.length > 0)
+  ) {
+    prompt +=
+      'OPMERKING: Er zijn hole-specifieke regels beschikbaar voor deze baan. Als je vraag over een specifieke hole gaat, vermeld dan het hole nummer in je vraag.\n\n';
   }
 
   return prompt;
+}
+
+// Helper functie om hole nummers uit een vraag te extraheren
+function extractHoleNumbers(question) {
+  const holeMatches = question.match(/hole\s+(\d+)/gi) || [];
+  const numberMatches = question.match(/\b(\d+)\b/g) || [];
+
+  const holes = new Set();
+
+  // Voeg hole matches toe
+  holeMatches.forEach((match) => {
+    const num = parseInt(match.replace(/hole\s+/i, ''));
+    if (num >= 1 && num <= 18) {
+      holes.add(num);
+    }
+  });
+
+  // Voeg losse nummers toe (alleen als ze tussen 1-18 zijn en niet al als hole zijn gevonden)
+  numberMatches.forEach((match) => {
+    const num = parseInt(match);
+    if (num >= 1 && num <= 18 && !holes.has(num)) {
+      // Alleen toevoegen als het woord "hole" in de buurt staat of als het een duidelijk hole nummer is
+      const context = question.substring(
+        Math.max(0, question.indexOf(match) - 10),
+        question.indexOf(match) + 10,
+      );
+      if (context.toLowerCase().includes('hole') || context.toLowerCase().includes('baan')) {
+        holes.add(num);
+      }
+    }
+  });
+
+  return Array.from(holes);
 }
 
 // Health check endpoint

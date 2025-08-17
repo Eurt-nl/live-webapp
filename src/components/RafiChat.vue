@@ -334,11 +334,12 @@ const sendMessage = async () => {
   await scrollToBottom();
 
   // Bereid Rafi request voor
+  const compactRules = await compactRulesForPrompt(localRules.value);
   const request: RafiRequest = {
     question,
     courseId: nearestCourse.value.courseId,
     courseName: nearestCourse.value.courseName,
-    localRules: compactRulesForPrompt(localRules.value),
+    localRules: compactRules,
     lang: $customT('app.language') || 'nl',
   };
 

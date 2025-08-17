@@ -71,7 +71,7 @@ const authStore = useAuthStore();
     max-width: 100%;
     margin: 0;
   }
-  
+
   .login-required-container {
     min-height: 50vh;
     padding: 20px;

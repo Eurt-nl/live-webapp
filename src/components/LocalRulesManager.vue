@@ -39,12 +39,12 @@
                 :label="getRuleTypeName(rule.type)"
               />
               <q-chip
-                v-if="rule.hole"
+                v-if="rule.hole_id && rule.hole_id.length > 0"
                 color="primary"
                 text-color="white"
                 size="sm"
                 square
-                :label="`${$customT('holes.hole')} ${rule.hole}`"
+                :label="`${$customT('holes.hole')} ${getHoleNumbers(rule.hole_id).join(', ')}`"
               />
               <q-chip
                 v-else
@@ -123,9 +123,10 @@
               use-chips
             />
 
-            <!-- Hole selectie -->
+            <!-- Hole selectie - alleen tonen bij hole_specific type -->
             <q-select
-              v-model="formData.hole"
+              v-if="showHoleSelection"
+              v-model="formData.hole_id"
               :options="holeOptions"
               :label="$customT('courses.ruleHole')"
               :hint="$customT('courses.ruleHoleHint')"
@@ -133,7 +134,13 @@
               option-label="label"
               emit-value
               map-options
-              clearable
+              multiple
+              :rules="[
+                (val) =>
+                  !showHoleSelection ||
+                  (val && val.length > 0) ||
+                  $customT('courses.holeSelectionRequired'),
+              ]"
             />
 
             <q-input
@@ -207,6 +214,7 @@ interface LocalRule {
   id: string;
   course: string;
   hole?: number;
+  hole_id?: string[];
   title: string;
   description: string;
   type: { category: string }[] | { category: string };
@@ -220,7 +228,7 @@ interface FormData {
   title: string;
   description: string;
   type: { category: string }[];
-  hole?: number;
+  hole_id?: string[];
   active: boolean;
 }
 
@@ -244,31 +252,27 @@ const formData = ref<FormData>({
   title: '',
   description: '',
   type: [{ category: 'general' }],
-  hole: undefined,
+  hole_id: undefined,
   active: true,
 });
 
+// Vereenvoudigde rule type opties - alleen general en hole specifiek
 const ruleTypeOptions = [
   { label: $customT('courses.ruleTypeGeneral'), value: { category: 'general' } },
-  { label: $customT('courses.ruleTypeEtiquette'), value: { category: 'etiquette' } },
-  { label: $customT('courses.ruleTypeSafety'), value: { category: 'safety' } },
-  { label: $customT('courses.ruleTypeDresscode'), value: { category: 'dresscode' } },
-  { label: $customT('courses.ruleTypeOpening'), value: { category: 'opening' } },
+  { label: $customT('courses.ruleTypeHoleSpecific'), value: { category: 'hole_specific' } },
 ];
 
-// Hole opties voor de select dropdown
+// Hole opties voor de select dropdown - alleen holes van deze baan
 const holeOptions = computed(() => {
-  const options = [{ label: $customT('courses.ruleGeneral'), value: undefined }];
+  return holes.value.map((hole) => ({
+    label: `${$customT('holes.hole')} ${hole.hole}`,
+    value: hole.id,
+  }));
+});
 
-  // Voeg alle beschikbare holes toe
-  holes.value.forEach((hole) => {
-    options.push({
-      label: `${$customT('holes.hole')} ${hole.hole}`,
-      value: hole.hole,
-    });
-  });
-
-  return options;
+// Computed property om te bepalen of hole selectie getoond moet worden
+const showHoleSelection = computed(() => {
+  return formData.value.type.some((type) => type.category === 'hole_specific');
 });
 
 const getRuleTypeName = (types: { category: string }[] | { category: string }) => {
@@ -286,6 +290,13 @@ const getRuleTypeName = (types: { category: string }[] | { category: string }) =
       return option ? option.label : type.category;
     })
     .join(', ');
+};
+
+// Helper functie om hole nummers op te halen uit hole_id array
+const getHoleNumbers = (holeIds: string[]): number[] => {
+  return holeIds
+    .map((id) => holes.value.find((hole) => hole.id === id)?.hole)
+    .filter((holeNumber) => holeNumber !== undefined) as number[];
 };
 
 const loadHoles = async () => {
@@ -321,7 +332,7 @@ const openAddDialog = () => {
     title: '',
     description: '',
     type: [{ category: 'general' }],
-    hole: undefined,
+    hole_id: undefined,
     active: true,
   };
   dialogOpen.value = true;
@@ -334,11 +345,27 @@ const openEditDialog = (rule: LocalRule) => {
     title: rule.title,
     description: rule.description,
     type: Array.isArray(rule.type) ? rule.type : [rule.type],
-    hole: rule.hole,
+    hole_id: rule.hole_id || undefined,
     active: rule.active,
   };
   dialogOpen.value = true;
 };
+
+// Watch voor type wijzigingen - reset hole_id als type verandert naar general
+watch(
+  () => formData.value.type,
+  (newType) => {
+    if (
+      newType &&
+      newType.length > 0 &&
+      !newType.some((type) => type.category === 'hole_specific')
+    ) {
+      // Als type niet meer hole_specific is, reset hole_id
+      formData.value.hole_id = undefined;
+    }
+  },
+  { deep: true },
+);
 
 const saveRule = async () => {
   if (
@@ -349,12 +376,26 @@ const saveRule = async () => {
   )
     return;
 
+  // Validatie: als type hole_specific is, moet er minimaal één hole geselecteerd zijn
+  if (
+    formData.value.type.some((type) => type.category === 'hole_specific') &&
+    (!formData.value.hole_id || formData.value.hole_id.length === 0)
+  ) {
+    $q.notify({
+      color: 'negative',
+      message: $customT('courses.holeSelectionRequired'),
+      icon: 'error',
+    });
+    return;
+  }
+
   try {
     saving.value = true;
 
     const ruleData = {
       course: props.courseId,
-      hole: formData.value.hole || null, // null voor algemene regels
+      hole: null, // Oude veld wordt niet meer gebruikt
+      hole_id: formData.value.hole_id || null,
       title: formData.value.title,
       description: formData.value.description,
       type: formData.value.type.length > 0 ? formData.value.type : [{ category: 'general' }],

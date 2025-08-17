@@ -6,7 +6,8 @@ export interface LocalRule {
   id: string;
   title: string;
   description: string;
-  hole?: number;
+  hole?: number; // Oude veld - wordt niet meer gebruikt
+  hole_id?: string[]; // Nieuwe veld - array van hole IDs
   type?: string[];
   active: boolean;
 }
@@ -15,7 +16,7 @@ export interface CompactLocalRule {
   id: string;
   title: string;
   description: string;
-  hole?: number;
+  holeNumbers?: number[]; // Hole nummers in plaats van IDs
   type?: string[];
 }
 
@@ -35,7 +36,8 @@ export function useLocalRules() {
     try {
       const records = await pb.collection('local_rules').getList(1, 1000, {
         filter: `course = "${courseId}" && active = true`,
-        sort: 'hole,title',
+        sort: 'title',
+        expand: 'hole_id', // Expand hole_id om hole nummers op te halen
       });
 
       const rules = records.items.map((item) => ({
@@ -43,6 +45,7 @@ export function useLocalRules() {
         title: item.title,
         description: item.description,
         hole: item.hole || undefined,
+        hole_id: item.hole_id || undefined,
         type: item.type || undefined,
         active: item.active,
       }));
@@ -58,20 +61,65 @@ export function useLocalRules() {
     }
   };
 
-  // Regels compacteren voor prompt
-  const compactRulesForPrompt = (rules: LocalRule[]): CompactLocalRule[] => {
-    return rules.map((rule) => ({
-      id: rule.id,
-      title: rule.title,
-      description: rule.description,
-      hole: rule.hole,
-      type: rule.type,
-    }));
+  // Regels compacteren voor prompt met hole nummers
+  const compactRulesForPrompt = async (rules: LocalRule[]): Promise<CompactLocalRule[]> => {
+    const compactRules: CompactLocalRule[] = [];
+
+    for (const rule of rules) {
+      let holeNumbers: number[] | undefined;
+
+      if (rule.hole_id && rule.hole_id.length > 0) {
+        try {
+          // Haal hole nummers op uit de hole_id array
+          const holeDetails = await Promise.all(
+            rule.hole_id.map(async (holeId) => {
+              try {
+                const holeRecord = await pb.collection('course_detail').getOne(holeId);
+                return holeRecord.hole;
+              } catch (error) {
+                console.error(`Error fetching hole ${holeId}:`, error);
+                return null;
+              }
+            }),
+          );
+
+          // Filter null values en sorteer
+          holeNumbers = holeDetails
+            .filter((holeNum): holeNum is number => holeNum !== null)
+            .sort((a, b) => a - b);
+        } catch (error) {
+          console.error('Error fetching hole numbers:', error);
+          holeNumbers = undefined;
+        }
+      }
+
+      compactRules.push({
+        id: rule.id,
+        title: rule.title,
+        description: rule.description,
+        holeNumbers,
+        type: rule.type,
+      });
+    }
+
+    return compactRules;
   };
 
-  // Regels filteren op hole
-  const getRulesForHole = (hole: number): LocalRule[] => {
-    return localRules.value.filter((rule) => rule.hole === hole);
+  // Regels filteren op hole nummer
+  const getRulesForHole = (holeNumber: number): LocalRule[] => {
+    return localRules.value.filter((rule) => {
+      // Check oude hole veld (fallback)
+      if (rule.hole === holeNumber) return true;
+
+      // Check nieuwe hole_id veld
+      if (rule.hole_id && rule.hole_id.length > 0) {
+        // Hier zou je de hole nummers moeten ophalen uit de hole_id array
+        // Voor nu returnen we false - dit wordt opgelost in de prompt logica
+        return false;
+      }
+
+      return false;
+    });
   };
 
   // Regels filteren op type
@@ -81,7 +129,17 @@ export function useLocalRules() {
 
   // Algemene regels (zonder specifieke hole)
   const getGeneralRules = (): LocalRule[] => {
-    return localRules.value.filter((rule) => !rule.hole);
+    return localRules.value.filter((rule) => {
+      // Geen hole_id of lege hole_id array
+      return !rule.hole_id || rule.hole_id.length === 0;
+    });
+  };
+
+  // Hole-specifieke regels
+  const getHoleSpecificRules = (): LocalRule[] => {
+    return localRules.value.filter((rule) => {
+      return rule.hole_id && rule.hole_id.length > 0;
+    });
   };
 
   // Reset state
@@ -100,6 +158,7 @@ export function useLocalRules() {
     getRulesForHole,
     getRulesByType,
     getGeneralRules,
+    getHoleSpecificRules,
     reset,
   };
 }

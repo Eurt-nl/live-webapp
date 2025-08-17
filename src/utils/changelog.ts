@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.10.0",
+    date: "2025-08-17",
+    type: "minor",
+    changes: ["feat: restrict Rafi access to authenticated users only"]
+  },
+  {
     version: "0.9.0",
     date: "2025-08-17",
     type: "minor",

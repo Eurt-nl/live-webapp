@@ -59,8 +59,8 @@
 
       <!-- Rafi AI Assistant -->
       <q-separator />
-      <q-item 
-        :to="authStore.isAuthenticated ? '/rafi' : undefined" 
+      <q-item
+        :to="authStore.isAuthenticated ? '/rafi' : undefined"
         :clickable="authStore.isAuthenticated"
         class="rafi-menu-item"
         :class="{ 'rafi-menu-item--disabled': !authStore.isAuthenticated }"

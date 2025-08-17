@@ -662,7 +662,9 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE UNIQUE INDEX `uniq_cdetail_course_hole` ON `course_detail` (\n  `course`,\n  `hole`\n);"
+        ],
         "system": false
     },
     {
@@ -850,7 +852,10 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX `idx_course_name` ON `course` (`name`);",
+            "CREATE INDEX `idx_course_country_city` ON `course` (\n  `country`,\n  `city`\n);"
+        ],
         "system": false
     },
     {
@@ -1364,6 +1369,19 @@
                 "required": false,
                 "system": false,
                 "type": "bool"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_1762296751",
+                "hidden": false,
+                "id": "relation363716908",
+                "maxSelect": 18,
+                "minSelect": 0,
+                "name": "hole_id",
+                "presentable": true,
+                "required": false,
+                "system": false,
+                "type": "relation"
             },
             {
                 "hidden": false,
