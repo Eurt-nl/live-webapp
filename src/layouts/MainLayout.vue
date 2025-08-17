@@ -59,15 +59,15 @@
 
       <!-- Rafi AI Assistant -->
       <q-separator />
-      <q-item to="/rafi" clickable>
+      <q-item to="/rafi" clickable class="rafi-menu-item">
         <q-item-section avatar>
-          <q-avatar size="40px">
+          <q-avatar size="100px">
             <img src="/rafi-avatar.png" alt="Rafi" />
           </q-avatar>
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ $customT('rafi.title') }}</q-item-label>
-          <q-item-label caption>{{ $customT('navigation.comingSoon') }}</q-item-label>
+          <q-item-label class="text-h6">Meet Rafi: AI Pitch & Putt Referee</q-item-label>
+          <q-item-label caption class="text-body2">Still learning</q-item-label>
         </q-item-section>
       </q-item>
     </q-drawer>
@@ -590,3 +590,39 @@ onMounted(() => {
   setupServiceWorkerListener();
 });
 </script>
+
+<style scoped>
+/* Rafi menu item styling */
+.rafi-menu-item {
+  padding: 16px;
+  margin: 8px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  transition: all 0.3s ease;
+}
+
+.rafi-menu-item:hover {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.rafi-menu-item .q-item__section--avatar {
+  margin-right: 16px;
+}
+
+.rafi-menu-item .q-avatar {
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rafi-menu-item .q-item__label {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.rafi-menu-item .q-item__label--caption {
+  color: #7f8c8d;
+  font-style: italic;
+}
+</style>

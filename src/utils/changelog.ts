@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.8.3",
+    date: "2025-08-17",
+    type: "patch",
+    changes: ["fix: Rafi avatar URL corrected in RafiChat component"]
+  },
+  {
     version: "0.8.2",
     date: "2025-08-17",
     type: "patch",
