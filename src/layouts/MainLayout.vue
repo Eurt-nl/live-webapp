@@ -59,7 +59,13 @@
 
       <!-- Rafi AI Assistant -->
       <q-separator />
-      <q-item to="/rafi" clickable class="rafi-menu-item">
+      <q-item 
+        :to="authStore.isAuthenticated ? '/rafi' : undefined" 
+        :clickable="authStore.isAuthenticated"
+        class="rafi-menu-item"
+        :class="{ 'rafi-menu-item--disabled': !authStore.isAuthenticated }"
+        @click="!authStore.isAuthenticated && showLoginPrompt()"
+      >
         <q-item-section avatar>
           <q-avatar size="100px">
             <img src="/rafi-avatar.png" alt="Rafi" />
@@ -67,7 +73,9 @@
         </q-item-section>
         <q-item-section>
           <q-item-label class="text-h6">Meet Rafi: AI Pitch & Putt Referee</q-item-label>
-          <q-item-label caption class="text-body2">Still learning</q-item-label>
+          <q-item-label caption class="text-body2">
+            {{ authStore.isAuthenticated ? 'Still learning' : 'Login required to use Rafi' }}
+          </q-item-label>
         </q-item-section>
       </q-item>
     </q-drawer>
@@ -573,6 +581,24 @@ function requestUserLocation() {
   window.dispatchEvent(new CustomEvent('get-user-location'));
 }
 
+// Toon login prompt voor niet-ingelogde gebruikers
+function showLoginPrompt() {
+  $q.notify({
+    color: 'warning',
+    message: $customT('rafi.loginRequired'),
+    icon: 'login',
+    actions: [
+      {
+        label: $customT('auth.login'),
+        color: 'white',
+        handler: () => {
+          $router.push('/auth/login');
+        },
+      },
+    ],
+  });
+}
+
 // Watch voor authenticatie status om PWA dialog te tonen na login
 watch(
   () => authStore.isAuthenticated,
@@ -624,5 +650,22 @@ onMounted(() => {
 .rafi-menu-item .q-item__label--caption {
   color: #7f8c8d;
   font-style: italic;
+}
+
+/* Disabled state voor niet-ingelogde gebruikers */
+.rafi-menu-item--disabled {
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.rafi-menu-item--disabled:hover {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rafi-menu-item--disabled .q-item__label--caption {
+  color: #e74c3c;
+  font-weight: 500;
 }
 </style>

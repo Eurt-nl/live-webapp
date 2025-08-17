@@ -136,6 +136,7 @@
       "error": "Error communicating with Rafi",
       "serviceUnavailable": "Rafi service is currently unavailable. Please try again later."
     },
+    "loginRequired": "You must be logged in to use Rafi",
     "messages": {
       "noCourseNearby": "No course found within 3 km of your location. Ask your question manually or try a different location.",
       "courseFound": "Course found",

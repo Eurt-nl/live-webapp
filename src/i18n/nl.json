@@ -136,6 +136,7 @@
       "error": "Fout bij communiceren met Rafi",
       "serviceUnavailable": "Rafi service is momenteel niet beschikbaar. Probeer het later opnieuw."
     },
+    "loginRequired": "Je moet ingelogd zijn om Rafi te gebruiken",
     "messages": {
       "noCourseNearby": "Er is geen baan gevonden binnen 3 km van je locatie. Stel je vraag handmatig in of probeer een andere locatie.",
       "courseFound": "Baan gevonden",
