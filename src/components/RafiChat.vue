@@ -142,7 +142,7 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 
 // Avatars
-const rafiAvatar = ref('/public/rafi-avatar.png');
+const rafiAvatar = ref('/rafi-avatar.png');
 
 // Computed properties
 const canSendMessage = computed(() => {
