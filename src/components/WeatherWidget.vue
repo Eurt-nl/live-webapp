@@ -100,202 +100,218 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useQuasar } from 'quasar'
-import { useLocationStore } from 'stores/location'
+import { ref, onMounted, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useQuasar } from 'quasar';
+import { useLocationStore } from 'stores/location';
 
-const { t: $customT } = useI18n()
-const $q = useQuasar()
-const locationStore = useLocationStore()
+const { t: $customT } = useI18n();
+const $q = useQuasar();
+const locationStore = useLocationStore();
 
 // Reactive data
-const weatherData = ref<WeatherData | null>(null)
-const isLoading = ref(false)
-const error = ref<string | null>(null)
+const weatherData = ref<WeatherData | null>(null);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
 
 // Types
 interface WeatherData {
-  temperature: number
-  feelsLike: number
-  humidity: number
-  windSpeed: number
-  pressure: number
-  cloudCover: number
-  description: string
-  symbol: string
-  lastUpdated: string
+  temperature: number;
+  feelsLike: number;
+  humidity: number;
+  windSpeed: number;
+  pressure: number;
+  cloudCover: number;
+  description: string;
+  symbol: string;
+  lastUpdated: string;
 }
 
 // Computed properties
-const userLocation = computed(() => locationStore.userLocation)
+const userLocation = computed(() => locationStore.userLocation);
 
 // Methods
 const requestLocation = async () => {
   try {
-    await locationStore.refreshLocation()
-    const location = await locationStore.getOrFetchLocation()
+    await locationStore.refreshLocation();
+    const location = await locationStore.getOrFetchLocation();
 
     if (location) {
-      await fetchWeather()
+      await fetchWeather();
       $q.notify({
         color: 'positive',
         message: $customT('weather.locationSuccess'),
-        icon: 'my_location'
-      })
+        icon: 'my_location',
+      });
     } else {
       $q.notify({
         color: 'warning',
         message: $customT('weather.locationDenied'),
-        icon: 'warning'
-      })
+        icon: 'warning',
+      });
     }
   } catch (err) {
-    console.error('Error requesting location:', err)
+    console.error('Error requesting location:', err);
     $q.notify({
       color: 'negative',
       message: $customT('weather.locationError'),
-      icon: 'error'
-    })
+      icon: 'error',
+    });
   }
-}
+};
 
 const fetchWeather = async () => {
   if (!userLocation.value) {
-    error.value = $customT('weather.locationRequired')
-    return
+    error.value = $customT('weather.locationRequired');
+    return;
   }
 
-  isLoading.value = true
-  error.value = null
+  isLoading.value = true;
+  error.value = null;
 
   try {
     // Format coordinates to max 4 decimal places as per API requirement
-    const lat = Number(userLocation.value.latitude.toFixed(4))
-    const lon = Number(userLocation.value.longitude.toFixed(4))
+    const lat = Number(userLocation.value.latitude.toFixed(4));
+    const lon = Number(userLocation.value.longitude.toFixed(4));
 
     const response = await fetch(
       `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
       {
         headers: {
-          'User-Agent': 'PitchPuttApp/1.0 (https://pitch-putt.live)'
-        }
-      }
-    )
+          Accept: 'application/json',
+        },
+        // CORS-vriendelijke configuratie voor iOS PWA
+        mode: 'cors',
+        credentials: 'omit',
+      },
+    );
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      console.error(`Weather API error: ${response.status} ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json()
+    const data = await response.json();
 
     // Extract current weather from the first timeseries entry
-    const currentWeather = data.properties.timeseries[0]
-    const details = currentWeather.data.instant.details
+    const currentWeather = data.properties.timeseries[0];
+    const details = currentWeather.data.instant.details;
 
     weatherData.value = {
       temperature: Math.round(details.air_temperature),
-      feelsLike: Math.round(details.air_temperature_feels_like),
+      feelsLike: Math.round(details.air_temperature), // Gebruik gewone temperatuur als fallback
       humidity: Math.round(details.relative_humidity),
       windSpeed: Math.round(details.wind_speed * 10) / 10, // 1 decimal
       pressure: Math.round(details.air_pressure_at_sea_level),
       cloudCover: Math.round(details.cloud_area_fraction),
-      description: getWeatherDescription(details.symbol_code),
-      symbol: details.symbol_code,
-      lastUpdated: currentWeather.time
-    }
+      description: getWeatherDescription(
+        data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+      ),
+      symbol: data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+      lastUpdated: currentWeather.time,
+    };
   } catch (err) {
-    console.error('Error fetching weather:', err)
-    error.value = $customT('weather.fetchError')
+    console.error('Error fetching weather:', err);
+    error.value = $customT('weather.fetchError');
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const getWeatherDescription = (symbolCode: string): string => {
   // Map MET Norway symbol codes to readable descriptions
   const descriptions: Record<string, string> = {
-    'clearsky_day': $customT('weather.clearsky'),
-    'clearsky_night': $customT('weather.clearsky'),
-    'clearsky_polartwilight': $customT('weather.clearsky'),
-    'fair_day': $customT('weather.fair'),
-    'fair_night': $customT('weather.fair'),
-    'fair_polartwilight': $customT('weather.fair'),
-    'partlycloudy_day': $customT('weather.partlycloudy'),
-    'partlycloudy_night': $customT('weather.partlycloudy'),
-    'partlycloudy_polartwilight': $customT('weather.partlycloudy'),
-    'cloudy': $customT('weather.cloudy'),
-    'rainshowers_day': $customT('weather.rainshowers'),
-    'rainshowers_night': $customT('weather.rainshowers'),
-    'rainshowers_polartwilight': $customT('weather.rainshowers'),
-    'rain': $customT('weather.rain'),
-    'heavyrain': $customT('weather.heavyrain'),
-    'snow': $customT('weather.snow'),
-    'sleet': $customT('weather.sleet'),
-    'fog': $customT('weather.fog')
-  }
+    clearsky_day: $customT('weather.clearsky'),
+    clearsky_night: $customT('weather.clearsky'),
+    clearsky_polartwilight: $customT('weather.clearsky'),
+    fair_day: $customT('weather.fair'),
+    fair_night: $customT('weather.fair'),
+    fair_polartwilight: $customT('weather.fair'),
+    partlycloudy_day: $customT('weather.partlycloudy'),
+    partlycloudy_night: $customT('weather.partlycloudy'),
+    partlycloudy_polartwilight: $customT('weather.partlycloudy'),
+    cloudy: $customT('weather.cloudy'),
+    rainshowers_day: $customT('weather.rainshowers'),
+    rainshowers_night: $customT('weather.rainshowers'),
+    rainshowers_polartwilight: $customT('weather.rainshowers'),
+    lightrainshowers_day: $customT('weather.rainshowers'),
+    lightrainshowers_night: $customT('weather.rainshowers'),
+    lightrainshowers_polartwilight: $customT('weather.rainshowers'),
+    rain: $customT('weather.rain'),
+    lightrain: $customT('weather.rain'),
+    heavyrain: $customT('weather.heavyrain'),
+    snow: $customT('weather.snow'),
+    sleet: $customT('weather.sleet'),
+    fog: $customT('weather.fog'),
+  };
 
-  return descriptions[symbolCode] || $customT('weather.unknown')
-}
+  return descriptions[symbolCode] || $customT('weather.unknown');
+};
 
 const getWeatherIcon = (symbolCode: string): string => {
   // Map MET Norway symbol codes to Material Design icons
   const icons: Record<string, string> = {
-    'clearsky_day': 'wb_sunny',
-    'clearsky_night': 'nightlight',
-    'clearsky_polartwilight': 'wb_sunny',
-    'fair_day': 'wb_sunny',
-    'fair_night': 'nightlight',
-    'fair_polartwilight': 'wb_sunny',
-    'partlycloudy_day': 'partly_cloudy_day',
-    'partlycloudy_night': 'partly_cloudy_night',
-    'partlycloudy_polartwilight': 'partly_cloudy_day',
-    'cloudy': 'cloud',
-    'rainshowers_day': 'rainy',
-    'rainshowers_night': 'rainy',
-    'rainshowers_polartwilight': 'rainy',
-    'rain': 'rainy',
-    'heavyrain': 'thunderstorm',
-    'snow': 'ac_unit',
-    'sleet': 'ac_unit',
-    'fog': 'foggy'
-  }
+    clearsky_day: 'wb_sunny',
+    clearsky_night: 'nightlight',
+    clearsky_polartwilight: 'wb_sunny',
+    fair_day: 'wb_sunny',
+    fair_night: 'nightlight',
+    fair_polartwilight: 'wb_sunny',
+    partlycloudy_day: 'partly_cloudy_day',
+    partlycloudy_night: 'partly_cloudy_night',
+    partlycloudy_polartwilight: 'partly_cloudy_day',
+    cloudy: 'cloud',
+    rainshowers_day: 'rainy',
+    rainshowers_night: 'rainy',
+    rainshowers_polartwilight: 'rainy',
+    lightrainshowers_day: 'rainy',
+    lightrainshowers_night: 'rainy',
+    lightrainshowers_polartwilight: 'rainy',
+    rain: 'rainy',
+    lightrain: 'rainy',
+    heavyrain: 'thunderstorm',
+    snow: 'ac_unit',
+    sleet: 'ac_unit',
+    fog: 'foggy',
+  };
 
-  return icons[symbolCode] || 'wb_sunny'
-}
+  return icons[symbolCode] || 'wb_sunny';
+};
 
 const formatTime = (timeString: string): string => {
-  const time = new Date(timeString)
+  const time = new Date(timeString);
   return time.toLocaleTimeString('nl-NL', {
     hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+    minute: '2-digit',
+  });
+};
 
 // Watch for location changes
 watch(userLocation, (newLocation) => {
   if (newLocation) {
-    void fetchWeather()
+    void fetchWeather();
   }
-})
+});
 
 // Lifecycle
 onMounted(() => {
   if (userLocation.value) {
-    void fetchWeather()
+    void fetchWeather();
   }
-})
+});
 </script>
 
 <style lang="scss" scoped>
 .weather-widget {
   background: white;
   color: #333;
-  
+
   .weather-content {
     color: #333;
   }
-  
+
   .weather-detail {
     display: flex;
     align-items: center;
@@ -304,15 +320,19 @@ onMounted(() => {
     background: #f5f5f5;
     border-radius: 8px;
   }
-  
+
   .q-card__section {
     color: #333;
   }
-  
-  .text-h6, .text-h4, .text-body1, .text-body2, .text-caption {
+
+  .text-h6,
+  .text-h4,
+  .text-body1,
+  .text-body2,
+  .text-caption {
     color: #333;
   }
-  
+
   .text-grey {
     color: #666 !important;
   }

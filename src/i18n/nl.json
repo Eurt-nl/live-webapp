@@ -176,7 +176,17 @@
     "snow": "Sneeuw",
     "sleet": "Natte sneeuw",
     "fog": "Mist",
-    "unknown": "Onbekend"
+    "unknown": "Onbekend",
+    "impactTable": "Weer-invloed",
+    "temperature": "Temperatuur",
+    "windSpeed": "Windsnelheid",
+    "windDirection": "Windrichting",
+    "noGPSData": "Geen GPS data beschikbaar voor weer-invloed berekening",
+    "hole": "Hole",
+    "length": "Lengte",
+    "today": "Vandaag",
+    "correction": "Correctie",
+    "explanation": "Groen = langer door weer, Rood = korter door weer. Correctie = waar je moet mikken."
   },
   "events": {
     "title": "Events",
@@ -403,6 +413,7 @@
     "silencePhone": "Zet je telefoon op stil tijdens de ronde",
     "silencePhoneMessage": "Herinnering: Zet je telefoon op stil tijdens de ronde om andere spelers niet te storen."
   },
+
   "practiceRound": {
     "newRound": "Nieuwe oefenronde",
     "course": "Baan",

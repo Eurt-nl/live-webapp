@@ -120,7 +120,17 @@
     "snow": "Snow",
     "sleet": "Sleet",
     "fog": "Fog",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "impactTable": "Weather Impact",
+    "temperature": "Temperature",
+    "windSpeed": "Wind Speed",
+    "windDirection": "Wind Direction",
+    "noGPSData": "No GPS data available for weather impact calculation",
+    "hole": "Hole",
+    "length": "Length",
+    "today": "Today",
+    "correction": "Correction",
+    "explanation": "Green = longer due to weather, Red = shorter due to weather. Correction = where to aim."
   },
   "rafi": {
     "title": "Rafi - Pitch & Putt Assistant",
@@ -427,6 +437,7 @@
     "silencePhone": "Silence your phone during the round",
     "silencePhoneMessage": "Reminder: Please silence your phone during the round to avoid disturbing other players."
   },
+
   "practiceRound": {
     "newRound": "New practice round",
     "course": "Course",

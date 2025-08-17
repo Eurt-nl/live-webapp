@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.13.1",
+    date: "2025-08-17",
+    type: "patch",
+    changes: ["fix: weer widget alleen voor ingelogde gebruikers en witte achtergrond"]
+  },
+  {
     version: "0.13.0",
     date: "2025-08-17",
     type: "minor",

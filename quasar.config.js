@@ -109,6 +109,13 @@ export default configure((ctx) => {
         });
         return middlewares;
       },
+      // Onderdruk passive event listener waarschuwingen
+      client: {
+        overlay: {
+          warnings: false,
+          errors: true,
+        },
+      },
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
@@ -162,6 +169,14 @@ export default configure((ctx) => {
         clientsClaim: true,
         // Force cache update voor alle assets
         runtimeCaching: [
+          // MET Norway API: altijd network-only voor iOS PWA compatibiliteit
+          {
+            urlPattern: /^https:\/\/api\.met\.no\/.*/,
+            handler: 'NetworkOnly',
+            options: {
+              cacheName: 'met-norway-cache',
+            },
+          },
           // API routes: altijd network-only om gecachte Rafi responses te voorkomen
           // Server stuurt al Cache-Control: no-store, maar SW moet niet interfereren
           {

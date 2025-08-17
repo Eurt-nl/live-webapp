@@ -12,6 +12,12 @@
         </template>
         <template v-else> {{ $customT('scores.enterScores') }} </template>
       </div>
+      <!-- Weer-invloed icoontje -->
+      <WeatherImpactTable
+        v-if="round && holes.length > 0"
+        :course-id="String(round.course)"
+        :holes="holes"
+      />
     </div>
     <q-page padding>
       <!-- Pull-to-refresh voor handmatig verversen -->
@@ -701,6 +707,7 @@ import { useRoundsStore } from 'stores/rounds';
 import { getScoreColor } from 'src/constants/scoreColors';
 import { debug } from 'src/utils/debug';
 import { useI18n } from 'vue-i18n';
+import WeatherImpactTable from 'src/components/WeatherImpactTable.vue';
 
 // Initialiseer router, Quasar, PocketBase en authenticatie-store
 const route = useRoute();
@@ -750,7 +757,14 @@ type Round = {
   };
   [key: string]: unknown;
 };
-type Hole = { id: string; hole: number; par: number; hole_length: number };
+type Hole = {
+  id: string;
+  hole: number;
+  par: number;
+  hole_length: number;
+  gps_tee?: { latitude: number; longitude: number } | null;
+  gps_green?: { latitude: number; longitude: number } | null;
+};
 type RoundScore = {
   id: string;
   round: string;

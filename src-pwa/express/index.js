@@ -147,6 +147,117 @@ const validateRafiRequest = (req, res, next) => {
   next();
 };
 
+// Rate limiting voor weather API
+const weatherLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuut
+  max: 10, // Max 10 requests per minuut per IP
+  message: { error: 'Too many weather requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// MET Norway Weather API proxy endpoint
+app.get('/api/weather', weatherLimiter, async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    // Valideer coördinaten
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    // Format coördinaten naar max 4 decimal places zoals vereist door MET Norway
+    const formattedLat = Number(latitude.toFixed(4));
+    const formattedLon = Number(longitude.toFixed(4));
+
+    // MET Norway API aanroepen met server-side User-Agent
+    let response = await fetch(
+      `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${formattedLat}&lon=${formattedLon}`,
+      {
+        headers: {
+          'User-Agent': 'PitchPuttApp/1.0 (https://pitch-putt.live)',
+          Accept: 'application/json',
+        },
+      },
+    );
+
+    // Fallback naar Open-Meteo als MET Norway faalt
+    if (!response.ok) {
+      console.warn(`MET Norway API failed (${response.status}), trying Open-Meteo fallback`);
+
+      try {
+        response = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${formattedLat}&longitude=${formattedLon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,pressure_msl,cloud_cover&timezone=auto`,
+          {
+            headers: {
+              Accept: 'application/json',
+            },
+          },
+        );
+
+        if (!response.ok) {
+          console.error(
+            `Open-Meteo fallback also failed: ${response.status} ${response.statusText}`,
+          );
+          return res.status(503).json({
+            error: 'Weather services temporarily unavailable',
+          });
+        }
+
+        // Converteer Open-Meteo response naar MET Norway formaat
+        const openMeteoData = await response.json();
+        const current = openMeteoData.current;
+
+        const convertedData = {
+          properties: {
+            timeseries: [
+              {
+                time: current.time,
+                data: {
+                  instant: {
+                    details: {
+                      air_temperature: current.temperature_2m,
+                      air_temperature_feels_like: current.apparent_temperature,
+                      relative_humidity: current.relative_humidity_2m,
+                      wind_speed: current.wind_speed_10m,
+                      wind_from_direction: current.wind_direction_10m,
+                      air_pressure_at_sea_level: current.pressure_msl,
+                      cloud_area_fraction: current.cloud_cover,
+                      // Fallback symbol code voor Open-Meteo
+                      symbol_code: 'fair_day',
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        };
+
+        res.json(convertedData);
+        return;
+      } catch (fallbackError) {
+        console.error('Open-Meteo fallback error:', fallbackError);
+        return res.status(503).json({
+          error: 'Weather services temporarily unavailable',
+        });
+      }
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Weather proxy error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Rafi API endpoint
 app.post('/api/rafi', validateRafiRequest, async (req, res) => {
   try {
