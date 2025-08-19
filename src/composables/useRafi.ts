@@ -3,6 +3,7 @@ import { usePocketbase } from './usePocketbase';
 import { useI18n } from 'vue-i18n';
 import type { CompactLocalRule } from './useLocalRules';
 import { getApiUrl, isLoggingEnabled } from '../config/rafi';
+import { formatDateForPocketBase } from '../utils/dateUtils';
 
 export interface RafiRequest {
   question: string;
@@ -24,7 +25,7 @@ export interface ChatLogData {
   answer: string;
   usedRules?: string[];
   distance?: number;
-  clientMeta?: Record<string, any>;
+  clientMeta?: Record<string, unknown>;
 }
 
 export function useRafi() {
@@ -97,7 +98,7 @@ export function useRafi() {
             ...data.clientMeta,
             userAgent: navigator.userAgent,
             language: navigator.language,
-            timestamp: new Date().toISOString(),
+            timestamp: formatDateForPocketBase(new Date()),
           },
         };
 
@@ -110,14 +111,14 @@ export function useRafi() {
   };
 
   // Helper functie voor client metadata
-  const getClientMeta = (): Record<string, any> => {
+  const getClientMeta = (): Record<string, unknown> => {
     return {
       userAgent: navigator.userAgent,
       language: navigator.language,
       platform: navigator.platform,
       cookieEnabled: navigator.cookieEnabled,
       onLine: navigator.onLine,
-      timestamp: new Date().toISOString(),
+      timestamp: formatDateForPocketBase(new Date()),
     };
   };
 

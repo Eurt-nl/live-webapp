@@ -149,7 +149,9 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
+
 import { debug } from 'src/utils/debug';
+import { formatDateForPocketBase, formatDateOnlyForPocketBase } from 'src/utils/dateUtils';
 
 const router = useRouter();
 const route = useRoute();
@@ -184,20 +186,6 @@ const recurringIntervals = [
   { label: $customT('eventForm.everyWeek'), value: 'weeks' },
   { label: $customT('eventForm.everyMonth'), value: 'months' },
 ];
-
-// Functie om afstand tussen twee GPS-punten te berekenen (Haversine-formule)
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Laad een bestaand event voor bewerking
 const loadEvent = async (id: string) => {
@@ -270,26 +258,8 @@ const loadCourses = async () => {
       expand: 'category',
     });
 
-    // Sorteer op afstand tot gebruiker indien locatie beschikbaar
-    let allCourses = result.items;
-    if (navigator.geolocation) {
-      await new Promise<void>((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            allCourses = [...allCourses].sort((a, b) => {
-              if (!a.gps || !b.gps) return 0;
-              const distA = getDistance(latitude, longitude, a.gps.latitude, a.gps.longitude);
-              const distB = getDistance(latitude, longitude, b.gps.latitude, b.gps.longitude);
-              return distA - distB;
-            });
-            resolve();
-          },
-          () => resolve(),
-          { enableHighAccuracy: false, timeout: 3000 },
-        );
-      });
-    }
+    // Banen zijn al gesorteerd op naam door de API
+    const allCourses = result.items;
 
     courses.value = allCourses.map((course) => ({
       id: course.id,
@@ -315,34 +285,34 @@ const loadCourses = async () => {
 // Functie om datum te verhogen met interval
 const addIntervalToDate = (date: Date, value: number, interval: string): Date => {
   const newDate = new Date(date);
-  debug(`addIntervalToDate - Input: ${date.toISOString()}, value: ${value}, interval: ${interval}`);
+  debug(`addIntervalToDate - Input: ${formatDateForPocketBase(date)}, value: ${value}, interval: ${interval}`);
 
   switch (interval) {
     case 'days':
       newDate.setDate(newDate.getDate() + value);
-      debug(`addIntervalToDate - Dagen: ${newDate.toISOString()}`);
+      debug(`addIntervalToDate - Dagen: ${formatDateForPocketBase(newDate)}`);
       break;
     case 'weeks':
       newDate.setDate(newDate.getDate() + value * 7);
-      debug(`addIntervalToDate - Weken: ${newDate.toISOString()}`);
+      debug(`addIntervalToDate - Weken: ${formatDateForPocketBase(newDate)}`);
       break;
     case 'months': {
       // Voor maanden: behoud de dag van de maand, maar pas op voor maanden met minder dagen
       const currentDay = newDate.getDate();
       debug(`addIntervalToDate - Maanden - huidige dag: ${currentDay}`);
       newDate.setMonth(newDate.getMonth() + value);
-      debug(`addIntervalToDate - Maanden - na setMonth: ${newDate.toISOString()}`);
+      debug(`addIntervalToDate - Maanden - na setMonth: ${formatDateForPocketBase(newDate)}`);
 
       // Als de dag van de maand niet meer bestaat (bijv. 31e in februari),
       // zet dan naar de laatste dag van de nieuwe maand
       if (newDate.getDate() !== currentDay) {
         newDate.setDate(0); // Zet naar laatste dag van vorige maand
-        debug(`addIntervalToDate - Maanden - aangepast naar laatste dag: ${newDate.toISOString()}`);
+        debug(`addIntervalToDate - Maanden - aangepast naar laatste dag: ${formatDateForPocketBase(newDate)}`);
       }
       break;
     }
   }
-  debug(`addIntervalToDate - Resultaat: ${newDate.toISOString()}`);
+  debug(`addIntervalToDate - Resultaat: ${formatDateForPocketBase(newDate)}`);
   return newDate;
 };
 
@@ -350,19 +320,19 @@ const addIntervalToDate = (date: Date, value: number, interval: string): Date =>
 const testDateCalculation = () => {
   const testDate = new Date('2024-01-15T00:00:00');
   debug('Test datum berekening:');
-  debug('Start datum:', testDate.toISOString());
+  debug('Start datum:', formatDateForPocketBase(testDate));
 
   // Test dagen
   const nextDay = addIntervalToDate(testDate, 1, 'days');
-  debug('Volgende dag:', nextDay.toISOString());
+  debug('Volgende dag:', formatDateForPocketBase(nextDay));
 
   // Test weken
   const nextWeek = addIntervalToDate(testDate, 1, 'weeks');
-  debug('Volgende week:', nextWeek.toISOString());
+  debug('Volgende week:', formatDateForPocketBase(nextWeek));
 
   // Test maanden
   const nextMonth = addIntervalToDate(testDate, 1, 'months');
-  debug('Volgende maand:', nextMonth.toISOString());
+  debug('Volgende maand:', formatDateForPocketBase(nextMonth));
 
   // Test met string formaat (zoals in de form)
   const testDateStr = '2024-01-15';
@@ -378,7 +348,7 @@ const testDateCalculation = () => {
     const [year, month, day] = currentDateStr.split('-').map(Number);
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const nextDate = addIntervalToDate(currentDate, 1, 'days');
-    currentDateStr = nextDate.toISOString().split('T')[0];
+    currentDateStr = formatDateOnlyForPocketBase(nextDate);
     debug(`Dag ${i + 2}:`, currentDateStr);
   }
 
@@ -389,7 +359,7 @@ const testDateCalculation = () => {
     const [year, month, day] = currentDateStr.split('-').map(Number);
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const nextDate = addIntervalToDate(currentDate, 1, 'weeks');
-    currentDateStr = nextDate.toISOString().split('T')[0];
+    currentDateStr = formatDateOnlyForPocketBase(nextDate);
     debug(`Week ${i + 2}:`, currentDateStr);
   }
 
@@ -400,7 +370,7 @@ const testDateCalculation = () => {
     const [year, month, day] = currentDateStr.split('-').map(Number);
     const currentDate = new Date(Date.UTC(year, month - 1, day));
     const nextDate = addIntervalToDate(currentDate, 1, 'months');
-    currentDateStr = nextDate.toISOString().split('T')[0];
+    currentDateStr = formatDateOnlyForPocketBase(nextDate);
     debug(`Maand ${i + 2}:`, currentDateStr);
   }
 };
@@ -466,11 +436,11 @@ const onSubmit = async () => {
         // Gebruik UTC om timezone problemen te voorkomen
         const [year, month, day] = currentDateStr.split('-').map(Number);
         const currentDate = new Date(Date.UTC(year, month - 1, day));
-        debug(`Event ${i + 1} - CurrentDate object:`, currentDate.toISOString());
+        debug(`Event ${i + 1} - CurrentDate object:`, formatDateForPocketBase(currentDate));
         const nextDate = addIntervalToDate(currentDate, 1, form.value.recurringInterval);
-        debug(`Event ${i + 1} - NextDate object:`, nextDate.toISOString());
+        debug(`Event ${i + 1} - NextDate object:`, formatDateForPocketBase(nextDate));
         // Gebruik UTC om timezone problemen te voorkomen
-        currentDateStr = nextDate.toISOString().split('T')[0];
+        currentDateStr = formatDateOnlyForPocketBase(nextDate);
         debug(`Event ${i + 1} - Nieuwe datum string:`, currentDateStr);
       }
 

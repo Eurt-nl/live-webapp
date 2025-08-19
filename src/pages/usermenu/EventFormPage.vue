@@ -182,6 +182,7 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'src/stores/auth';
+import { formatDateOnlyForPocketBase } from 'src/utils/dateUtils';
 
 interface EventData {
   name: string;
@@ -241,45 +242,14 @@ const form = ref({
   status: null,
 });
 
-// Functie om afstand tussen twee GPS-punten te berekenen (Haversine-formule)
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
 const loadData = async () => {
   try {
     // Laad banen uit de view-collectie
     const coursesResult = await pb
       .collection('vw_courses_with_details')
       .getList(1, 50, { sort: 'name' });
-    let allCourses = coursesResult.items;
-    // Sorteer op afstand tot gebruiker indien locatie beschikbaar
-    if (navigator.geolocation) {
-      await new Promise<void>((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            allCourses = [...allCourses].sort((a, b) => {
-              if (!a.gps || !b.gps) return 0;
-              const distA = getDistance(latitude, longitude, a.gps.latitude, a.gps.longitude);
-              const distB = getDistance(latitude, longitude, b.gps.latitude, b.gps.longitude);
-              return distA - distB;
-            });
-            resolve();
-          },
-          () => resolve(),
-          { enableHighAccuracy: false, timeout: 3000 },
-        );
-      });
-    }
+    const allCourses = coursesResult.items;
+    // Banen zijn al gesorteerd op naam door de API
     courses.value = allCourses.map((course) => ({
       id: course.id,
       name: course.name,
@@ -358,8 +328,8 @@ const loadData = async () => {
       form.value = {
         name: event.name,
         course: selectedCourse,
-        startdate: startDate.toISOString().split('T')[0],
-        enddate: endDate ? endDate.toISOString().split('T')[0] : '',
+        startdate: formatDateOnlyForPocketBase(startDate),
+        enddate: endDate ? formatDateOnlyForPocketBase(endDate) : '',
         max_players: event.max_players,
         description: event.description || '',
         moderators: event.moderators || [],
@@ -415,8 +385,8 @@ const saveEvent = async () => {
       endDate.setDate(endDate.getDate() + 1);
     }
 
-    const finalStartDate = startDate.toISOString().split('T')[0];
-    const finalEndDate = endDate.toISOString().split('T')[0];
+    const finalStartDate = formatDateOnlyForPocketBase(startDate);
+    const finalEndDate = formatDateOnlyForPocketBase(endDate);
 
     // Owner alleen toevoegen bij create
     const eventData: Partial<EventData> = {

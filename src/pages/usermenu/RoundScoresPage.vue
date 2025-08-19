@@ -290,22 +290,23 @@
           </div>
           <!-- Tussenstand event -->
           <div v-if="eventStandings.length > 0" class="q-mt-xl">
+            <!-- Realtime indicator - boven de standings -->
+            <div v-if="isRealtimeEnabled" class="q-mb-sm">
+              <q-chip
+                dense
+                color="positive"
+                text-color="white"
+                icon="wifi"
+                size="sm"
+                label="Live updates"
+                square
+              />
+            </div>
             <div class="row items-center justify-between q-mb-sm">
               <div class="row items-center">
                 <div class="text-h6 cursor-pointer" @click="showStandings = !showStandings">
                   {{ $customT('scores.standings') }}
                   <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
-                </div>
-                <!-- Realtime indicator -->
-                <div v-if="isRealtimeEnabled" class="q-ml-sm">
-                  <q-chip
-                    dense
-                    color="positive"
-                    text-color="white"
-                    icon="wifi"
-                    size="sm"
-                    label="Live updates"
-                  />
                 </div>
               </div>
               <q-toggle
@@ -724,6 +725,7 @@ const { t: $customT } = useI18n(); // Centrale store voor rondes
 // State voor realtime subscriptions
 const subscriptions = ref<Array<() => void>>([]);
 const isRealtimeEnabled = ref(false);
+const periodicRefreshInterval = ref<NodeJS.Timeout | null>(null);
 
 // -----------------------------
 // Type-definities
@@ -1472,7 +1474,9 @@ const startRealtimeSubscriptions = () => {
           updateScoreData(data.record);
         } catch (error) {
           debug('Error during realtime data update:', error);
-          // Geen notificatie tonen bij realtime errors om gebruikers niet te storen
+          // Fallback: volledige refresh bij realtime errors
+          debug('Falling back to full refresh due to realtime error');
+          void loadData();
         }
 
         // Verwijder notificatie voor score updates - dit leidt alleen maar af
@@ -1501,12 +1505,20 @@ const startRealtimeSubscriptions = () => {
           updateRoundData(data.record);
         } catch (error) {
           debug('Error during realtime data update:', error);
-          // Geen notificatie tonen bij realtime errors om gebruikers niet te storen
+          // Fallback: volledige refresh bij realtime errors
+          debug('Falling back to full refresh due to realtime error');
+          void loadData();
         }
       }
     });
 
     debug('Realtime subscriptions started successfully');
+
+    // Start periodieke refresh als backup (elke 30 seconden)
+    periodicRefreshInterval.value = setInterval(() => {
+      debug('Periodic refresh triggered as backup');
+      void loadData();
+    }, 30000);
   } catch (error) {
     debug('Error starting realtime subscriptions:', error);
     isRealtimeEnabled.value = false;
@@ -1519,6 +1531,12 @@ const stopRealtimeSubscriptions = () => {
   subscriptions.value.forEach((unsubscribe) => unsubscribe());
   subscriptions.value = [];
   isRealtimeEnabled.value = false;
+
+  // Stop periodieke refresh
+  if (periodicRefreshInterval.value) {
+    clearInterval(periodicRefreshInterval.value);
+    periodicRefreshInterval.value = null;
+  }
 };
 
 // Controleer of een score update relevant is voor de huidige tussenstand
@@ -1576,6 +1594,14 @@ const updateScoreData = (scoreRecord: Record<string, unknown>) => {
     playerRecords.value[holeId] = allScores.value.find(
       (s) => s.hole === holeId && s.score_marker != null,
     ) as RoundScore;
+  }
+
+  // Check of we de ronde kennen, zo niet: trigger een refresh
+  const knownRound = allRounds.value.find((r) => r.id === roundId);
+  if (!knownRound) {
+    debug('Unknown round detected in realtime update, triggering refresh');
+    // Trigger een refresh om nieuwe rondes te laden
+    void loadData();
   }
 
   debug('Score data updated efficiently:', { scoreId, roundId, holeId });

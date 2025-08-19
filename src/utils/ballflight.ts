@@ -5,36 +5,36 @@
 // ==================
 // Afstelbare constanten
 // ==================
-const ALPHA_TEMP = 0.0017;    // ~1% per +6°C t.o.v. 15°C
-const K_TAIL = 0.008;         // windfactor tailwind
-const K_HEAD = 0.010;         // windfactor headwind
-const CLAMP_MIN = 0.8;        // min. carry factor
-const CLAMP_MAX = 1.2;        // max. carry factor
+const ALPHA_TEMP = 0.0017; // ~1% per +6°C t.o.v. 15°C
+const K_TAIL = 0.008; // windfactor tailwind
+const K_HEAD = 0.01; // windfactor headwind
+const CLAMP_MIN = 0.8; // min. carry factor
+const CLAMP_MAX = 1.2; // max. carry factor
 const FLIGHTTIME_FACTOR = 0.04; // s/m; vluchttijd-heuristiek
-const GAMMA_SIDE = 0.3;       // zijwind-effectiviteit (0.6 → realistischer 0.3)
-const DRIFT_CAP = 3;          // max richtcorrectie in meters (optioneel)
+const GAMMA_SIDE = 0.3; // zijwind-effectiviteit (0.6 → realistischer 0.3)
+const DRIFT_CAP = 3; // max richtcorrectie in meters (optioneel)
 
 // ==================
 // Types
 // ==================
 export type HoleInput = {
-  hole: number;           // 1..18
-  length_m: number;       // normale lengte in meters
-  bearing_deg?: number;   // Azimut tee→green in graden (0=N, 90=E)
+  hole: number; // 1..18
+  length_m: number; // normale lengte in meters
+  bearing_deg?: number; // Azimut tee→green in graden (0=N, 90=E)
   relative_wind_deg?: number; // Relatieve hoek φ (0=mee, +90=van links, -90=van rechts)
 };
 
 export type WeatherInput = {
-  T_c: number;            // temperatuur in °C
+  T_c: number; // temperatuur in °C
   wind_speed_10m: number; // m/s (MET Norway)
   wind_dir_from_deg: number; // windrichting FROM in graden, 0=N
 };
 
 export type TableRow = {
   hole: number;
-  normaal: number;    // m
-  aangepast: number;  // m (afgerond)
-  richt: string;      // "2L" | "1R" | "—"
+  normaal: number; // m
+  aangepast: number; // m (afgerond)
+  richt: string; // "2L" | "1R" | "—"
 };
 
 // ==================
@@ -84,7 +84,7 @@ function lateralDriftMeters(v_side: number, L: number): number {
 export function computeAdjustedTable(
   holes: HoleInput[],
   weather: WeatherInput,
-  opts?: { roundMeters?: number }
+  opts?: { roundMeters?: number },
 ): TableRow[] {
   const { T_c, wind_speed_10m, wind_dir_from_deg } = weather;
   const roundMeters = opts?.roundMeters ?? 1;
@@ -104,7 +104,7 @@ export function computeAdjustedTable(
     // 3) Relatieve hoek φ
     let phi_deg: number;
     if (typeof h.bearing_deg === 'number') {
-      phi_deg = signedAngleDeg(h.bearing_deg, wind_to_deg);
+      phi_deg = signedAngleDeg(wind_to_deg, h.bearing_deg);
     } else if (typeof h.relative_wind_deg === 'number') {
       phi_deg = h.relative_wind_deg;
     } else {

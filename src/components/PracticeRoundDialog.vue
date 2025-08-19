@@ -74,6 +74,7 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useRouter } from 'vue-router';
+import { formatDateForPocketBase } from 'src/utils/dateUtils';
 
 // Props voor openen/sluiten van de dialog en voor de banenlijst
 const props = defineProps({
@@ -218,7 +219,7 @@ async function createRound() {
       player: userId,
       category: practiceType.id,
       status: conceptStatus.id,
-      date: newRound.value.date ? new Date(newRound.value.date).toISOString() : '',
+      date: newRound.value.date ? formatDateForPocketBase(newRound.value.date) : '',
       notes: newRound.value.notes,
       created_by: userId,
       is_active: true, // Nieuwe oefenronde is actief

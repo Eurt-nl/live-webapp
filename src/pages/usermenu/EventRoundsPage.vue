@@ -237,6 +237,7 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
+import { formatDateForPocketBase } from 'src/utils/dateUtils';
 
 const route = useRoute();
 // const router = useRouter(); // Niet gebruikt
@@ -290,13 +291,14 @@ const formatDateTime = (dateString: string) => {
 const formatDateTimeForInput = (dateString: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+  const formatted = formatDateForPocketBase(date);
+  return formatted.slice(0, 16).replace(' ', 'T'); // Format: YYYY-MM-DDTHH:mm
 };
 
 const formatDateTimeForSave = (dateString: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toISOString(); // Format: YYYY-MM-DDTHH:mm:ss.sssZ
+  return formatDateForPocketBase(date); // Format: YYYY-MM-DD HH:mm:ss
 };
 
 const loadEvent = async () => {
@@ -307,11 +309,11 @@ const loadEvent = async () => {
       const startDate = new Date(eventData.startdate);
       const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + 1);
-      eventData.enddate = endDate.toISOString();
+      eventData.enddate = formatDateForPocketBase(endDate);
     }
     // Zorg voor consistent datumformaat
-    eventData.startdate = new Date(eventData.startdate).toISOString();
-    eventData.enddate = new Date(eventData.enddate).toISOString();
+    eventData.startdate = formatDateForPocketBase(new Date(eventData.startdate));
+    eventData.enddate = formatDateForPocketBase(new Date(eventData.enddate));
     event.value = eventData;
     roundForm.value.event = eventData.id;
   } catch (error) {
@@ -358,7 +360,7 @@ const loadStatuses = async () => {
 const resetForm = () => {
   roundForm.value = {
     round_number: rounds.value.length + 1,
-    date_time_event_round: formatDateTimeForInput(new Date().toISOString()),
+    date_time_event_round: formatDateTimeForInput(formatDateForPocketBase(new Date())),
     status: null,
     event: event.value?.id || '',
     players: [],
@@ -384,7 +386,7 @@ const editRound = (round) => {
 
 const formatDebugDate = (dateString: string) => {
   if (!dateString) return 'Geen datum';
-  return new Date(dateString).toISOString();
+  return formatDateForPocketBase(new Date(dateString));
 };
 
 const validateDateTime = (dateTimeStr: string, roundNumber: number) => {

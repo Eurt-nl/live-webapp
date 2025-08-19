@@ -24,12 +24,12 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../stores/auth';
 import RafiChat from '../components/RafiChat.vue';
 
-const router = useRouter();
+
 const { t: $customT } = useI18n();
 const authStore = useAuthStore();
 </script>

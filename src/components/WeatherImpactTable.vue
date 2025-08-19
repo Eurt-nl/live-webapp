@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useWeather, type WeatherData } from 'src/composables/useWeather';
 import { computeAdjustedTable, type HoleInput, type WeatherInput } from 'src/utils/ballflight';
@@ -205,7 +205,7 @@ const columns = [
 // Laad weerdata wanneer dialog opent
 watch(showDialog, (newValue) => {
   if (newValue && hasValidGPSData.value) {
-    loadWeatherData();
+    void loadWeatherData();
   }
 });
 
@@ -253,7 +253,7 @@ const calculateWeatherImpact = (weather: WeatherData) => {
         isValidGPSPoint(hole.gps_green),
     )
     .map((hole) => {
-      const bearing = calculateBearing(hole.gps_tee!, hole.gps_green!);
+      const bearing = calculateBearing(hole.gps_tee, hole.gps_green);
       return {
         hole: hole.hole,
         length_m: hole.hole_length || 0,

@@ -105,6 +105,7 @@ import { getFileUrl } from 'src/utils/pocketbase-helpers';
 import type { Course, Country } from 'src/components/models';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useLocationStore } from 'stores/location';
+import { useLocationFocus } from 'src/composables/useLocationFocus';
 
 const { t: $customT } = useI18n();
 const router = useRouter();
@@ -114,6 +115,9 @@ const countries = ref<Record<string, Country>>({});
 const searchQuery = ref('');
 const userLocation = ref<{ latitude: number; longitude: number } | null>(null);
 const locationStore = useLocationStore();
+
+// Setup focus-based locatie ophaling
+useLocationFocus();
 
 // Haal de naam van het land op basis van het id
 const getCountryName = (countryId: string) => {
@@ -270,9 +274,9 @@ const fetchAllCourses = async () => {
 
 // Bij het laden van de pagina of bij handmatig verversen:
 async function fetchUserLocationAndBanen() {
-  const loc = await locationStore.getOrFetchLocation();
+  // Locatie wordt nu automatisch opgehaald door useLocationFocus
   // Gebruik locationStore.userLocation voor filtering/sortering van banen
-  userLocation.value = loc;
+  userLocation.value = locationStore.userLocation;
   try {
     // Haal alle banen op (met paginering)
     banen.value = await fetchAllCourses();

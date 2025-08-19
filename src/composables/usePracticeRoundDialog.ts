@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useLocationStore } from 'stores/location';
 
+
 // Centrale composable voor oefenronde-dialog
 export function usePracticeRoundDialog() {
   const { pb } = usePocketbase();
@@ -19,13 +20,8 @@ export function usePracticeRoundDialog() {
   async function openPracticeRoundDialog() {
     console.log('DEBUG: openPracticeRoundDialog (begin)', showPracticeDialog.value);
 
-    // Automatische locatie refresh voordat banen worden gefilterd
-    try {
-      console.log('DEBUG: Refreshing location before filtering courses');
-      await locationStore.refreshLocation();
-    } catch (error) {
-      console.error('DEBUG: Error refreshing location:', error);
-    }
+    // Locatie wordt nu automatisch opgehaald door useLocationFocus
+    // Geen handmatige refresh meer nodig
 
     // Gebruik de centrale locatie uit de store
     const loc = await locationStore.getOrFetchLocation();

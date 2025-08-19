@@ -296,7 +296,7 @@ const getRuleTypeName = (types: { category: string }[] | { category: string }) =
 const getHoleNumbers = (holeIds: string[]): number[] => {
   return holeIds
     .map((id) => holes.value.find((hole) => hole.id === id)?.hole)
-    .filter((holeNumber) => holeNumber !== undefined) as number[];
+    .filter((holeNumber) => holeNumber !== undefined);
 };
 
 const loadHoles = async () => {
@@ -305,7 +305,7 @@ const loadHoles = async () => {
       filter: `course = "${props.courseId}"`,
       sort: 'hole',
     });
-    holes.value = result.items.map((item: any) => ({
+    holes.value = result.items.map((item: Record<string, unknown>) => ({
       id: item.id,
       hole: item.hole,
     }));

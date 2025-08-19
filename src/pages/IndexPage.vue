@@ -234,6 +234,8 @@ import { useLocationStore } from 'stores/location';
 import { useRoundsStore } from 'stores/rounds';
 import { usePracticeRoundDialog } from 'src/composables/usePracticeRoundDialog';
 import WeatherWidget from 'src/components/WeatherWidget.vue';
+import { useLocationFocus } from 'src/composables/useLocationFocus';
+import { formatDateForPocketBase, formatDateOnlyForPocketBase } from 'src/utils/dateUtils';
 
 const $q = useQuasar();
 const router = useRouter();
@@ -251,6 +253,9 @@ const {
   openPracticeRoundDialog,
   onPracticeRoundCreated,
 } = usePracticeRoundDialog();
+
+// Setup focus-based locatie ophaling
+useLocationFocus();
 
 const showInfoDialog = ref(false);
 const allEvents = ref([]);
@@ -352,8 +357,8 @@ async function startEventRound(event: Record<string, unknown>) {
     const roundData = {
       course: event.course[0],
       created_by: authStore.user?.id,
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toISOString(),
+      date: formatDateOnlyForPocketBase(new Date()),
+      time: formatDateForPocketBase(new Date()),
       event: event.id,
       player: authStore.user?.id,
       public: false,
@@ -390,32 +395,18 @@ async function startEventRound(event: Record<string, unknown>) {
 }
 
 // Functie om gebruikerslocatie op te halen (voor ingelogde gebruikers)
+// VERVANGEN door useLocationFocus composable
 function getUserLocation(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (!('geolocation' in navigator)) {
-      reject(new Error('Geolocatie niet beschikbaar'));
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        locationStore.setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
+  return new Promise((resolve) => {
+    // Gebruik de centrale locatie service
+    locationStore
+      .getOrFetchLocation()
+      .then(() => {
         resolve();
-      },
-      (error) => {
-        debug.warn('Kon locatie niet ophalen:', error);
-        locationStore.setLocation(null);
+      })
+      .catch(() => {
         resolve(); // Resolve zonder locatie
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minuten cache
-      },
-    );
+      });
   });
 }
 

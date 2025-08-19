@@ -111,11 +111,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useLocalRules, type LocalRule } from '../composables/useLocalRules';
+import { useLocalRules } from '../composables/useLocalRules';
 import { useRafi, type RafiRequest } from '../composables/useRafi';
 import { usePocketbase } from '../composables/usePocketbase';
 import { useLocationStore } from '../stores/location';
 import { useAuthStore } from '../stores/auth';
+import { useLocationFocus } from '../composables/useLocationFocus';
 
 const { t: $customT } = useI18n();
 const { pb } = usePocketbase();
@@ -125,6 +126,9 @@ const locationStore = useLocationStore();
 const authStore = useAuthStore();
 const { fetchLocalRules, compactRulesForPrompt, localRules } = useLocalRules();
 const { askRafi, rafiLogger, getClientMeta, isLoading: rafiLoading, error: rafiError } = useRafi();
+
+// Setup focus-based locatie ophaling
+useLocationFocus();
 
 // Reactive data
 const nearestCourse = ref<NearestCourse | null>(null);
@@ -393,11 +397,11 @@ const initializeChat = async () => {
 };
 
 // Lifecycle
-onMounted(async () => {
+onMounted(() => {
   try {
     // Alleen initialiseren als er al een locatie is
     if (locationStore.userLocation) {
-      await initializeChat();
+      void initializeChat();
     } else {
       // No location found, waiting for user gesture
     }
@@ -410,7 +414,7 @@ onMounted(async () => {
 watch(
   chatMessages,
   () => {
-    scrollToBottom();
+    void scrollToBottom();
   },
   { deep: true },
 );
@@ -418,10 +422,10 @@ watch(
 // Watch voor locatie wijzigingen
 watch(
   () => locationStore.userLocation,
-  async (newLocation) => {
+  (newLocation) => {
     if (newLocation && !nearestCourse.value) {
       // Als er een nieuwe locatie is en er nog geen baan is gevonden, initialiseer de chat
-      await initializeChat();
+      void initializeChat();
     }
   },
   { immediate: false },

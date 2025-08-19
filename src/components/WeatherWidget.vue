@@ -3,14 +3,6 @@
     <q-card-section class="q-pa-md">
       <div class="row items-center justify-between">
         <div class="text-h6">{{ $customT('weather.title') }}</div>
-        <q-btn
-          flat
-          round
-          icon="refresh"
-          :loading="isLoading"
-          @click="fetchWeather"
-          :disable="!userLocation"
-        />
       </div>
 
       <!-- Locatie niet beschikbaar -->
@@ -19,13 +11,6 @@
         <div class="text-body2 text-grey q-mt-sm">
           {{ $customT('weather.locationRequired') }}
         </div>
-        <q-btn
-          color="primary"
-          :label="$customT('weather.shareLocation')"
-          icon="my_location"
-          @click="requestLocation"
-          class="q-mt-md"
-        />
       </div>
 
       <!-- Weer data -->
@@ -70,11 +55,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Locatie info -->
-        <div class="text-caption text-grey q-mt-md text-center">
-          {{ $customT('weather.lastUpdated') }}: {{ formatTime(weatherData.lastUpdated) }}
-        </div>
       </div>
 
       <!-- Loading state -->
@@ -87,13 +67,6 @@
       <div v-else-if="error" class="text-center q-pa-md">
         <q-icon name="error" size="48px" color="negative" />
         <div class="text-body2 text-negative q-mt-sm">{{ error }}</div>
-        <q-btn
-          color="primary"
-          :label="$customT('weather.retry')"
-          icon="refresh"
-          @click="fetchWeather"
-          class="q-mt-md"
-        />
       </div>
     </q-card-section>
   </q-card>
@@ -102,12 +75,15 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useQuasar } from 'quasar';
+
 import { useLocationStore } from 'stores/location';
+import { useLocationFocus } from 'src/composables/useLocationFocus';
 
 const { t: $customT } = useI18n();
-const $q = useQuasar();
 const locationStore = useLocationStore();
+
+// Setup focus-based locatie ophaling
+useLocationFocus();
 
 // Reactive data
 const weatherData = ref<WeatherData | null>(null);
@@ -129,36 +105,6 @@ interface WeatherData {
 
 // Computed properties
 const userLocation = computed(() => locationStore.userLocation);
-
-// Methods
-const requestLocation = async () => {
-  try {
-    await locationStore.refreshLocation();
-    const location = await locationStore.getOrFetchLocation();
-
-    if (location) {
-      await fetchWeather();
-      $q.notify({
-        color: 'positive',
-        message: $customT('weather.locationSuccess'),
-        icon: 'my_location',
-      });
-    } else {
-      $q.notify({
-        color: 'warning',
-        message: $customT('weather.locationDenied'),
-        icon: 'warning',
-      });
-    }
-  } catch (err) {
-    console.error('Error requesting location:', err);
-    $q.notify({
-      color: 'negative',
-      message: $customT('weather.locationError'),
-      icon: 'error',
-    });
-  }
-};
 
 const fetchWeather = async () => {
   if (!userLocation.value) {
@@ -210,7 +156,6 @@ const fetchWeather = async () => {
         data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
       ),
       symbol: data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
-      lastUpdated: currentWeather.time,
     };
   } catch (err) {
     console.error('Error fetching weather:', err);
@@ -278,14 +223,6 @@ const getWeatherIcon = (symbolCode: string): string => {
   };
 
   return icons[symbolCode] || 'wb_sunny';
-};
-
-const formatTime = (timeString: string): string => {
-  const time = new Date(timeString);
-  return time.toLocaleTimeString('nl-NL', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 // Watch for location changes

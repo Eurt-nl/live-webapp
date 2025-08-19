@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.14.0",
+    date: "2025-08-17",
+    type: "minor",
+    changes: ["feat: weer impact berekeningen en ballflight simulatie toegevoegd"]
+  },
+  {
     version: "0.13.1",
     date: "2025-08-17",
     type: "patch",

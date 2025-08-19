@@ -128,12 +128,18 @@ import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'stores/auth';
 import LocationPicker from 'src/components/LocationPicker.vue';
 import { debug } from 'src/utils/debug';
+import { useLocationStore } from 'stores/location';
+import { useLocationFocus } from 'src/composables/useLocationFocus';
 
 const $q = useQuasar();
 const { t: $customT } = useI18n();
 const router = useRouter();
 const { pb } = usePocketbase();
 const authStore = useAuthStore();
+const locationStore = useLocationStore();
+
+// Setup focus-based locatie ophaling
+useLocationFocus();
 
 // Form data
 const formData = ref({
@@ -354,18 +360,12 @@ const scrollToForm = () => {
 
 onMounted(() => {
   // Centreer op huidige locatie als beschikbaar
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        mapCenter.value = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-      },
-      (error) => {
-        debug('Error getting current location:', error);
-      },
-    );
+  // Locatie wordt nu automatisch opgehaald door useLocationFocus
+  if (locationStore.userLocation) {
+    mapCenter.value = {
+      lat: locationStore.userLocation.latitude,
+      lng: locationStore.userLocation.longitude,
+    };
   }
 });
 </script>

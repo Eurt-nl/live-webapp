@@ -2,7 +2,7 @@
 // Composable voor het ophalen van weerdata van MET Norway API
 
 import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+
 
 export interface WeatherData {
   temperature: number; // °C
@@ -18,7 +18,7 @@ export interface WeatherLocation {
 }
 
 export function useWeather() {
-  const { t: $customT } = useI18n();
+
 
   const weatherData = ref<WeatherData | null>(null);
   const loading = ref(false);

@@ -163,6 +163,7 @@ import { useI18n } from 'vue-i18n';
 
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { useAuthStore } from 'src/stores/auth';
+
 import { debug } from 'src/utils/debug';
 
 // Initialiseer router, Quasar, PocketBase en authenticatie-store
@@ -259,26 +260,8 @@ const loadCourses = async () => {
   try {
     // Haal alle banen op uit de view-collectie
     const result = await pb.collection('vw_courses_with_details').getList(1, 50, { sort: 'name' });
-    let allCourses = result.items;
-    // Sorteer op afstand tot gebruiker indien locatie beschikbaar
-    if (navigator.geolocation) {
-      await new Promise<void>((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            allCourses = [...allCourses].sort((a, b) => {
-              if (!a.gps || !b.gps) return 0;
-              const distA = getDistance(latitude, longitude, a.gps.latitude, a.gps.longitude);
-              const distB = getDistance(latitude, longitude, b.gps.latitude, b.gps.longitude);
-              return distA - distB;
-            });
-            resolve();
-          },
-          () => resolve(),
-          { enableHighAccuracy: false, timeout: 3000 },
-        );
-      });
-    }
+    const allCourses = result.items;
+    // Banen zijn al gesorteerd op naam door de API
     courses.value = allCourses;
   } catch (error) {
     // Foutmelding bij mislukken
@@ -290,19 +273,6 @@ const loadCourses = async () => {
     });
   }
 };
-
-// Functie om afstand tussen twee GPS-punten te berekenen (Haversine-formule)
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // Haal alle gebruikers op voor de moderators-selectie
 const loadUsers = async () => {
