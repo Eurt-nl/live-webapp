@@ -24,18 +24,18 @@
           </div>
           <div class="text-grey text-right" v-else>-</div>
         </div>
-        
+
         <div v-if="loading" class="q-mt-md">
           <q-spinner size="md" color="primary" />
         </div>
-        
+
         <!-- Error melding -->
         <div v-else-if="error" class="q-mt-md">
           <q-banner class="text-white bg-negative">
             {{ error }}
           </q-banner>
         </div>
-        
+
         <!-- Handicap grafiek en tabel -->
         <div v-else>
           <!-- Tabel met handicap-ontwikkeling -->
@@ -59,17 +59,17 @@
               </template>
             </q-table>
           </div>
-          
+
           <!-- Handicap grafiek met ECharts -->
           <div v-if="currentHandicap !== null" class="q-mt-md">
             <div class="text-subtitle2 q-mb-sm">{{ $customT('stats.handicapDevelopment') }}</div>
-            <v-chart 
-              :option="getHandicapChartOption" 
-              style="width: 100%; height: 300px;"
+            <v-chart
+              :option="getHandicapChartOption"
+              style="width: 100%; height: 300px"
               autoresize
             />
           </div>
-          
+
           <!-- Geen handicap beschikbaar -->
           <div v-else class="text-grey q-mt-md">
             {{ $customT('stats.notEnoughRounds') }}
@@ -110,12 +110,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import VChart from 'vue-echarts'
-import { useHandicapStats } from 'src/composables/useHandicapStats'
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import VChart from 'vue-echarts';
+import { useHandicapStats } from 'src/composables/useHandicapStats';
 
-const { t: $customT } = useI18n()
+const { t: $customT } = useI18n();
 
 // Gebruik de nieuwe handicap composable
 const {
@@ -125,11 +125,11 @@ const {
   handicapHistory,
   fetchHandicapData,
   formatDate,
-  getHandicapChartOption
-} = useHandicapStats()
+  getHandicapChartOption,
+} = useHandicapStats();
 
 // Reactieve variabelen
-const showInfoDialog = ref(false)
+const showInfoDialog = ref(false);
 
 // Computed property voor de tabeldata: handicap geschiedenis
 const handicapTableData = computed(() => {
@@ -138,12 +138,18 @@ const handicapTableData = computed(() => {
     date: formatDate(item.round_date),
     roundsSoFar: item.rounds_so_far,
     handicap: item.handicap_at_round,
-  }))
-})
+  }));
+});
 
 // Kolommen voor de q-table
 const handicapTableColumns = [
-  { name: 'date', label: $customT('stats.date'), field: 'date', align: 'left' as const, sortable: true },
+  {
+    name: 'date',
+    label: $customT('stats.date'),
+    field: 'date',
+    align: 'left' as const,
+    sortable: true,
+  },
   {
     name: 'roundsSoFar',
     label: $customT('stats.rounds'),
@@ -158,12 +164,12 @@ const handicapTableColumns = [
     align: 'right' as const,
     sortable: true,
   },
-]
+];
 
 // Laad handicap data bij mount
 onMounted(async () => {
-  await fetchHandicapData()
-})
+  await fetchHandicapData();
+});
 </script>
 
 <style scoped>

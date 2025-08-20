@@ -176,26 +176,43 @@ export const useAuthStore = defineStore('auth', {
         // Probeer eerst de token uit localStorage te halen
         const storedAuth = localStorage.getItem('pb_auth');
         if (storedAuth) {
-          const { token, model } = JSON.parse(storedAuth);
-          if (token && model) {
-            pb.authStore.save(token, model);
+          try {
+            const { token, model } = JSON.parse(storedAuth);
+            if (token && model) {
+              pb.authStore.save(token, model);
+            }
+          } catch (parseError) {
+            console.error('Error parsing stored auth:', parseError);
+            localStorage.removeItem('pb_auth');
+            return false;
           }
         }
 
         // Controleer of we een geldige auth store hebben
         if (pb.authStore.isValid && pb.authStore.model?.id) {
-          const user = await pb.collection('users').getOne(pb.authStore.model.id, {
-            expand: 'role',
-          });
-          this.user = { ...user, token: pb.authStore.token } as User;
-          this.token = pb.authStore.token;
+          try {
+            const user = await pb.collection('users').getOne(pb.authStore.model.id, {
+              expand: 'role',
+            });
+            this.user = { ...user, token: pb.authStore.token } as User;
+            this.token = pb.authStore.token;
 
-          // Haal direct de banen van de gebruiker op na auth check
-          const coursesStore = useCoursesStore();
-          await coursesStore.fetchUserCourses();
+            // Haal direct de banen van de gebruiker op na auth check
+            const coursesStore = useCoursesStore();
+            await coursesStore.fetchUserCourses();
 
-          return true;
+            return true;
+          } catch (userError) {
+            console.error('Error fetching user data:', userError);
+            // Als we de user data niet kunnen ophalen, clear de auth store
+            this.logout();
+            return false;
+          }
         }
+        
+        // Als we geen geldige auth store hebben, clear de state
+        this.user = null;
+        this.token = null;
         return false;
       } catch (error) {
         console.error('Auth check error:', error);

@@ -11,21 +11,7 @@ export const authGuard = async (
   try {
     const authStore = useAuthStore();
 
-    // Controleer eerst of we al een token hebben
-    if (!authStore.token) {
-      const storedAuth = localStorage.getItem('pb_auth');
-      if (storedAuth) {
-        try {
-          const { token, model } = JSON.parse(storedAuth);
-          if (token && model) {
-            authStore.pb.authStore.save(token, model);
-          }
-        } catch {
-          localStorage.removeItem('pb_auth');
-        }
-      }
-    }
-
+    // Controleer authenticatie status
     const isAuthenticated = await authStore.checkAuth();
 
     // Als we op de login pagina zijn en al ingelogd, redirect naar home

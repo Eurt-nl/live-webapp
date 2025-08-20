@@ -73,8 +73,30 @@ const getRedirectUrl = (): string => {
   return 'https://pitch-putt.live/#/auth/reset-password';
 };
 
+// Functie om auth store te herstellen uit localStorage
+const restoreAuthStore = (): void => {
+  if (!pb) return;
+  
+  try {
+    const storedAuth = localStorage.getItem('pb_auth');
+    if (storedAuth) {
+      const { token, model } = JSON.parse(storedAuth);
+      if (token && model) {
+        pb.authStore.save(token, model);
+        console.log('Auth store restored from localStorage');
+      }
+    }
+  } catch (error) {
+    console.error('Error restoring auth store:', error);
+    localStorage.removeItem('pb_auth');
+  }
+};
+
 // Stel de redirect URL in voor password reset
 if (pb) {
+  // Herstel auth store bij initialisatie
+  restoreAuthStore();
+  
   pb.authStore.onChange(() => {
     // Deze hook wordt aangeroepen wanneer de auth store verandert
     // We kunnen hier eventueel extra logica toevoegen

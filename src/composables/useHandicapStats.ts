@@ -40,7 +40,7 @@ export function useHandicapStats() {
     try {
       loading.value = true
       error.value = null
-      
+
       const userId = authStore.user?.id
       if (!userId) {
         throw new Error('Geen gebruiker gevonden')
@@ -179,12 +179,12 @@ export function useHandicapStats() {
     loading,
     error,
     handicapData,
-    
+
     // Computed
     currentHandicap,
     totalRounds,
     handicapHistory,
-    
+
     // Methods
     fetchHandicapData,
     formatDate,

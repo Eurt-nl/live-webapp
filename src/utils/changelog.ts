@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.16.1",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: authenticatie probleem bij refresh opgelost door verbeterde auth store herstel"]
+  },
+  {
+    version: "0.16.0",
+    date: "2025-08-20",
+    type: "minor",
+    changes: ["feat: Apache ECharts toegevoegd en handicap statistieken aangepast voor nieuwe vw_handicap view"]
+  },
+  {
     version: "0.15.0",
     date: "2025-08-20",
     type: "minor",
