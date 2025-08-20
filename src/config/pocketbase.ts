@@ -76,7 +76,7 @@ const getRedirectUrl = (): string => {
 // Functie om auth store te herstellen uit localStorage
 const restoreAuthStore = (): void => {
   if (!pb) return;
-  
+
   try {
     const storedAuth = localStorage.getItem('pb_auth');
     if (storedAuth) {
@@ -96,7 +96,7 @@ const restoreAuthStore = (): void => {
 if (pb) {
   // Herstel auth store bij initialisatie
   restoreAuthStore();
-  
+
   pb.authStore.onChange(() => {
     // Deze hook wordt aangeroepen wanneer de auth store verandert
     // We kunnen hier eventueel extra logica toevoegen

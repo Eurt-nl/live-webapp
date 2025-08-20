@@ -209,7 +209,7 @@ export const useAuthStore = defineStore('auth', {
             return false;
           }
         }
-        
+
         // Als we geen geldige auth store hebben, clear de state
         this.user = null;
         this.token = null;

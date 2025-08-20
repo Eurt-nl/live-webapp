@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.16.3",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: ECharts module import probleem opgelost door boot file toe te voegen"]
+  },
+  {
+    version: "0.16.2",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: authenticatie probleem bij refresh opgelost door verbeterde auth store herstel"]
+  },
+  {
     version: "0.16.1",
     date: "2025-08-20",
     type: "patch",
