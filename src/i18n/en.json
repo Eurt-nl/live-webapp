@@ -410,7 +410,11 @@
     "applyForModeratorDescription": "Apply to become a moderator for {courseName}. Moderators can edit course information and manage events.",
     "subject": "Subject",
     "notification": "Notification",
-    "send": "Send"
+    "send": "Send",
+    "dataSyncIssue": "Data synchronization issue",
+    "refreshNow": "Refresh now",
+    "connectionLost": "Connection lost",
+    "reconnect": "Reconnect"
   },
   "validation": {
     "required": "This field is required",
@@ -623,7 +627,10 @@
     "statistics": "Statistics",
     "putts": "Putts",
     "chips": "Chips",
-    "minZero": "Minimum 0"
+    "minZero": "Minimum 0",
+    "liveUpdates": "Live updates",
+    "connectionError": "Connection error",
+    "connecting": "Connecting..."
   },
   "marker": {
     "linkAsMarker": "Link yourself as marker",
@@ -818,6 +825,7 @@
     "doubleBogey": "Dbl bogey",
     "worse": "Worse (>5)",
     "close": "Close",
+    "rounds": "Rounds",
     "allCourses": "All courses",
     "perHoleStats": "Statistics per hole",
     "holeStatsExplanation": "Explanation of hole statistics",

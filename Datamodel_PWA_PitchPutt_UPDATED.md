@@ -554,7 +554,7 @@
                 "maxSelect": 1,
                 "minSelect": 0,
                 "name": "course",
-                "presentable": false,
+                "presentable": true,
                 "required": false,
                 "system": false,
                 "type": "relation"
@@ -566,7 +566,7 @@
                 "min": 1,
                 "name": "hole",
                 "onlyInt": true,
-                "presentable": false,
+                "presentable": true,
                 "required": false,
                 "system": false,
                 "type": "number"
@@ -699,7 +699,7 @@
                 "min": 0,
                 "name": "name",
                 "pattern": "",
-                "presentable": false,
+                "presentable": true,
                 "primaryKey": false,
                 "required": false,
                 "system": false,
@@ -2651,7 +2651,7 @@
                 "maxSelect": 1,
                 "minSelect": 0,
                 "name": "event",
-                "presentable": false,
+                "presentable": true,
                 "required": false,
                 "system": false,
                 "type": "relation"
@@ -2660,7 +2660,7 @@
                 "hidden": false,
                 "id": "bool458715613",
                 "name": "is_active",
-                "presentable": true,
+                "presentable": false,
                 "required": false,
                 "system": false,
                 "type": "bool"
@@ -2669,7 +2669,7 @@
                 "hidden": false,
                 "id": "bool2470667982",
                 "name": "is_finalized",
-                "presentable": true,
+                "presentable": false,
                 "required": false,
                 "system": false,
                 "type": "bool"
@@ -2725,12 +2725,12 @@
             {
                 "autogeneratePattern": "",
                 "hidden": false,
-                "id": "_clone_opQe",
+                "id": "_clone_Kfpb",
                 "max": 0,
                 "min": 0,
                 "name": "name",
                 "pattern": "",
-                "presentable": false,
+                "presentable": true,
                 "primaryKey": false,
                 "required": false,
                 "system": false,
@@ -2738,7 +2738,7 @@
             },
             {
                 "hidden": false,
-                "id": "_clone_KhkC",
+                "id": "_clone_UVjt",
                 "maxSize": 0,
                 "name": "gps",
                 "presentable": false,
@@ -2750,5 +2750,410 @@
         "indexes": [],
         "system": false,
         "viewQuery": "SELECT c.id, c.name, c.gps\nFROM courses c\nWHERE EXISTS (\n    SELECT 1\n    FROM course_detail cd\n    WHERE cd.course = c.id\n)"
+    },
+    {
+        "id": "pbc_1841713602",
+        "listRule": "",
+        "viewRule": "",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "vw_handicap",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json2582050271",
+                "maxSize": 1,
+                "name": "player_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4231605813",
+                "maxSize": 1,
+                "name": "player_name",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2785041568",
+                "maxSize": 1,
+                "name": "round_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json254355162",
+                "maxSize": 1,
+                "name": "round_date",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2994803872",
+                "maxSize": 1,
+                "name": "rounds_so_far",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1843871296",
+                "maxSize": 1,
+                "name": "pool_count",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json3858364101",
+                "maxSize": 1,
+                "name": "used_rounds",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json388986624",
+                "maxSize": 1,
+                "name": "handicap_at_round",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "WITH per_round AS (\n  SELECT\n    r.id AS round_id,\n    r.player AS player_id,\n    r.created AS round_date,\n    COUNT(rs.id) AS holes_count,\n    SUM(COALESCE(rs.score_player, 0)) - (COUNT(rs.id) * 3) AS round_score_vs_par\n  FROM round_scores rs\n  JOIN rounds r ON r.id = rs.round\n  GROUP BY r.id, r.player, r.created\n),\ncompleted_rounds AS (\n  SELECT\n    pr.round_id,\n    pr.player_id,\n    pr.round_date,\n    pr.holes_count,\n    pr.round_score_vs_par\n  FROM per_round pr\n  WHERE pr.holes_count >= 18\n),\nranked AS (\n  SELECT\n    cr.round_id,\n    cr.player_id,\n    cr.round_date,\n    cr.holes_count,\n    cr.round_score_vs_par,\n    ROW_NUMBER() OVER (\n      PARTITION BY cr.player_id\n      ORDER BY cr.round_date ASC, cr.round_id ASC\n    ) AS seq\n  FROM completed_rounds cr\n),\naug AS (\n  SELECT\n    ranked.round_id,\n    ranked.player_id,\n    ranked.round_date,\n    ranked.holes_count,\n    ranked.round_score_vs_par,\n    ranked.seq,\n    (CASE WHEN ranked.seq > 10 THEN 10 ELSE ranked.seq END) AS pool_count,\n    (CASE WHEN ranked.seq > 10 THEN ranked.seq - 9 ELSE 1 END) AS pool_start,\n    (CASE WHEN ranked.seq >= 5 THEN 5 ELSE NULL END) AS used_rounds\n  FROM ranked\n),\nfinal_rows AS (\n  SELECT\n    (aug.player_id || '_' || printf('%05d', aug.seq)) AS id,\n    aug.player_id AS player_id,\n    u.name AS player_name,\n    aug.round_id AS round_id,\n    aug.round_date AS round_date,\n    aug.seq AS rounds_so_far,\n    aug.pool_count AS pool_count,\n    aug.used_rounds AS used_rounds,\n    (CASE\n       WHEN aug.seq >= 5 THEN (\n         SELECT AVG(rr.round_score_vs_par)\n         FROM ranked rr\n         WHERE rr.player_id = aug.player_id\n           AND rr.seq BETWEEN aug.pool_start AND aug.seq\n           AND (\n             SELECT COUNT(*)\n             FROM ranked rr2\n             WHERE rr2.player_id = aug.player_id\n               AND rr2.seq BETWEEN aug.pool_start AND aug.seq\n               AND (\n                 rr2.round_score_vs_par < rr.round_score_vs_par\n                 OR (rr2.round_score_vs_par = rr.round_score_vs_par AND rr2.round_date > rr.round_date)\n               )\n           ) < 5\n       )\n       ELSE NULL\n     END) AS handicap_at_round\n  FROM aug\n  JOIN users u ON u.id = aug.player_id\n)\nSELECT\n  final_rows.id AS id,\n  final_rows.player_id AS player_id,\n  final_rows.player_name AS player_name,\n  final_rows.round_id AS round_id,\n  final_rows.round_date AS round_date,\n  final_rows.rounds_so_far AS rounds_so_far,\n  final_rows.pool_count AS pool_count,\n  final_rows.used_rounds AS used_rounds,\n  final_rows.handicap_at_round AS handicap_at_round\nFROM final_rows\nWHERE final_rows.handicap_at_round IS NOT NULL\nORDER BY final_rows.player_id, final_rows.rounds_so_far ASC"
+    },
+    {
+        "id": "pbc_2629827037",
+        "listRule": "",
+        "viewRule": "",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "vw_player_course_hole_stroke_distribution",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json2582050271",
+                "maxSize": 1,
+                "name": "player_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4231605813",
+                "maxSize": 1,
+                "name": "player_name",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2306335985",
+                "maxSize": 1,
+                "name": "player_avatar",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1495058834",
+                "maxSize": 1,
+                "name": "course_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2525078272",
+                "maxSize": 1,
+                "name": "course_name",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1911513770",
+                "maxSize": 1,
+                "name": "hole_number",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1767766964",
+                "maxSize": 1,
+                "name": "par",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json429021047",
+                "maxSize": 1,
+                "name": "samples",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json443004465",
+                "maxSize": 1,
+                "name": "pct1",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2205083531",
+                "maxSize": 1,
+                "name": "pct2",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4100577053",
+                "maxSize": 1,
+                "name": "pct3",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1779253950",
+                "maxSize": 1,
+                "name": "pct4",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json487223848",
+                "maxSize": 1,
+                "name": "pct5",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2085103005",
+                "maxSize": 1,
+                "name": "pct6plus",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "WITH base AS (\n  SELECT\n    r.player AS player_id,\n    u.name AS player_name,\n    u.avatar AS player_avatar,\n    cd.course AS course_id,\n    c.name AS course_name,\n    cd.hole AS hole_number,\n    cd.par AS par,\n    rs.score_player AS score_player\n  FROM round_scores rs\n  JOIN rounds r       ON r.id = rs.round\n  JOIN users u        ON u.id = r.player\n  JOIN course_detail cd ON cd.id = rs.hole\n  JOIN courses c      ON c.id = cd.course\n  WHERE rs.score_player IS NOT NULL\n  -- AND rs.verified = TRUE     -- optioneel: alleen geverifieerde scores\n),\nagg AS (\n  SELECT\n    base.player_id AS player_id,\n    base.player_name AS player_name,\n    base.player_avatar AS player_avatar,\n    base.course_id AS course_id,\n    base.course_name AS course_name,\n    base.hole_number AS hole_number,\n    base.par AS par,\n    COUNT(*) AS samples,\n    SUM(CASE WHEN base.score_player = 1 THEN 1 ELSE 0 END) AS s1,\n    SUM(CASE WHEN base.score_player = 2 THEN 1 ELSE 0 END) AS s2,\n    SUM(CASE WHEN base.score_player = 3 THEN 1 ELSE 0 END) AS s3,\n    SUM(CASE WHEN base.score_player = 4 THEN 1 ELSE 0 END) AS s4,\n    SUM(CASE WHEN base.score_player = 5 THEN 1 ELSE 0 END) AS s5,\n    SUM(CASE WHEN base.score_player >= 6 THEN 1 ELSE 0 END) AS s6plus\n  FROM base\n  GROUP BY\n    base.player_id, base.player_name, base.player_avatar,\n    base.course_id, base.course_name,\n    base.hole_number, base.par\n),\npct AS (\n  SELECT\n    agg.player_id AS player_id,\n    agg.player_name AS player_name,\n    agg.player_avatar AS player_avatar,\n    agg.course_id AS course_id,\n    agg.course_name AS course_name,\n    agg.hole_number AS hole_number,\n    agg.par AS par,\n    agg.samples AS samples,\n    ((1.0 * agg.s1) / agg.samples) * 100.0 AS pct1,\n    ((1.0 * agg.s2) / agg.samples) * 100.0 AS pct2,\n    ((1.0 * agg.s3) / agg.samples) * 100.0 AS pct3,\n    ((1.0 * agg.s4) / agg.samples) * 100.0 AS pct4,\n    ((1.0 * agg.s5) / agg.samples) * 100.0 AS pct5,\n    ((1.0 * agg.s6plus) / agg.samples) * 100.0 AS pct6plus\n  FROM agg\n)\nSELECT\n  (pct.player_id || '_' || pct.course_id || '_' || printf('%02d', pct.hole_number)) AS id,\n  pct.player_id AS player_id,\n  pct.player_name AS player_name,\n  pct.player_avatar AS player_avatar,\n  pct.course_id AS course_id,\n  pct.course_name AS course_name,\n  pct.hole_number AS hole_number,\n  pct.par AS par,\n  pct.samples AS samples,\n  pct.pct1 AS pct1,\n  pct.pct2 AS pct2,\n  pct.pct3 AS pct3,\n  pct.pct4 AS pct4,\n  pct.pct5 AS pct5,\n  pct.pct6plus AS pct6plus\nFROM pct\nORDER BY pct.player_name ASC, pct.course_name ASC, pct.hole_number ASC"
+    },
+    {
+        "id": "pbc_717151079",
+        "listRule": "",
+        "viewRule": "",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "vw_player_course_round_stats",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json2582050271",
+                "maxSize": 1,
+                "name": "player_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_VmdW",
+                "max": 255,
+                "min": 0,
+                "name": "player_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": true,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json1495058834",
+                "maxSize": 1,
+                "name": "course_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_XTth",
+                "max": 0,
+                "min": 0,
+                "name": "course_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json3276522170",
+                "maxSize": 1,
+                "name": "rounds_count",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json334979317",
+                "maxSize": 1,
+                "name": "best_score",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1908169239",
+                "maxSize": 1,
+                "name": "worst_score",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2153517403",
+                "maxSize": 1,
+                "name": "avg_score",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json3864874032",
+                "maxSize": 1,
+                "name": "last_round_date",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "WITH per_round AS (\n  SELECT\n    r.id AS round_id,\n    r.player AS player_id,\n    r.course AS course_id,\n    r.created AS round_date,\n    COUNT(rs.id) AS holes_count,\n    SUM(COALESCE(rs.score_player, 0)) - (COUNT(rs.id) * 3) AS round_score_vs_par\n  FROM round_scores rs\n  JOIN rounds r ON r.id = rs.round\n  WHERE r.course IS NOT NULL\n  GROUP BY r.id, r.player, r.course, r.created\n),\ncompleted_rounds AS (\n  SELECT\n    pr.round_id,\n    pr.player_id,\n    pr.course_id,\n    pr.round_date,\n    pr.holes_count,\n    pr.round_score_vs_par\n  FROM per_round pr\n  WHERE pr.holes_count >= 18\n),\nagg AS (\n  SELECT\n    cr.player_id,\n    cr.course_id,\n    MIN(cr.round_score_vs_par) AS best_score,\n    MAX(cr.round_score_vs_par) AS worst_score,\n    AVG(cr.round_score_vs_par) AS avg_score,\n    COUNT(*) AS rounds_count,\n    MAX(cr.round_date) AS last_round_date\n  FROM completed_rounds cr\n  GROUP BY cr.player_id, cr.course_id\n)\nSELECT\n  (agg.player_id || '_' || agg.course_id) AS id,\n  agg.player_id AS player_id,\n  u.name AS player_name,\n  agg.course_id AS course_id,\n  c.name AS course_name,\n  agg.rounds_count AS rounds_count,\n  agg.best_score AS best_score,\n  agg.worst_score AS worst_score,\n  agg.avg_score AS avg_score,\n  agg.last_round_date AS last_round_date\nFROM agg\nJOIN users u ON u.id = agg.player_id\nJOIN courses c ON c.id = agg.course_id\nORDER BY u.name ASC, c.name ASC"
     }
 ]

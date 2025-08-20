@@ -509,6 +509,7 @@
     "doubleBogey": "Dbl bogey",
     "worse": "Worse (>5)",
     "close": "Sluiten",
+    "rounds": "Rondes",
     "allCourses": "Alle banen",
     "perHoleStats": "Statistieken per hole",
     "holeStatsExplanation": "Uitleg over hole statistieken",
@@ -625,7 +626,10 @@
     "statistics": "Statistieken",
     "putts": "Putts",
     "chips": "Chips",
-    "minZero": "Minimaal 0"
+    "minZero": "Minimaal 0",
+    "liveUpdates": "Live updates",
+    "connectionError": "Verbindingsfout",
+    "connecting": "Verbinden..."
   },
   "marker": {
     "linkAsMarker": "Koppel jezelf als marker",
@@ -834,7 +838,11 @@
     "applyForModeratorDescription": "Vraag aan om moderator te worden voor {courseName}. Moderators kunnen baaninformatie bewerken en events beheren.",
     "subject": "Onderwerp",
     "notification": "Melding",
-    "send": "Verzenden"
+    "send": "Verzenden",
+    "dataSyncIssue": "Probleem met data synchronisatie",
+    "refreshNow": "Nu vernieuwen",
+    "connectionLost": "Verbinding verloren",
+    "reconnect": "Opnieuw verbinden"
   },
   "serviceWorker": {
     "newVersionDownloading": "Nieuwe versie beschikbaar, wordt gedownload...",

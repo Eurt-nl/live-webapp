@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.15.0",
+    date: "2025-08-20",
+    type: "minor",
+    changes: ["feat: Apache ECharts toegevoegd en handicap statistieken aangepast voor nieuwe vw_handicap view"]
+  },
+  {
+    version: "0.14.1",
+    date: "2025-08-19",
+    type: "patch",
+    changes: ["fix: resolve all ESLint errors and enforce PocketBase date formatting"]
+  },
+  {
     version: "0.14.0",
     date: "2025-08-17",
     type: "minor",

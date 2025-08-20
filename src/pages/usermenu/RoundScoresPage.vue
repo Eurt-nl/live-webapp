@@ -290,15 +290,33 @@
           </div>
           <!-- Tussenstand event -->
           <div v-if="eventStandings.length > 0" class="q-mt-xl">
-            <!-- Realtime indicator - boven de standings -->
-            <div v-if="isRealtimeEnabled" class="q-mb-sm">
+            <!-- Connection status indicator - boven de standings -->
+            <div class="q-mb-sm">
               <q-chip
                 dense
-                color="positive"
+                :color="
+                  connectionStatus === 'connected'
+                    ? 'positive'
+                    : connectionStatus === 'error'
+                      ? 'negative'
+                      : 'warning'
+                "
                 text-color="white"
-                icon="wifi"
+                :icon="
+                  connectionStatus === 'connected'
+                    ? 'wifi'
+                    : connectionStatus === 'error'
+                      ? 'wifi_off'
+                      : 'sync_problem'
+                "
                 size="sm"
-                label="Live updates"
+                :label="
+                  connectionStatus === 'connected'
+                    ? $customT('scores.liveUpdates')
+                    : connectionStatus === 'error'
+                      ? $customT('scores.connectionError')
+                      : $customT('scores.connecting')
+                "
                 square
               />
             </div>
@@ -725,7 +743,14 @@ const { t: $customT } = useI18n(); // Centrale store voor rondes
 // State voor realtime subscriptions
 const subscriptions = ref<Array<() => void>>([]);
 const isRealtimeEnabled = ref(false);
-const periodicRefreshInterval = ref<NodeJS.Timeout | null>(null);
+const connectionHealthCheck = ref<NodeJS.Timeout | null>(null);
+const updateQueue = ref<Array<{ type: 'score' | 'round'; data: Record<string, unknown> }>>([]);
+const isProcessingUpdates = ref(false);
+const lastSyncTimestamp = ref<number>(Date.now());
+const connectionStatus = ref<'connected' | 'disconnected' | 'error'>('disconnected');
+
+// Debounce timer voor batch updates
+const updateDebounceTimer = ref<NodeJS.Timeout | null>(null);
 
 // -----------------------------
 // Type-definities
@@ -1354,6 +1379,20 @@ const saveScore = async () => {
     return;
   }
   saving.value[String(holeId)] = true;
+
+  // Optimistische update: update UI direct
+  const optimisticScoreData = {
+    round: route.params.id,
+    hole: String(holeId),
+    score_player: scoreForm.value.score_player,
+    score_marker: scoreForm.value.score_marker,
+    note: scoreForm.value.note,
+    gir: scoreForm.value.gir,
+    putts: scoreForm.value.putts,
+    chips: scoreForm.value.chips,
+    created_by: authStore.user?.id,
+  };
+
   try {
     if (!isPracticeRound.value && !isEventRound.value) {
       // Alleen voor event_round rondes: beide scores verplicht
@@ -1383,42 +1422,85 @@ const saveScore = async () => {
         return;
       }
     }
+
     const myRecord = allScores.value.find(
       (s) => s.round === route.params.id && s.hole === String(holeId),
     );
-    const scoreData = {
-      round: route.params.id,
-      hole: String(holeId),
-      score_player: scoreForm.value.score_player,
-      score_marker: scoreForm.value.score_marker,
-      note: scoreForm.value.note,
-      gir: scoreForm.value.gir,
-      putts: scoreForm.value.putts,
-      chips: scoreForm.value.chips,
-      created_by: authStore.user?.id,
-    };
+
+    // Optimistische update: voeg toe aan lokale data
+    if (myRecord && myRecord.id) {
+      // Update bestaande score optimistisch
+      const existingIndex = allScores.value.findIndex((s) => s.id === myRecord.id);
+      if (existingIndex >= 0) {
+        allScores.value[existingIndex] = {
+          ...allScores.value[existingIndex],
+          ...optimisticScoreData,
+        } as RoundScore;
+      }
+    } else {
+      // Voeg nieuwe score optimistisch toe
+      const newScore = {
+        id: `temp_${Date.now()}`, // Tijdelijke ID
+        ...optimisticScoreData,
+      } as RoundScore;
+      allScores.value.push(newScore);
+    }
+
+    // Update markerRecords en playerRecords voor snelle lookup
+    if (optimisticScoreData.score_player != null) {
+      markerRecords.value[String(holeId)] = allScores.value.find(
+        (s) => s.hole === String(holeId) && s.score_player != null,
+      ) as RoundScore;
+    }
+
+    if (optimisticScoreData.score_marker != null) {
+      playerRecords.value[String(holeId)] = allScores.value.find(
+        (s) => s.hole === String(holeId) && s.score_marker != null,
+      ) as RoundScore;
+    }
+
+    // Sla op naar server
     let result;
     if (myRecord && myRecord.id) {
-      result = await pb.collection('round_scores').update(myRecord.id, scoreData);
+      result = await pb.collection('round_scores').update(myRecord.id, optimisticScoreData);
       await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
       debug('Score update (gebruiker):', result);
     } else {
-      result = await pb.collection('round_scores').create(scoreData);
+      result = await pb.collection('round_scores').create(optimisticScoreData);
       await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
       debug('Score create (gebruiker):', result);
+
+      // Vervang tijdelijke ID met echte ID
+      const tempIndex = allScores.value.findIndex((s) => s.id === `temp_${Date.now() - 1000}`);
+      if (tempIndex >= 0) {
+        allScores.value[tempIndex] = {
+          ...allScores.value[tempIndex],
+          id: result.id,
+        } as RoundScore;
+      }
     }
-    await loadData();
+
+    // Geen volledige refresh meer - de websocket zal de data syncen
     $q.notify({
       color: 'positive',
       message: $customT('notifications.scoreSaved'),
       icon: 'check',
     });
     scoreDialog.value = false;
-    // Nieuw: check of alle scores nu ingevuld zijn
+
+    // Check of alle scores nu ingevuld zijn
     if (allScoresEntered() && !isReadOnly.value) {
       finalizeDialog.value = true;
     }
-  } catch {
+  } catch (error) {
+    debug('Error saving score:', error);
+
+    // Rollback optimistische update bij error
+    const tempIndex = allScores.value.findIndex((s) => s.id === `temp_${Date.now() - 1000}`);
+    if (tempIndex >= 0) {
+      allScores.value.splice(tempIndex, 1);
+    }
+
     $q.notify({
       color: 'negative',
       message: $customT('notifications.saveScoreError'),
@@ -1454,74 +1536,61 @@ const onRefresh = async (done: () => void) => {
 // Websocket/realtime functionaliteit
 // -----------------------------
 // Start realtime subscriptions voor live tussenstand updates
+
 const startRealtimeSubscriptions = () => {
   if (!round.value || isRealtimeEnabled.value) return;
 
   debug('Starting realtime subscriptions for standings updates');
   isRealtimeEnabled.value = true;
+  connectionStatus.value = 'connected';
 
   try {
     // Subscribe op round_scores collection voor score updates
-    void pb.collection('round_scores').subscribe('*', (data) => {
-      debug('Realtime score update received:', data);
+    pb.collection('round_scores')
+      .subscribe('*', (data) => {
+        debug('Realtime score update received:', data);
 
-      // Alleen verwerken als het relevante scores zijn voor dit event
-      if (data.record && isRelevantScoreUpdate(data.record)) {
-        debug('Relevant score update detected, updating data efficiently');
-        // Gebruik try-catch om errors te voorkomen
-        try {
-          // Gebruik efficiënte update in plaats van volledige refresh
-          updateScoreData(data.record);
-        } catch (error) {
-          debug('Error during realtime data update:', error);
-          // Fallback: volledige refresh bij realtime errors
-          debug('Falling back to full refresh due to realtime error');
-          void loadData();
+        // Alleen verwerken als het relevante scores zijn voor dit event
+        if (data.record && isRelevantScoreUpdate(data.record)) {
+          debug('Relevant score update detected, queuing for batch processing');
+          // Voeg toe aan update queue in plaats van direct te verwerken
+          updateQueue.value.push({ type: 'score', data: data.record });
+          scheduleBatchUpdate();
         }
-
-        // Verwijder notificatie voor score updates - dit leidt alleen maar af
-        // if (data.action === 'create' || data.action === 'update') {
-        //   $q.notify({
-        //     color: 'info',
-        //     message: 'Nieuwe score update ontvangen',
-        //     icon: 'update',
-        //     timeout: 3000,
-        //     position: 'top',
-        //   });
-        // }
-      }
-    });
+      })
+      .then((unsubscribe) => void subscriptions.value.push(unsubscribe))
+      .catch((error) => {
+        debug('Error subscribing to round_scores:', error);
+      });
 
     // Subscribe op rounds collection voor ronde status updates
-    void pb.collection('rounds').subscribe('*', (data) => {
-      debug('Realtime round update received:', data);
+    pb.collection('rounds')
+      .subscribe('*', (data) => {
+        debug('Realtime round update received:', data);
 
-      // Alleen verwerken als het relevante rondes zijn voor dit event
-      if (data.record && isRelevantRoundUpdate(data.record)) {
-        debug('Relevant round update detected, updating data efficiently');
-        // Gebruik try-catch om errors te voorkomen
-        try {
-          // Gebruik efficiënte update in plaats van volledige refresh
-          updateRoundData(data.record);
-        } catch (error) {
-          debug('Error during realtime data update:', error);
-          // Fallback: volledige refresh bij realtime errors
-          debug('Falling back to full refresh due to realtime error');
-          void loadData();
+        // Alleen verwerken als het relevante rondes zijn voor dit event
+        if (data.record && isRelevantRoundUpdate(data.record)) {
+          debug('Relevant round update detected, queuing for batch processing');
+          // Voeg toe aan update queue in plaats van direct te verwerken
+          updateQueue.value.push({ type: 'round', data: data.record });
+          scheduleBatchUpdate();
         }
-      }
-    });
+      })
+      .then((unsubscribe) => void subscriptions.value.push(unsubscribe))
+      .catch((error) => {
+        debug('Error subscribing to rounds:', error);
+      });
 
     debug('Realtime subscriptions started successfully');
 
-    // Start periodieke refresh als backup (elke 30 seconden)
-    periodicRefreshInterval.value = setInterval(() => {
-      debug('Periodic refresh triggered as backup');
-      void loadData();
-    }, 30000);
+    // Start connection health check (elke 60 seconden, veel minder agressief)
+    connectionHealthCheck.value = setInterval(() => {
+      void checkConnectionHealth();
+    }, 60000);
   } catch (error) {
     debug('Error starting realtime subscriptions:', error);
     isRealtimeEnabled.value = false;
+    connectionStatus.value = 'error';
   }
 };
 
@@ -1531,12 +1600,131 @@ const stopRealtimeSubscriptions = () => {
   subscriptions.value.forEach((unsubscribe) => unsubscribe());
   subscriptions.value = [];
   isRealtimeEnabled.value = false;
+  connectionStatus.value = 'disconnected';
 
-  // Stop periodieke refresh
-  if (periodicRefreshInterval.value) {
-    clearInterval(periodicRefreshInterval.value);
-    periodicRefreshInterval.value = null;
+  // Stop connection health check
+  if (connectionHealthCheck.value) {
+    clearInterval(connectionHealthCheck.value);
+    connectionHealthCheck.value = null;
   }
+
+  // Clear update queue en timers
+  updateQueue.value = [];
+  if (updateDebounceTimer.value) {
+    clearTimeout(updateDebounceTimer.value);
+    updateDebounceTimer.value = null;
+  }
+  isProcessingUpdates.value = false;
+};
+
+// Schedule batch update met debouncing
+const scheduleBatchUpdate = () => {
+  // Clear bestaande timer
+  if (updateDebounceTimer.value) {
+    clearTimeout(updateDebounceTimer.value);
+  }
+
+  // Schedule nieuwe batch update na 500ms debounce
+  updateDebounceTimer.value = setTimeout(() => {
+    processBatchUpdates();
+  }, 500);
+};
+
+// Verwerk alle queued updates in één batch
+const processBatchUpdates = () => {
+  if (isProcessingUpdates.value || updateQueue.value.length === 0) return;
+
+  isProcessingUpdates.value = true;
+  debug(`Processing ${updateQueue.value.length} queued updates`);
+
+  try {
+    const updates = [...updateQueue.value];
+    updateQueue.value = []; // Clear queue
+
+    // Verwerk alle updates efficiënt
+    for (const update of updates) {
+      if (update.type === 'score') {
+        updateScoreDataEfficiently(update.data);
+      } else if (update.type === 'round') {
+        updateRoundDataEfficiently(update.data);
+      }
+    }
+
+    lastSyncTimestamp.value = Date.now();
+    debug('Batch updates processed successfully');
+  } catch (error) {
+    debug('Error processing batch updates:', error);
+    // Bij error: toon subtiele indicator maar forceer geen refresh
+    connectionStatus.value = 'error';
+
+    // Alleen bij kritieke errors een refresh triggeren
+    if (error instanceof Error && error.message.includes('critical')) {
+      debug('Critical error detected, triggering manual refresh option');
+      // Toon optie voor handmatige refresh in plaats van automatische
+      $q.notify({
+        color: 'warning',
+        message: $customT('notifications.dataSyncIssue'),
+        icon: 'sync_problem',
+        timeout: 5000,
+        position: 'top',
+        actions: [
+          {
+            label: $customT('notifications.refreshNow'),
+            color: 'white',
+            handler: () => {
+              void loadData();
+            },
+          },
+        ],
+      });
+    }
+  } finally {
+    isProcessingUpdates.value = false;
+  }
+};
+
+// Check connection health zonder agressieve refresh
+const checkConnectionHealth = async () => {
+  try {
+    // Eenvoudige health check: probeer een kleine API call
+    await pb.collection('rounds').getList(1, 1);
+    connectionStatus.value = 'connected';
+    debug('Connection health check passed');
+  } catch (error) {
+    debug('Connection health check failed:', error);
+    connectionStatus.value = 'disconnected';
+
+    // Alleen bij langdurige disconnecties een subtiele melding
+    if (connectionStatus.value === 'disconnected') {
+      $q.notify({
+        color: 'warning',
+        message: $customT('notifications.connectionLost'),
+        icon: 'wifi_off',
+        timeout: 3000,
+        position: 'top',
+        actions: [
+          {
+            label: $customT('notifications.reconnect'),
+            color: 'white',
+            handler: () => {
+              void reconnectRealtime();
+            },
+          },
+        ],
+      });
+    }
+  }
+};
+
+// Reconnect realtime subscriptions
+const reconnectRealtime = async () => {
+  debug('Attempting to reconnect realtime subscriptions');
+  stopRealtimeSubscriptions();
+
+  // Korte delay voor reconnect
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  startRealtimeSubscriptions();
 };
 
 // Controleer of een score update relevant is voor de huidige tussenstand
@@ -1561,8 +1749,8 @@ const isRelevantScoreUpdate = (scoreRecord: Record<string, unknown>): boolean =>
   return false;
 };
 
-// Efficiënte update functie voor realtime score updates
-const updateScoreData = (scoreRecord: Record<string, unknown>) => {
+// Efficiënte update functie voor realtime score updates (geen fallback refresh)
+const updateScoreDataEfficiently = (scoreRecord: Record<string, unknown>) => {
   if (!scoreRecord) return;
 
   const scoreId = scoreRecord.id as string;
@@ -1596,14 +1784,6 @@ const updateScoreData = (scoreRecord: Record<string, unknown>) => {
     ) as RoundScore;
   }
 
-  // Check of we de ronde kennen, zo niet: trigger een refresh
-  const knownRound = allRounds.value.find((r) => r.id === roundId);
-  if (!knownRound) {
-    debug('Unknown round detected in realtime update, triggering refresh');
-    // Trigger een refresh om nieuwe rondes te laden
-    void loadData();
-  }
-
   debug('Score data updated efficiently:', { scoreId, roundId, holeId });
 };
 
@@ -1627,8 +1807,8 @@ const isRelevantRoundUpdate = (roundRecord: Record<string, unknown>): boolean =>
   return false;
 };
 
-// Efficiënte update functie voor realtime ronde updates
-const updateRoundData = (roundRecord: Record<string, unknown>) => {
+// Efficiënte update functie voor realtime ronde updates (geen fallback refresh)
+const updateRoundDataEfficiently = (roundRecord: Record<string, unknown>) => {
   if (!roundRecord) return;
 
   const roundId = roundRecord.id as string;
