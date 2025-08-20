@@ -132,7 +132,13 @@ export function useHandicapStats() {
         type: 'category',
         data: dates,
         axisLabel: {
-          rotate: 45
+          show: false
+        },
+        axisTick: {
+          show: false
+        },
+        axisLine: {
+          show: false
         }
       },
       yAxis: {

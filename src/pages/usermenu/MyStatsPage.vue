@@ -36,30 +36,8 @@
           </q-banner>
         </div>
 
-        <!-- Handicap grafiek en tabel -->
+        <!-- Handicap grafiek -->
         <div v-else>
-          <!-- Tabel met handicap-ontwikkeling -->
-          <div v-if="handicapTableData.length > 0" class="q-mb-md">
-            <q-table
-              :rows="handicapTableData"
-              :columns="handicapTableColumns"
-              row-key="id"
-              dense
-              flat
-              hide-bottom
-            >
-              <template v-slot:body-cell-handicap="props">
-                <q-td :props="props">
-                  <span
-                    :class="{ 'text-negative': props.value > 0, 'text-positive': props.value < 0 }"
-                  >
-                    {{ props.value > 0 ? '+' : '' }}{{ props.value.toFixed(1) }}
-                  </span>
-                </q-td>
-              </template>
-            </q-table>
-          </div>
-
           <!-- Handicap grafiek met ECharts -->
           <div v-if="currentHandicap !== null" class="q-mt-md">
             <div class="text-subtitle2 q-mb-sm">{{ $customT('stats.handicapDevelopment') }}</div>
@@ -110,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VChart from 'vue-echarts';
 import { useHandicapStats } from 'src/composables/useHandicapStats';
@@ -122,49 +100,12 @@ const {
   loading,
   error,
   currentHandicap,
-  handicapHistory,
   fetchHandicapData,
-  formatDate,
   getHandicapChartOption,
 } = useHandicapStats();
 
 // Reactieve variabelen
 const showInfoDialog = ref(false);
-
-// Computed property voor de tabeldata: handicap geschiedenis
-const handicapTableData = computed(() => {
-  return handicapHistory.value.map((item) => ({
-    id: item.id,
-    date: formatDate(item.round_date),
-    roundsSoFar: item.rounds_so_far,
-    handicap: item.handicap_at_round,
-  }));
-});
-
-// Kolommen voor de q-table
-const handicapTableColumns = [
-  {
-    name: 'date',
-    label: $customT('stats.date'),
-    field: 'date',
-    align: 'left' as const,
-    sortable: true,
-  },
-  {
-    name: 'roundsSoFar',
-    label: $customT('stats.rounds'),
-    field: 'roundsSoFar',
-    align: 'right' as const,
-    sortable: true,
-  },
-  {
-    name: 'handicap',
-    label: $customT('stats.myHandicap'),
-    field: 'handicap',
-    align: 'right' as const,
-    sortable: true,
-  },
-];
 
 // Laad handicap data bij mount
 onMounted(async () => {

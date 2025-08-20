@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.16.9",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["feat: handicap grafiek vereenvoudigd - tabel en datums verwijderd voor cleaner design"]
+  },
+  {
+    version: "0.16.8",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: ontbrekende html2canvas dependency toegevoegd voor FeedbackFooterBtn component"]
+  },
+  {
     version: "0.16.7",
     date: "2025-08-20",
     type: "patch",
