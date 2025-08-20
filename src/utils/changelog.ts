@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.16.7",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: ontbrekende html2canvas dependency toegevoegd voor FeedbackFooterBtn component"]
+  },
+  {
+    version: "0.16.6",
+    date: "2025-08-20",
+    type: "patch",
+    changes: ["fix: Vite cache probleem opgelost door cache te vernieuwen na ECharts toevoeging"]
+  },
+  {
     version: "0.16.5",
     date: "2025-08-20",
     type: "patch",
