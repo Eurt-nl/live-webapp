@@ -366,9 +366,9 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="row in showAllPlayers ? eventStandings : markerStandingsSlice"
+                      v-for="row in showAllPlayers ? eventStandings : (isPracticeRound ? eventStandings : markerStandingsSlice)"
                       :key="row.id"
-                      :class="{ 'bg-primary text-white': row.id === markerId }"
+                      :class="{ 'bg-primary text-white': !isPracticeRound && row.id === markerId }"
                     >
                       <td class="text-left">{{ row.rank }}</td>
                       <td class="text-left">{{ row.name }}</td>
@@ -396,11 +396,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="row in skinsStandings"
-                    :key="row.id"
-                    :class="{ 'bg-primary text-white': row.id === markerId }"
-                  >
+                                      <tr
+                      v-for="row in skinsStandings"
+                      :key="row.id"
+                      :class="{ 'bg-primary text-white': !isPracticeRound && row.id === markerId }"
+                    >
                     <td class="text-left">{{ row.name }}</td>
                     <td class="text-right">
                       <span
@@ -1091,6 +1091,9 @@ const isUpdate = computed(() => {
 
 // Computed voor afwijkingen in score-invoer (voor visuele feedback)
 const scorePlayerError = computed(() => {
+  // Voor oefenrondes: geen marker vergelijking
+  if (isPracticeRound.value) return false;
+  
   // Geeft true als de speler-score afwijkt van de marker-score
   const myUserId = authStore.user?.id;
   const currentRound = allRounds.value.find((r) => r.marker === myUserId);
@@ -1113,6 +1116,9 @@ const scorePlayerError = computed(() => {
 });
 
 const scoreMarkerError = computed(() => {
+  // Voor oefenrondes: geen marker vergelijking
+  if (isPracticeRound.value) return false;
+  
   // Geeft true als de marker-score afwijkt van de speler-score
   const myUserId = authStore.user?.id;
   const currentRound = allRounds.value.find((r) => r.marker === myUserId);
@@ -1166,6 +1172,9 @@ const totalScorePlayer = computed(() => {
 
 // Totale score van marker berekenen (t.o.v. par)
 const totalScoreMarker = computed(() => {
+  // Voor oefenrondes: geen marker score
+  if (isPracticeRound.value) return null;
+  
   // Som van alle scores van de marker in deze ronde
   if (!round.value?.expand?.marker?.id || holes.value.length === 0) return null;
   const markerRound = findMarkerRound(round.value.expand.marker.id);
@@ -1199,6 +1208,9 @@ const getPlayerScoreForHole = (holeId: string) => {
 
 // Haal de score van de marker op voor een specifieke hole
 const getMarkerScoreForHole = (holeId: string) => {
+  // Voor oefenrondes: geen marker score
+  if (isPracticeRound.value) return '-';
+  
   if (!round.value?.expand?.marker?.id) return '-';
   const markerRound = findMarkerRound(round.value.expand.marker.id);
   if (!markerRound) return '-';
@@ -1602,7 +1614,7 @@ const onRefresh = (done: () => void) => {
 const startRealtimeSubscriptions = () => {
   if (!round.value || isRealtimeEnabled.value) return;
 
-      // Start realtime subscriptions for standings updates
+  // Start realtime subscriptions for standings updates
   isRealtimeEnabled.value = true;
   connectionStatus.value = 'connecting';
 
@@ -2541,95 +2553,87 @@ watch(
   },
 );
 
+// 4. Scores analysis
+debug('4. SCORES ANALYSIS:');
+debug('All score round IDs:', [...new Set(allScores.value.map((s) => s.round))]);
+debug('Scores per round:');
+const scoresPerRound = {};
+allScores.value.forEach((s) => {
+  const roundId = s.round;
+  if (!scoresPerRound[roundId]) scoresPerRound[roundId] = 0;
+  scoresPerRound[roundId]++;
+});
+debug('Scores per round count:', scoresPerRound);
 
+// 5. Current round scores
+debug('5. CURRENT ROUND SCORES:');
+const currentRoundScores = allScores.value.filter((s) => s.round === round.value?.id);
+debug('Current round scores count:', currentRoundScores.length);
+debug(
+  'Current round scores:',
+  currentRoundScores.map((s) => ({
+    hole: s.hole,
+    score_player: s.score_player,
+    score_marker: s.score_marker,
+  })),
+);
 
+// 6. UI state
+debug('6. UI STATE:');
+debug('Marker records count:', Object.keys(markerRecords.value).length);
+debug('Player records count:', Object.keys(playerRecords.value).length);
+debug('Show player scores:', showPlayerScores.value);
+debug('Show marker scores:', showMarkerScores.value);
+debug('Show standings:', showStandings.value);
 
+// 7. Computed values
+debug('7. COMPUTED VALUES:');
+debug('Total score player:', totalScorePlayer.value);
+debug('Total score marker:', totalScoreMarker.value);
+debug('Can sign off:', canSignOff.value);
+debug('Is read only:', isReadOnly.value);
 
+// 8. Event standings
+debug('8. EVENT STANDINGS:');
+debug('Event standings count:', eventStandings.value.length);
+debug(
+  'Event standings:',
+  eventStandings.value.map((s) => ({
+    id: s.id,
+    name: s.name,
+    score: s.score,
+    holesPlayed: s.holesPlayed,
+    rank: s.rank,
+  })),
+);
 
+// 9. Filter analysis
+debug('9. FILTER ANALYSIS:');
+debug('Filter by category:', filterByCategory.value);
+debug('Current player category:', round.value?.expand?.player?.category);
+debug('Current player category name:', round.value?.expand?.player?.expand?.category?.name);
 
-  // 4. Scores analysis
-  debug('4. SCORES ANALYSIS:');
-  debug('All score round IDs:', [...new Set(allScores.value.map((s) => s.round))]);
-  debug('Scores per round:');
-  const scoresPerRound = {};
-  allScores.value.forEach((s) => {
-    const roundId = s.round;
-    if (!scoresPerRound[roundId]) scoresPerRound[roundId] = 0;
-    scoresPerRound[roundId]++;
-  });
-  debug('Scores per round count:', scoresPerRound);
+// 10. Potential issues
+debug('10. POTENTIAL ISSUES:');
+const issues = [];
 
-  // 5. Current round scores
-  debug('5. CURRENT ROUND SCORES:');
-  const currentRoundScores = allScores.value.filter((s) => s.round === round.value?.id);
-  debug('Current round scores count:', currentRoundScores.length);
-  debug(
-    'Current round scores:',
-    currentRoundScores.map((s) => ({
-      hole: s.hole,
-      score_player: s.score_player,
-      score_marker: s.score_marker,
-    })),
-  );
+// Check if current round is in allRounds
+const currentRoundInAllRounds = allRounds.value.find((r) => r.id === round.value?.id);
+if (!currentRoundInAllRounds) {
+  issues.push('Current round not found in allRounds');
+}
 
-  // 6. UI state
-  debug('6. UI STATE:');
-  debug('Marker records count:', Object.keys(markerRecords.value).length);
-  debug('Player records count:', Object.keys(playerRecords.value).length);
-  debug('Show player scores:', showPlayerScores.value);
-  debug('Show marker scores:', showMarkerScores.value);
-  debug('Show standings:', showStandings.value);
+// Check if current round has scores
+if (currentRoundScores.length === 0) {
+  issues.push('No scores found for current round');
+}
 
-  // 7. Computed values
-  debug('7. COMPUTED VALUES:');
-  debug('Total score player:', totalScorePlayer.value);
-  debug('Total score marker:', totalScoreMarker.value);
-  debug('Can sign off:', canSignOff.value);
-  debug('Is read only:', isReadOnly.value);
-
-  // 8. Event standings
-  debug('8. EVENT STANDINGS:');
-  debug('Event standings count:', eventStandings.value.length);
-  debug(
-    'Event standings:',
-    eventStandings.value.map((s) => ({
-      id: s.id,
-      name: s.name,
-      score: s.score,
-      holesPlayed: s.holesPlayed,
-      rank: s.rank,
-    })),
-  );
-
-  // 9. Filter analysis
-  debug('9. FILTER ANALYSIS:');
-  debug('Filter by category:', filterByCategory.value);
-  debug('Current player category:', round.value?.expand?.player?.category);
-  debug('Current player category name:', round.value?.expand?.player?.expand?.category?.name);
-
-  // 10. Potential issues
-  debug('10. POTENTIAL ISSUES:');
-  const issues = [];
-
-  // Check if current round is in allRounds
-  const currentRoundInAllRounds = allRounds.value.find((r) => r.id === round.value?.id);
-  if (!currentRoundInAllRounds) {
-    issues.push('Current round not found in allRounds');
-  }
-
-  // Check if current round has scores
-  if (currentRoundScores.length === 0) {
-    issues.push('No scores found for current round');
-  }
-
-  // Check for type mismatches
-  const roundIdTypes = [...new Set(allRounds.value.map((r) => typeof r.id))];
-  const scoreRoundIdTypes = [...new Set(allScores.value.map((s) => typeof s.round))];
-  if (roundIdTypes.length > 1 || scoreRoundIdTypes.length > 1) {
-    issues.push('Type mismatches in round IDs');
-  }
-
-
+// Check for type mismatches
+const roundIdTypes = [...new Set(allRounds.value.map((r) => typeof r.id))];
+const scoreRoundIdTypes = [...new Set(allScores.value.map((s) => typeof s.round))];
+if (roundIdTypes.length > 1 || scoreRoundIdTypes.length > 1) {
+  issues.push('Type mismatches in round IDs');
+}
 </script>
 
 <style scoped>

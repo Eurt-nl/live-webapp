@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.20.2",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["refactor: remove debug statements from RoundScoresPage"]
+  },
+  {
     version: "0.20.1",
     date: "2025-08-24",
     type: "patch",
