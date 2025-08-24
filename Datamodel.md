@@ -3627,6 +3627,32 @@
                 "type": "text"
             },
             {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "_clone_marker",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "marker",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_3292755704",
+                "hidden": false,
+                "id": "_clone_category",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "category",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
                 "autogeneratePattern": "",
                 "hidden": false,
                 "id": "_clone_UHhG",
@@ -3637,6 +3663,34 @@
                 "presentable": true,
                 "primaryKey": false,
                 "required": true,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_marker_name",
+                "max": 255,
+                "min": 0,
+                "name": "marker_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_category_name",
+                "max": 255,
+                "min": 0,
+                "name": "category_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": false,
                 "system": false,
                 "type": "text"
             },
@@ -3679,6 +3733,6 @@
         ],
         "indexes": [],
         "system": false,
-        "viewQuery": "SELECT\n  -- primaire sleutel voor de view\n  r.id                         AS id,\n\n  -- expliciete velden uit rounds\n  r.course                     AS course,\n  r.player                     AS player,\n  r.event                      AS event,\n  r.event_round                AS event_round,\n  r.date                       AS date,\n  r.time                       AS time,\n  r.flight                     AS flight,\n  r.photo_required             AS photo_required,\n  r.photo_min_count            AS photo_min_count,\n  r.photo_randomize            AS photo_randomize,\n  r.public                     AS public,\n  r.notes                      AS notes,\n  r.round_type                 AS round_type,\n  r.archived_by                AS archived_by,\n  r.qr_token                   AS qr_token,\n  r.signed_by                  AS signed_by,\n  r.score_override             AS score_override,\n  r.is_active                  AS is_active,\n  r.is_finalized               AS is_finalized,\n  r.created                    AS created,\n  r.updated                    AS updated,\n\n  -- denormalized labels\n  c.name                       AS course_name,\n  u.name                       AS player_name,\n  e.name                       AS event_name,\n  er.round_number              AS round_number,\n\n  -- geaggregeerde holes/scores als JSON array, gesorteerd op hole-nummer\n  COALESCE(\n    json_group_array(\n      json_object(\n        'hole_id',      cd.id,\n        'hole_number',  cd.hole,\n        'par',          cd.par,\n        'score_player', rs.score_player,\n        'score_marker', rs.score_marker,\n        'putts',        rs.putts,\n        'chips',        rs.chips,\n        'gir',          rs.gir\n      )\n      ORDER BY cd.hole, cd.id\n    ),\n    '[]'\n  )                           AS scores\n\nFROM rounds r\nLEFT JOIN courses       c  ON c.id  = r.course\nLEFT JOIN users         u  ON u.id  = r.player\nLEFT JOIN events        e  ON e.id  = r.event\nLEFT JOIN event_rounds  er ON er.id = r.event_round\n\n-- koppel alle holes van de baan van deze ronde\nLEFT JOIN course_detail cd ON cd.course = r.course\n-- scores van deze ronde matchen aan de juiste hole\nLEFT JOIN round_scores  rs ON rs.round  = r.id\n                           AND rs.hole  = cd.id\n\nGROUP BY r.id;"
+        "viewQuery": "SELECT\n  -- primaire sleutel voor de view\n  r.id                         AS id,\n\n  -- expliciete velden uit rounds\n  r.course                     AS course,\n  r.player                     AS player,\n  r.marker                     AS marker,\n  r.category                   AS category,\n  r.event                      AS event,\n  r.event_round                AS event_round,\n  r.date                       AS date,\n  r.time                       AS time,\n  r.flight                     AS flight,\n  r.photo_required             AS photo_required,\n  r.photo_min_count            AS photo_min_count,\n  r.photo_randomize            AS photo_randomize,\n  r.public                     AS public,\n  r.notes                      AS notes,\n  r.round_type                 AS round_type,\n  r.archived_by                AS archived_by,\n  r.qr_token                   AS qr_token,\n  r.signed_by                  AS signed_by,\n  r.score_override             AS score_override,\n  r.is_active                  AS is_active,\n  r.is_finalized               AS is_finalized,\n  r.created                    AS created,\n  r.updated                    AS updated,\n\n  -- denormalized labels\n  c.name                       AS course_name,\n  u.name                       AS player_name,\n  m.name                       AS marker_name,\n  cat.name                     AS category_name,\n  e.name                       AS event_name,\n  er.round_number              AS round_number,\n\n  -- geaggregeerde holes/scores als JSON array, gesorteerd op hole-nummer\n  COALESCE(\n    json_group_array(\n      json_object(\n        'hole_id',      cd.id,\n        'hole_number',  cd.hole,\n        'par',          cd.par,\n        'score_player', rs.score_player,\n        'score_marker', rs.score_marker,\n        'putts',        rs.putts,\n        'chips',        rs.chips,\n        'gir',          rs.gir\n      )\n      ORDER BY cd.hole, cd.id\n    ),\n    '[]'\n  )                           AS scores\n\nFROM rounds r\nLEFT JOIN courses       c  ON c.id  = r.course\nLEFT JOIN users         u  ON u.id  = r.player\nLEFT JOIN users         m  ON m.id  = r.marker\nLEFT JOIN categories    cat ON cat.id = r.category\nLEFT JOIN events        e  ON e.id  = r.event\nLEFT JOIN event_rounds  er ON er.id = r.event_round\n\n-- koppel alle holes van de baan van deze ronde\nLEFT JOIN course_detail cd ON cd.course = r.course\n-- scores van deze ronde matchen aan de juiste hole\nLEFT JOIN round_scores  rs ON rs.round  = r.id\n                           AND rs.hole  = cd.id\n\nGROUP BY r.id;"
     }
 ]

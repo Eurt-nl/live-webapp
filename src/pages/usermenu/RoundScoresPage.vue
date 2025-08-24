@@ -1295,6 +1295,8 @@ const loadData = async () => {
       expand: {
         course: { name: roundData.course_name },
         player: { name: roundData.player_name },
+        marker: roundData.marker ? { name: roundData.marker_name } : null,
+        category: roundData.category ? { name: roundData.category_name } : null,
         event: roundData.event ? { name: roundData.event_name } : null,
         event_round: roundData.event_round ? { round_number: roundData.round_number } : null,
       },

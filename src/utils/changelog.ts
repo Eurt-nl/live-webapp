@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.9",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: simplify score overview template to work with any number of holes"]
+  },
+  {
     version: "0.21.8",
     date: "2025-08-24",
     type: "patch",
