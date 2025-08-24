@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.1",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: prevent marker score validation for practice rounds"]
+  },
+  {
     version: "0.21.0",
     date: "2025-08-24",
     type: "minor",

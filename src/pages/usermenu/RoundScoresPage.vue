@@ -849,8 +849,14 @@ const scoreForm = ref({
 
 // Bepalen of het een oefenronde is (geen marker nodig)
 const isPracticeRound = computed(() => {
-  // Controleer of de ronde-categorie 'oefenronde' is
-  return round.value?.expand?.category?.name?.toLowerCase() === 'oefenronde';
+  // Controleer of de ronde-categorie 'oefenronde' is (via expand of direct)
+  const categoryName = round.value?.expand?.category?.name || round.value?.category;
+  const isPractice = typeof categoryName === 'string' && categoryName.toLowerCase() === 'oefenronde';
+  
+  // Extra check: als er geen event en geen event_round is, is het waarschijnlijk een oefenronde
+  const hasNoEvent = !round.value?.event && !round.value?.event_round;
+  
+  return isPractice || hasNoEvent;
 });
 
 // Bepalen of het een event ronde is (heeft event_id)
@@ -1466,12 +1472,12 @@ const saveScore = async () => {
   try {
     if (!isPracticeRound.value && !isEventRound.value) {
       // Alleen voor event_round rondes: beide scores verplicht
-          if (
-      scoreForm.value.score_player == null ||
-      (!isPracticeRound.value && scoreForm.value.score_marker == null) ||
-      scoreForm.value.score_player === 0 ||
-      (!isPracticeRound.value && scoreForm.value.score_marker === 0)
-    ) {
+      if (
+        scoreForm.value.score_player == null ||
+        (!isPracticeRound.value && scoreForm.value.score_marker == null) ||
+        scoreForm.value.score_player === 0 ||
+        (!isPracticeRound.value && scoreForm.value.score_marker === 0)
+      ) {
         $q.notify({
           color: 'negative',
           message: $customT('notifications.fillBothScores'),
