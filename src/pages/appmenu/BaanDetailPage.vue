@@ -319,6 +319,16 @@ const sendApplyModerator = async () => {
     return;
   }
 
+  // Controleer of user is ingelogd en user ID beschikbaar is
+  if (!authStore.user?.id) {
+    $q.notify({
+      color: 'negative',
+      message: 'Je moet ingelogd zijn om een moderator aanvraag te sturen',
+      icon: 'error',
+    });
+    return;
+  }
+
   try {
     sendingApplyModerator.value = true;
 

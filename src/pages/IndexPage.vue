@@ -415,10 +415,12 @@ async function loadEvents() {
   try {
     loading.value = true;
 
-    const result = await pb.collection('events').getList(1, 50, {
+    // OPTIMALISATIE: Specifieke datum/tijd filters voor nearby events
+    const today = new Date().toISOString().split('T')[0];
+    const result = await pb.collection('events').getList(1, 20, {
       sort: 'startdate',
       expand: 'course,status',
-      filter: 'is_open = true', // Alleen open events
+      filter: `is_open = true && startdate >= "${today}"`, // Alleen open events vanaf vandaag
     });
 
     allEvents.value = result.items;

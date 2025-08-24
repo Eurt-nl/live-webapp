@@ -15,44 +15,36 @@
 
       <!-- Weer data -->
       <div v-else-if="weatherData" class="weather-content">
-        <div class="row items-center q-mb-md">
-          <div class="col-8">
+        <div class="weather-main">
+          <div class="weather-info">
             <div class="text-h4">{{ weatherData.temperature }}°C</div>
             <div class="text-body1">{{ weatherData.description }}</div>
             <div class="text-caption text-grey">
               {{ $customT('weather.feelsLike') }} {{ weatherData.feelsLike }}°C
             </div>
           </div>
-          <div class="col-4 text-center">
-            <q-icon :name="getWeatherIcon(weatherData.symbol)" size="64px" color="primary" />
+          <div class="weather-icon">
+            <q-icon :name="getWeatherIcon(weatherData.symbol)" size="48px" color="primary" />
           </div>
         </div>
 
         <!-- Weer details -->
-        <div class="row q-col-gutter-md">
-          <div class="col-6">
-            <div class="weather-detail">
-              <q-icon name="opacity" size="20px" color="blue" />
-              <div class="text-body2">{{ weatherData.humidity }}%</div>
-            </div>
+        <div class="weather-details">
+          <div class="detail-item">
+            <q-icon name="opacity" size="20px" color="blue" />
+            <div class="text-body2">{{ weatherData.humidity }}%</div>
           </div>
-          <div class="col-6">
-            <div class="weather-detail">
-              <q-icon name="air" size="20px" color="grey" />
-              <div class="text-body2">{{ weatherData.windSpeed }} m/s</div>
-            </div>
+          <div class="detail-item">
+            <q-icon name="air" size="20px" color="grey" />
+            <div class="text-body2">{{ weatherData.windSpeed }} m/s</div>
           </div>
-          <div class="col-6">
-            <div class="weather-detail">
-              <q-icon name="visibility" size="20px" color="orange" />
-              <div class="text-body2">{{ weatherData.pressure }} hPa</div>
-            </div>
+          <div class="detail-item">
+            <q-icon name="visibility" size="20px" color="orange" />
+            <div class="text-body2">{{ weatherData.pressure }} hPa</div>
           </div>
-          <div class="col-6">
-            <div class="weather-detail">
-              <q-icon name="cloud" size="20px" color="blue-grey" />
-              <div class="text-body2">{{ weatherData.cloudCover }}%</div>
-            </div>
+          <div class="detail-item">
+            <q-icon name="cloud" size="20px" color="blue-grey" />
+            <div class="text-body2">{{ weatherData.cloudCover }}%</div>
           </div>
         </div>
       </div>
@@ -156,6 +148,7 @@ const fetchWeather = async () => {
         data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
       ),
       symbol: data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+      lastUpdated: currentWeather.time,
     };
   } catch (err) {
     console.error('Error fetching weather:', err);
@@ -249,7 +242,33 @@ onMounted(() => {
     color: #333;
   }
 
-  .weather-detail {
+  .weather-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .weather-info {
+    flex: 1;
+  }
+
+  .weather-icon {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .weather-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .detail-item {
     display: flex;
     align-items: center;
     gap: 8px;

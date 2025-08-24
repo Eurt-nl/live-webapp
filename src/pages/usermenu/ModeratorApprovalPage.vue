@@ -140,8 +140,19 @@ const approveModerator = async () => {
   try {
     processing.value = true;
 
-    // Haal huidige moderators op
-    const currentModerators = course.value?.moderators || [];
+    // Debug: log de huidige state
+    debug('Current course:', course.value);
+    debug('Current user:', user.value);
+    debug('Current moderators:', course.value?.moderators);
+
+    // Haal huidige moderators op (kan een array van IDs zijn of een array van user objects)
+    let currentModerators: string[] = [];
+    if (Array.isArray(course.value?.moderators)) {
+      // Als het een array van user objects is, haal de IDs eruit
+      currentModerators = course.value.moderators.map((mod) =>
+        typeof mod === 'string' ? mod : (mod as any)?.id || mod,
+      );
+    }
 
     // Voeg nieuwe moderator toe (voorkom duplicaten)
     const userId = typeof user.value?.id === 'string' ? user.value.id : '';
@@ -149,10 +160,17 @@ const approveModerator = async () => {
       ? currentModerators
       : [...currentModerators, userId];
 
+    debug('New moderators array:', newModerators);
+
     // Update de baan met nieuwe moderator
-    await pb.collection('courses').update(course.value.id, {
+    debug('Updating course with ID:', course.value.id);
+    debug('Update data:', { moderators: newModerators });
+
+    const updatedCourse = await pb.collection('courses').update(course.value.id, {
       moderators: newModerators,
     });
+
+    debug('Course updated successfully:', updatedCourse);
 
     // Markeer notificatie als gezien
     if (route.query.notificationId) {
@@ -175,6 +193,12 @@ const approveModerator = async () => {
     router.back();
   } catch (error) {
     debug('Error approving moderator:', error);
+    debug('Error details:', {
+      message: error.message,
+      data: error.data,
+      status: error.status,
+      response: error.response,
+    });
     $q.notify({
       color: 'negative',
       message: $customT('notifications.moderatorApprovalError') + ': ' + error.message,
@@ -225,8 +249,8 @@ onMounted(async () => {
     const userId = route.query.userId as string;
     const courseId = route.query.courseId as string;
 
-    if (!userId || !courseId) {
-      error.value = 'Ongeldige parameters';
+    if (!userId || !courseId || userId === 'undefined' || courseId === 'undefined') {
+      error.value = 'Ongeldige parameters - userId of courseId is undefined';
       loading.value = false;
       return;
     }
@@ -234,7 +258,7 @@ onMounted(async () => {
     // Haal gebruiker en baan gegevens op
     const [userResult, courseResult] = await Promise.all([
       pb.collection('users').getOne(userId),
-      pb.collection('courses').getOne(courseId, { expand: 'category' }),
+      pb.collection('courses').getOne(courseId, { expand: 'category,moderators' }),
     ]);
 
     user.value = userResult;

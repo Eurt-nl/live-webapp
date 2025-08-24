@@ -630,7 +630,9 @@
     "minZero": "Minimum 0",
     "liveUpdates": "Live updates",
     "connectionError": "Connection error",
-    "connecting": "Connecting..."
+    "connecting": "Connecting...",
+    "refreshData": "Refresh data",
+    "showAllPlayers": "All players"
   },
   "marker": {
     "linkAsMarker": "Link yourself as marker",
@@ -826,6 +828,8 @@
     "worse": "Worse (>5)",
     "close": "Close",
     "rounds": "Rounds",
+    "courseStats": "Course statistics",
+    "selectCourse": "Select course",
     "allCourses": "All courses",
     "perHoleStats": "Statistics per hole",
     "holeStatsExplanation": "Explanation of hole statistics",

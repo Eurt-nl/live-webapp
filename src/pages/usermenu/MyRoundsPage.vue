@@ -67,8 +67,11 @@
 
                 <div class="text-caption text-grey-8">{{ round.expand?.course?.name }}</div>
                 <!-- Event naam tonen voor alle rondes met een event -->
-                <div v-if="round.expand?.event?.name" class="text-body2 text-weight-medium q-mt-xs">
-                  {{ round.expand.event.name }}
+                <div
+                  v-if="round.expand?.event?.name || round.expand?.event_round?.expand?.event?.name"
+                  class="text-body2 text-weight-medium q-mt-xs"
+                >
+                  {{ round.expand?.event?.name || round.expand?.event_round?.expand?.event?.name }}
                 </div>
                 <!-- Datum tonen voor gearchiveerde rondes -->
                 <div v-if="showArchived" class="text-body2 q-mt-xs">
@@ -176,8 +179,11 @@
 
               <div class="text-caption text-grey-8">{{ round.expand?.course?.name }}</div>
               <!-- Event naam tonen voor alle rondes met een event -->
-              <div v-if="round.expand?.event?.name" class="text-body2 text-weight-medium q-mt-xs">
-                {{ round.expand.event.name }}
+              <div
+                v-if="round.expand?.event?.name || round.expand?.event_round?.expand?.event?.name"
+                class="text-body2 text-weight-medium q-mt-xs"
+              >
+                {{ round.expand?.event?.name || round.expand?.event_round?.expand?.event?.name }}
               </div>
               <!-- Datum tonen voor gearchiveerde rondes -->
               <div v-if="showArchived" class="text-body2 q-mt-xs">
@@ -419,9 +425,13 @@ const loadData = async () => {
     const userId = authStore.user?.id;
     const baseFilter = `(player = "${userId}" || marker = "${userId}")`;
 
-    // Haal alle rondes op
+    // OPTIMALISATIE: Paginering en recente ronde filtering
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    // Haal alle rondes op met recente filter
     const roundsResult = await pb.collection('rounds').getList(1, 50, {
-      filter: baseFilter,
+      filter: `${baseFilter} && created >= "${sixMonthsAgo.toISOString()}"`,
       sort: '-date,-time',
       expand: 'course,category,status,event_round,event_round.event,event',
     });
@@ -445,9 +455,11 @@ const loadData = async () => {
     // Debug: log de eerste ronde om te zien wat er in de data zit
     if (rounds.value.length > 0) {
       debug('Debug - Eerste ronde:', rounds.value[0]);
+      debug('Debug - Expand object:', rounds.value[0].expand);
       debug('Debug - Event round expand:', rounds.value[0].expand?.event_round);
-      debug('Debug - Direct event expand:', rounds.value[0].expand?.event);
+      debug('Debug - Event round expand:', rounds.value[0].expand?.event_round?.expand?.event);
       debug('Debug - Event field:', rounds.value[0].event);
+      debug('Debug - Event round field:', rounds.value[0].event_round);
     }
 
     // Check en update status voor rondes in het verleden

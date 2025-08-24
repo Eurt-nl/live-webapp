@@ -214,7 +214,11 @@
         "indexes": [
             "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
             "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''",
-            "CREATE UNIQUE INDEX `idx_Olw8FNn6tN` ON `users` (`name`)"
+            "CREATE UNIQUE INDEX `idx_Olw8FNn6tN` ON `users` (`name`)",
+            "CREATE INDEX IF NOT EXISTS idx_users_role        ON users(role);",
+            "CREATE INDEX IF NOT EXISTS idx_users_homecourse  ON users(homecourse);",
+            "CREATE INDEX IF NOT EXISTS idx_users_country     ON users(country);\n",
+            "CREATE INDEX IF NOT EXISTS idx_users_created     ON users(created);"
         ],
         "system": false,
         "authRule": "",
@@ -401,7 +405,10 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_categories_type_name ON categories(cat_type, name);\n",
+            "CREATE INDEX IF NOT EXISTS idx_categories_name       ON categories(name);"
+        ],
         "system": false
     },
     {
@@ -519,7 +526,12 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_countries_iso2 ON countries(isoAlpha2);\n",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_countries_iso3 ON countries(isoAlpha3);\n",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_countries_ison ON countries(isoNumeric);\n",
+            "CREATE INDEX  IF NOT EXISTS idx_countries_name       ON countries(name);"
+        ],
         "system": false
     },
     {
@@ -663,7 +675,9 @@
             }
         ],
         "indexes": [
-            "CREATE UNIQUE INDEX `uniq_cdetail_course_hole` ON `course_detail` (\n  `course`,\n  `hole`\n);"
+            "CREATE UNIQUE INDEX `uniq_cdetail_course_hole` ON `course_detail` (\n  `course`,\n  `hole`\n);",
+            "CREATE INDEX IF NOT EXISTS idx_cdetail_course         ON course_detail(course);\n",
+            "CREATE INDEX IF NOT EXISTS idx_cdetail_course_holeidx ON course_detail(course, hole_index);"
         ],
         "system": false
     },
@@ -853,8 +867,12 @@
             }
         ],
         "indexes": [
-            "CREATE INDEX `idx_course_name` ON `course` (`name`);",
-            "CREATE INDEX `idx_course_country_city` ON `course` (\n  `country`,\n  `city`\n);"
+            "CREATE INDEX IF NOT EXISTS idx_courses_name           ON courses(name);\n",
+            "CREATE INDEX IF NOT EXISTS idx_courses_country_city   ON courses(country, city);\n",
+            "CREATE INDEX IF NOT EXISTS idx_courses_owner          ON courses(owner);\n",
+            "CREATE INDEX IF NOT EXISTS idx_courses_category       ON courses(category);\n",
+            "CREATE INDEX IF NOT EXISTS idx_courses_created        ON courses(created);",
+            "CREATE INDEX IF NOT EXISTS idx_courses_search ON courses(name, city, country);"
         ],
         "system": false
     },
@@ -998,7 +1016,12 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_er_event               ON event_rounds(event);\n",
+            "CREATE INDEX IF NOT EXISTS idx_er_event_roundnr       ON event_rounds(event, round_number);\n",
+            "CREATE INDEX IF NOT EXISTS idx_er_event_datetime      ON event_rounds(event, date_time_event_round);\n",
+            "CREATE INDEX IF NOT EXISTS idx_er_event_status        ON event_rounds(event, status);"
+        ],
         "system": false
     },
     {
@@ -1274,7 +1297,16 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_events_start           ON events(startdate);\n",
+            "CREATE INDEX IF NOT EXISTS idx_events_range           ON events(startdate, enddate);\n",
+            "CREATE INDEX IF NOT EXISTS idx_events_status          ON events(status);\n",
+            "CREATE INDEX IF NOT EXISTS idx_events_isopen          ON events(is_open);\n",
+            "CREATE INDEX IF NOT EXISTS idx_events_owner           ON events(owner);",
+            "CREATE INDEX IF NOT EXISTS idx_events_open_date ON events(is_open, startdate);",
+            "CREATE INDEX IF NOT EXISTS idx_events_future ON events(startdate, status, is_open);",
+            "CREATE INDEX IF NOT EXISTS idx_events_complex ON events(is_open, startdate, status, owner);"
+        ],
         "system": false
     },
     {
@@ -1405,7 +1437,9 @@
             }
         ],
         "indexes": [
-            "CREATE INDEX `idx_course_hole_active` ON `local_rules` (\n  `course`,\n  `hole`,\n  `active`\n)"
+            "CREATE INDEX `idx_course_hole_active` ON `local_rules` (\n  `course`,\n  `hole`,\n  `active`\n)",
+            "CREATE INDEX IF NOT EXISTS idx_locrules_course_active ON local_rules(course, active);\n",
+            "CREATE INDEX IF NOT EXISTS idx_locrules_course_title  ON local_rules(course, title);"
         ],
         "system": false
     },
@@ -1620,7 +1654,11 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_notif_to_seen_created  ON notifications(to_user, seen, created);\n",
+            "CREATE INDEX IF NOT EXISTS idx_notif_from             ON notifications(from_user);\n",
+            "CREATE INDEX IF NOT EXISTS idx_notif_archivedby       ON notifications(archived_by);"
+        ],
         "system": false
     },
     {
@@ -1868,7 +1906,8 @@
             }
         ],
         "indexes": [
-            "CREATE INDEX `idx_course_created` ON `rafi_chats` (\n  `course`,\n  `created`\n)"
+            "CREATE INDEX `idx_course_created` ON `rafi_chats` (\n  `course`,\n  `created`\n)",
+            "CREATE INDEX IF NOT EXISTS idx_rafichats_user_created ON rafi_chats(user, created DESC);"
         ],
         "system": false
     },
@@ -1983,7 +2022,12 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_reg_event              ON registrations(event);\n",
+            "CREATE INDEX IF NOT EXISTS idx_reg_user               ON registrations(user);\n",
+            "CREATE INDEX IF NOT EXISTS idx_reg_event_status       ON registrations(event, status);",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_reg_event_user  ON registrations(event, user);\n"
+        ],
         "system": false
     },
     {
@@ -2083,7 +2127,10 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_rp_eventround          ON round_participants(event_round);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rp_user                ON round_participants(user);\n"
+        ],
         "system": false
     },
     {
@@ -2194,7 +2241,11 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX IF NOT EXISTS idx_rphotos_round          ON round_photos(round);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rphotos_round_hole     ON round_photos(round, hole);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rphotos_user           ON round_photos(user);"
+        ],
         "system": false
     },
     {
@@ -2248,6 +2299,19 @@
                 "type": "relation"
             },
             {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "relation3725765462",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "created_by",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
                 "hidden": false,
                 "id": "number2076392891",
                 "max": null,
@@ -2272,20 +2336,7 @@
                 "type": "number"
             },
             {
-                "cascadeDelete": false,
-                "collectionId": "_pb_users_auth_",
-                "hidden": false,
-                "id": "relation3725765462",
-                "maxSelect": 1,
-                "minSelect": 0,
-                "name": "created_by",
-                "presentable": false,
-                "required": false,
-                "system": false,
-                "type": "relation"
-            },
-            {
-                "hidden": false,
+                "hidden": true,
                 "id": "json1424645575",
                 "maxSize": 0,
                 "name": "gps",
@@ -2371,7 +2422,14 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX idx_round_scores_round_hole ON round_scores (round, hole);",
+            "CREATE INDEX idx_round_scores_round ON round_scores (round);",
+            "CREATE INDEX idx_round_scores_created_by ON round_scores (created_by);",
+            "CREATE INDEX IF NOT EXISTS idx_rs_round_putts         ON round_scores(round, putts);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rs_round_chips         ON round_scores(round, chips);",
+            "CREATE INDEX IF NOT EXISTS idx_roundscores_round_hole_player ON round_scores(round, hole, created_by);"
+        ],
         "system": false
     },
     {
@@ -2420,6 +2478,19 @@
                 "minSelect": 0,
                 "name": "created_by",
                 "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_1687431684",
+                "hidden": false,
+                "id": "relation1001261735",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "event",
+                "presentable": true,
                 "required": false,
                 "system": false,
                 "type": "relation"
@@ -2644,19 +2715,6 @@
                 "type": "text"
             },
             {
-                "cascadeDelete": false,
-                "collectionId": "pbc_1687431684",
-                "hidden": false,
-                "id": "relation1001261735",
-                "maxSelect": 1,
-                "minSelect": 0,
-                "name": "event",
-                "presentable": true,
-                "required": false,
-                "system": false,
-                "type": "relation"
-            },
-            {
                 "hidden": false,
                 "id": "bool458715613",
                 "name": "is_active",
@@ -2695,7 +2753,18 @@
                 "type": "autodate"
             }
         ],
-        "indexes": [],
+        "indexes": [
+            "CREATE INDEX idx_rounds_event_player ON rounds (event, player);",
+            "CREATE INDEX idx_rounds_event ON rounds (event);",
+            "CREATE INDEX idx_rounds_event_round ON rounds (event_round);",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_player          ON rounds(player);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_course          ON rounds(course);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_created         ON rounds(created);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_active          ON rounds(is_active);\n",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_finalized       ON rounds(is_finalized);",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_player_recent ON rounds(player, created DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_rounds_complex ON rounds(player, is_active, is_finalized, created DESC);"
+        ],
         "system": false
     },
     {
@@ -2859,6 +2928,125 @@
         "indexes": [],
         "system": false,
         "viewQuery": "WITH per_round AS (\n  SELECT\n    r.id AS round_id,\n    r.player AS player_id,\n    r.created AS round_date,\n    COUNT(rs.id) AS holes_count,\n    SUM(COALESCE(rs.score_player, 0)) - (COUNT(rs.id) * 3) AS round_score_vs_par\n  FROM round_scores rs\n  JOIN rounds r ON r.id = rs.round\n  GROUP BY r.id, r.player, r.created\n),\ncompleted_rounds AS (\n  SELECT\n    pr.round_id,\n    pr.player_id,\n    pr.round_date,\n    pr.holes_count,\n    pr.round_score_vs_par\n  FROM per_round pr\n  WHERE pr.holes_count >= 18\n),\nranked AS (\n  SELECT\n    cr.round_id,\n    cr.player_id,\n    cr.round_date,\n    cr.holes_count,\n    cr.round_score_vs_par,\n    ROW_NUMBER() OVER (\n      PARTITION BY cr.player_id\n      ORDER BY cr.round_date ASC, cr.round_id ASC\n    ) AS seq\n  FROM completed_rounds cr\n),\naug AS (\n  SELECT\n    ranked.round_id,\n    ranked.player_id,\n    ranked.round_date,\n    ranked.holes_count,\n    ranked.round_score_vs_par,\n    ranked.seq,\n    (CASE WHEN ranked.seq > 10 THEN 10 ELSE ranked.seq END) AS pool_count,\n    (CASE WHEN ranked.seq > 10 THEN ranked.seq - 9 ELSE 1 END) AS pool_start,\n    (CASE WHEN ranked.seq >= 5 THEN 5 ELSE NULL END) AS used_rounds\n  FROM ranked\n),\nfinal_rows AS (\n  SELECT\n    (aug.player_id || '_' || printf('%05d', aug.seq)) AS id,\n    aug.player_id AS player_id,\n    u.name AS player_name,\n    aug.round_id AS round_id,\n    aug.round_date AS round_date,\n    aug.seq AS rounds_so_far,\n    aug.pool_count AS pool_count,\n    aug.used_rounds AS used_rounds,\n    (CASE\n       WHEN aug.seq >= 5 THEN (\n         SELECT AVG(rr.round_score_vs_par)\n         FROM ranked rr\n         WHERE rr.player_id = aug.player_id\n           AND rr.seq BETWEEN aug.pool_start AND aug.seq\n           AND (\n             SELECT COUNT(*)\n             FROM ranked rr2\n             WHERE rr2.player_id = aug.player_id\n               AND rr2.seq BETWEEN aug.pool_start AND aug.seq\n               AND (\n                 rr2.round_score_vs_par < rr.round_score_vs_par\n                 OR (rr2.round_score_vs_par = rr.round_score_vs_par AND rr2.round_date > rr.round_date)\n               )\n           ) < 5\n       )\n       ELSE NULL\n     END) AS handicap_at_round\n  FROM aug\n  JOIN users u ON u.id = aug.player_id\n)\nSELECT\n  final_rows.id AS id,\n  final_rows.player_id AS player_id,\n  final_rows.player_name AS player_name,\n  final_rows.round_id AS round_id,\n  final_rows.round_date AS round_date,\n  final_rows.rounds_so_far AS rounds_so_far,\n  final_rows.pool_count AS pool_count,\n  final_rows.used_rounds AS used_rounds,\n  final_rows.handicap_at_round AS handicap_at_round\nFROM final_rows\nWHERE final_rows.handicap_at_round IS NOT NULL\nORDER BY final_rows.player_id, final_rows.rounds_so_far ASC"
+    },
+    {
+        "id": "pbc_3030404346",
+        "listRule": "",
+        "viewRule": "",
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "vw_player_course_hole_shortgame",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "json2582050271",
+                "maxSize": 1,
+                "name": "player_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4231605813",
+                "maxSize": 1,
+                "name": "player_name",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1495058834",
+                "maxSize": 1,
+                "name": "course_id",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2525078272",
+                "maxSize": 1,
+                "name": "course_name",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json1758281105",
+                "maxSize": 1,
+                "name": "hole",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2712910541",
+                "maxSize": 1,
+                "name": "gir_pct",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4288118863",
+                "maxSize": 1,
+                "name": "scramble_pct",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json4067612276",
+                "maxSize": 1,
+                "name": "putts_avg_gir",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            },
+            {
+                "hidden": false,
+                "id": "json2584390835",
+                "maxSize": 1,
+                "name": "chipin",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "WITH rounds_putts_sum AS (\n  SELECT\n    rs.round AS round_id,\n    SUM(COALESCE(rs.putts, 0)) AS total_putts_in_round\n  FROM round_scores rs\n  GROUP BY rs.round\n),\neligible_rounds AS (\n  SELECT\n    rps.round_id AS round_id\n  FROM rounds_putts_sum rps\n  WHERE rps.total_putts_in_round > 0\n),\nbase AS (\n  SELECT\n    r.player        AS player_id,\n    u.name          AS player_name,\n    cd.course       AS course_id,\n    c.name          AS course_name,\n    cd.hole         AS hole_number,\n    cd.par          AS par,\n    rs.gir          AS gir,\n    rs.putts        AS putts,\n    rs.chips        AS chips,\n    rs.score_player AS score_player\n  FROM round_scores rs\n  JOIN eligible_rounds er ON er.round_id = rs.round\n  JOIN rounds r           ON r.id = rs.round\n  JOIN users u            ON u.id = r.player\n  JOIN course_detail cd   ON cd.id = rs.hole\n  JOIN courses c          ON c.id = cd.course\n  WHERE rs.score_player IS NOT NULL\n),\nagg AS (\n  SELECT\n    base.player_id   AS player_id,\n    base.player_name AS player_name,\n    base.course_id   AS course_id,\n    base.course_name AS course_name,\n    base.hole_number AS hole_number,\n    base.par         AS par,\n    COUNT(*) AS samples,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 1 THEN 1 ELSE 0 END) AS gir_count,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 0 THEN 1 ELSE 0 END) AS nongir_count,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 0 AND base.score_player <= base.par THEN 1 ELSE 0 END) AS scramble_success,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 1 AND base.putts IS NOT NULL THEN base.putts ELSE 0 END) AS putts_sum_gir,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 1 AND base.putts IS NOT NULL THEN 1 ELSE 0 END) AS putts_cnt_gir,\n    SUM(CASE WHEN COALESCE(base.gir, 0) = 0 AND COALESCE(base.chips, 0) > 0 AND COALESCE(base.putts,0) = 0 THEN 1 ELSE 0 END) AS chipin_count\n  FROM base\n  GROUP BY\n    base.player_id, base.player_name,\n    base.course_id, base.course_name,\n    base.hole_number, base.par\n),\ncalc AS (\n  SELECT\n    agg.player_id       AS player_id,\n    agg.player_name     AS player_name,\n    agg.course_id       AS course_id,\n    agg.course_name     AS course_name,\n    agg.hole_number     AS hole_number,\n    CASE WHEN agg.samples > 0\n         THEN (1.0 * agg.gir_count / agg.samples) * 100.0\n         ELSE NULL END  AS gir_pct,\n    CASE WHEN agg.nongir_count > 0\n         THEN (1.0 * agg.scramble_success / agg.nongir_count) * 100.0\n         ELSE NULL END  AS scramble_pct,\n    CASE WHEN agg.putts_cnt_gir > 0\n         THEN (1.0 * agg.putts_sum_gir / agg.putts_cnt_gir)\n         ELSE NULL END  AS putts_avg_gir,\n    agg.chipin_count    AS chipin\n  FROM agg\n)\nSELECT\n  (calc.player_id || '_' || calc.course_id || '_' || printf('%02d', calc.hole_number)) AS id,\n  calc.player_id      AS player_id,\n  calc.player_name    AS player_name,\n  calc.course_id      AS course_id,\n  calc.course_name    AS course_name,\n  calc.hole_number    AS hole,\n  calc.gir_pct        AS gir_pct,\n  calc.scramble_pct   AS scramble_pct,\n  calc.putts_avg_gir  AS putts_avg_gir,\n  calc.chipin         AS chipin\nFROM calc\nORDER BY calc.player_name ASC, calc.course_name ASC, calc.hole_number ASC"
     },
     {
         "id": "pbc_2629827037",
@@ -3066,7 +3254,7 @@
             {
                 "autogeneratePattern": "",
                 "hidden": false,
-                "id": "_clone_VmdW",
+                "id": "_clone_N3l6",
                 "max": 255,
                 "min": 0,
                 "name": "player_name",
@@ -3090,7 +3278,7 @@
             {
                 "autogeneratePattern": "",
                 "hidden": false,
-                "id": "_clone_XTth",
+                "id": "_clone_BKhm",
                 "max": 0,
                 "min": 0,
                 "name": "course_name",
@@ -3154,6 +3342,343 @@
         ],
         "indexes": [],
         "system": false,
-        "viewQuery": "WITH per_round AS (\n  SELECT\n    r.id AS round_id,\n    r.player AS player_id,\n    r.course AS course_id,\n    r.created AS round_date,\n    COUNT(rs.id) AS holes_count,\n    SUM(COALESCE(rs.score_player, 0)) - (COUNT(rs.id) * 3) AS round_score_vs_par\n  FROM round_scores rs\n  JOIN rounds r ON r.id = rs.round\n  WHERE r.course IS NOT NULL\n  GROUP BY r.id, r.player, r.course, r.created\n),\ncompleted_rounds AS (\n  SELECT\n    pr.round_id,\n    pr.player_id,\n    pr.course_id,\n    pr.round_date,\n    pr.holes_count,\n    pr.round_score_vs_par\n  FROM per_round pr\n  WHERE pr.holes_count >= 18\n),\nagg AS (\n  SELECT\n    cr.player_id,\n    cr.course_id,\n    MIN(cr.round_score_vs_par) AS best_score,\n    MAX(cr.round_score_vs_par) AS worst_score,\n    AVG(cr.round_score_vs_par) AS avg_score,\n    COUNT(*) AS rounds_count,\n    MAX(cr.round_date) AS last_round_date\n  FROM completed_rounds cr\n  GROUP BY cr.player_id, cr.course_id\n)\nSELECT\n  (agg.player_id || '_' || agg.course_id) AS id,\n  agg.player_id AS player_id,\n  u.name AS player_name,\n  agg.course_id AS course_id,\n  c.name AS course_name,\n  agg.rounds_count AS rounds_count,\n  agg.best_score AS best_score,\n  agg.worst_score AS worst_score,\n  agg.avg_score AS avg_score,\n  agg.last_round_date AS last_round_date\nFROM agg\nJOIN users u ON u.id = agg.player_id\nJOIN courses c ON c.id = agg.course_id\nORDER BY u.name ASC, c.name ASC"
+        "viewQuery": "WITH per_round AS (\n  SELECT\n    r.id AS round_id,\n    r.player AS player_id,\n    r.course AS course_id,\n    r.created AS round_date,\n    COUNT(rs.id) AS holes_count,\n    SUM(COALESCE(rs.score_player, 0)) - (COUNT(rs.id) * 3) AS round_score_vs_par\n  FROM round_scores rs\n  JOIN rounds r ON r.id = rs.round\n  WHERE r.course IS NOT NULL\n  GROUP BY r.id, r.player, r.course, r.created\n),\ncompleted_rounds AS (\n  SELECT\n    pr.round_id,\n    pr.player_id,\n    pr.course_id,\n    pr.round_date,\n    pr.holes_count,\n    pr.round_score_vs_par\n  FROM per_round pr\n  WHERE pr.holes_count >= 18\n),\nagg AS (\n  SELECT\n    cr.player_id,\n    cr.course_id,\n    MIN(cr.round_score_vs_par) + 54 AS best_score,\n    MAX(cr.round_score_vs_par) + 54 AS worst_score,\n    AVG(cr.round_score_vs_par) + 54 AS avg_score,\n    COUNT(*) AS rounds_count,\n    MAX(cr.round_date) AS last_round_date\n  FROM completed_rounds cr\n  GROUP BY cr.player_id, cr.course_id\n)\nSELECT\n  (agg.player_id || '_' || agg.course_id) AS id,\n  agg.player_id AS player_id,\n  u.name AS player_name,\n  agg.course_id AS course_id,\n  c.name AS course_name,\n  agg.rounds_count AS rounds_count,\n  agg.best_score AS best_score,\n  agg.worst_score AS worst_score,\n  agg.avg_score AS avg_score,\n  agg.last_round_date AS last_round_date\nFROM agg\nJOIN users u ON u.id = agg.player_id\nJOIN courses c ON c.id = agg.course_id\nORDER BY u.name ASC, c.name ASC"
+    },
+    {
+        "id": "pbc_3119820941",
+        "listRule": null,
+        "viewRule": null,
+        "createRule": null,
+        "updateRule": null,
+        "deleteRule": null,
+        "name": "vw_round_with_scores",
+        "type": "view",
+        "fields": [
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "text3208210256",
+                "max": 0,
+                "min": 0,
+                "name": "id",
+                "pattern": "^[a-z0-9]+$",
+                "presentable": false,
+                "primaryKey": true,
+                "required": true,
+                "system": true,
+                "type": "text"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_955655590",
+                "hidden": false,
+                "id": "_clone_x6nH",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "course",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "_clone_G680",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "player",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_1687431684",
+                "hidden": false,
+                "id": "_clone_p1RL",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "event",
+                "presentable": true,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_1602151936",
+                "hidden": false,
+                "id": "_clone_47Ja",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "event_round",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_I2aA",
+                "max": "",
+                "min": "",
+                "name": "date",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "date"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_7lDV",
+                "max": "",
+                "min": "",
+                "name": "time",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "date"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_pfrh",
+                "max": null,
+                "min": null,
+                "name": "flight",
+                "onlyInt": false,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "number"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_0eZn",
+                "name": "photo_required",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_LTBc",
+                "max": null,
+                "min": null,
+                "name": "photo_min_count",
+                "onlyInt": false,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "number"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_DVcW",
+                "name": "photo_randomize",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_ohB7",
+                "name": "public",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_1EeP",
+                "max": 0,
+                "min": 0,
+                "name": "notes",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "pbc_3292755704",
+                "hidden": false,
+                "id": "_clone_4qke",
+                "maxSelect": 1,
+                "minSelect": 0,
+                "name": "round_type",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "_clone_uezB",
+                "maxSelect": 999,
+                "minSelect": 0,
+                "name": "archived_by",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_1qHt",
+                "max": 0,
+                "min": 0,
+                "name": "qr_token",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "cascadeDelete": false,
+                "collectionId": "_pb_users_auth_",
+                "hidden": false,
+                "id": "_clone_yhD6",
+                "maxSelect": 999,
+                "minSelect": 0,
+                "name": "signed_by",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "relation"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_tILg",
+                "max": 0,
+                "min": 0,
+                "name": "score_override",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_17Ns",
+                "name": "is_active",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_5Zq9",
+                "name": "is_finalized",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "bool"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_B3KX",
+                "name": "created",
+                "onCreate": true,
+                "onUpdate": false,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_Gp7r",
+                "name": "updated",
+                "onCreate": true,
+                "onUpdate": true,
+                "presentable": false,
+                "system": false,
+                "type": "autodate"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_UA41",
+                "max": 0,
+                "min": 0,
+                "name": "course_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": false,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_UHhG",
+                "max": 255,
+                "min": 0,
+                "name": "player_name",
+                "pattern": "",
+                "presentable": true,
+                "primaryKey": false,
+                "required": true,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "autogeneratePattern": "",
+                "hidden": false,
+                "id": "_clone_azXK",
+                "max": 0,
+                "min": 0,
+                "name": "event_name",
+                "pattern": "",
+                "presentable": false,
+                "primaryKey": false,
+                "required": true,
+                "system": false,
+                "type": "text"
+            },
+            {
+                "hidden": false,
+                "id": "_clone_Feit",
+                "max": null,
+                "min": null,
+                "name": "round_number",
+                "onlyInt": false,
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "number"
+            },
+            {
+                "hidden": false,
+                "id": "json122697566",
+                "maxSize": 1,
+                "name": "scores",
+                "presentable": false,
+                "required": false,
+                "system": false,
+                "type": "json"
+            }
+        ],
+        "indexes": [],
+        "system": false,
+        "viewQuery": "SELECT\n  -- primaire sleutel voor de view\n  r.id                         AS id,\n\n  -- expliciete velden uit rounds\n  r.course                     AS course,\n  r.player                     AS player,\n  r.event                      AS event,\n  r.event_round                AS event_round,\n  r.date                       AS date,\n  r.time                       AS time,\n  r.flight                     AS flight,\n  r.photo_required             AS photo_required,\n  r.photo_min_count            AS photo_min_count,\n  r.photo_randomize            AS photo_randomize,\n  r.public                     AS public,\n  r.notes                      AS notes,\n  r.round_type                 AS round_type,\n  r.archived_by                AS archived_by,\n  r.qr_token                   AS qr_token,\n  r.signed_by                  AS signed_by,\n  r.score_override             AS score_override,\n  r.is_active                  AS is_active,\n  r.is_finalized               AS is_finalized,\n  r.created                    AS created,\n  r.updated                    AS updated,\n\n  -- denormalized labels\n  c.name                       AS course_name,\n  u.name                       AS player_name,\n  e.name                       AS event_name,\n  er.round_number              AS round_number,\n\n  -- geaggregeerde holes/scores als JSON array, gesorteerd op hole-nummer\n  COALESCE(\n    json_group_array(\n      json_object(\n        'hole_id',      cd.id,\n        'hole_number',  cd.hole,\n        'par',          cd.par,\n        'score_player', rs.score_player,\n        'score_marker', rs.score_marker,\n        'putts',        rs.putts,\n        'chips',        rs.chips,\n        'gir',          rs.gir\n      )\n      ORDER BY cd.hole, cd.id\n    ),\n    '[]'\n  )                           AS scores\n\nFROM rounds r\nLEFT JOIN courses       c  ON c.id  = r.course\nLEFT JOIN users         u  ON u.id  = r.player\nLEFT JOIN events        e  ON e.id  = r.event\nLEFT JOIN event_rounds  er ON er.id = r.event_round\n\n-- koppel alle holes van de baan van deze ronde\nLEFT JOIN course_detail cd ON cd.course = r.course\n-- scores van deze ronde matchen aan de juiste hole\nLEFT JOIN round_scores  rs ON rs.round  = r.id\n                           AND rs.hole  = cd.id\n\nGROUP BY r.id;"
     }
 ]

@@ -39,12 +39,12 @@ export const getFileUrl = (collectionName: string, recordId: string, fileName: s
       pb.authStore.save(authStore.user.token);
     }
 
-    // Probeer eerst de getURL methode
+    // Probeer eerst de getUrl methode
     let url = '';
     try {
-      url = pb.files.getURL({ record: recordId, filename: fileName }, collectionName);
+      url = pb.files.getUrl({ record: recordId, filename: fileName }, collectionName);
     } catch (error) {
-      debug('Error using getURL:', error);
+      debug('Error using getUrl:', error);
     }
 
     // Als de URL leeg is, probeer dan een fallback URL te genereren
@@ -87,7 +87,7 @@ export const getThumbUrl = (
 ): string => {
   try {
     const { pb } = usePocketbase();
-    const url = pb.files.getURL({ record: recordId, filename: fileName }, collectionName, {
+    const url = pb.files.getUrl({ record: recordId, filename: fileName }, collectionName, {
       thumb: thumbSize,
     });
     return url;
@@ -113,7 +113,7 @@ export const getFileUrlWithParams = (
 ): string => {
   try {
     const { pb } = usePocketbase();
-    const url = pb.files.getURL({ record: recordId, filename: fileName }, collectionName, params);
+    const url = pb.files.getUrl({ record: recordId, filename: fileName }, collectionName, params);
     return url;
   } catch (error) {
     debug('Error generating file URL with params:', error);

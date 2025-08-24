@@ -448,8 +448,27 @@ const approveModerator = async (bericht) => {
       currentUser: authStore.user?.id,
     });
 
-    if (!userId || !courseId) {
-      throw new Error('Ongeldige moderator aanvraag parameters');
+    if (!userId || !courseId || userId === 'undefined' || courseId === 'undefined') {
+      // Probeer user ID uit de body te halen als fallback
+      const bodyMatch = bericht.body?.match(/Gebruiker ID: ([^\n]+)/);
+      const fallbackUserId = bodyMatch ? bodyMatch[1] : null;
+
+      if (fallbackUserId && fallbackUserId !== 'undefined') {
+        userId = fallbackUserId;
+        debug('Using fallback userId from body:', userId);
+      } else {
+        // Markeer de notificatie als ongeldig en geef een duidelijke error
+        await pb.collection('notifications').update(bericht.id, {
+          body:
+            bericht.body +
+            '\n\n[ONGELDIG: Deze notificatie is fout aangemaakt zonder geldige user ID]',
+          seen: true,
+        });
+
+        throw new Error(
+          'Ongeldige moderator aanvraag parameters - userId is undefined. Deze notificatie is fout aangemaakt en is gemarkeerd als ongeldig.',
+        );
+      }
     }
 
     // Haal huidige moderators op
@@ -523,7 +542,7 @@ const approveModerator = async (bericht) => {
     debug('Error approving moderator:', error);
     $q.notify({
       color: 'negative',
-      message: $customT('messages.moderatorApprovalError') + error.message,
+      message: $customT('notifications.moderatorApprovalError') + error.message,
       icon: 'error',
     });
   } finally {

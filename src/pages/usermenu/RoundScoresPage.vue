@@ -237,6 +237,22 @@
           </div>
           <!-- Back knop onder de acties -->
           <div class="row q-mt-sm justify-end">
+            <q-btn
+              flat
+              color="grey"
+              :label="$customT('scores.refreshData')"
+              @click="onRefresh(() => {})"
+              class="q-mr-sm"
+            />
+            <q-btn flat color="orange" label="Debug Scores" @click="debugScores" class="q-mr-sm" />
+            <q-btn
+              flat
+              color="purple"
+              label="Debug Standings"
+              @click="debugStandings"
+              class="q-mr-sm"
+            />
+            <q-btn flat color="red" label="Debug System" @click="debugSystem" class="q-mr-sm" />
             <q-btn color="primary" :label="$customT('navigation.back')" @click="router.back()" />
           </div>
           <!-- Popup voor bevestiging annuleren oefenronde -->
@@ -327,12 +343,20 @@
                   <q-icon :name="showStandings ? 'expand_less' : 'expand_more'" class="q-ml-xs" />
                 </div>
               </div>
-              <q-toggle
-                v-model="filterByCategory"
-                :label="$customT('scores.filterByCategory')"
-                color="primary"
-                size="sm"
-              />
+              <div class="row items-center q-gutter-sm">
+                <q-toggle
+                  v-model="showAllPlayers"
+                  :label="$customT('scores.showAllPlayers')"
+                  color="secondary"
+                  size="sm"
+                />
+                <q-toggle
+                  v-model="filterByCategory"
+                  :label="$customT('scores.filterByCategory')"
+                  color="primary"
+                  size="sm"
+                />
+              </div>
             </div>
             <div v-show="showStandings">
               <div
@@ -350,7 +374,7 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="row in markerStandingsSlice"
+                      v-for="row in showAllPlayers ? eventStandings : markerStandingsSlice"
                       :key="row.id"
                       :class="{ 'bg-primary text-white': row.id === markerId }"
                     >
@@ -747,10 +771,13 @@ const connectionHealthCheck = ref<NodeJS.Timeout | null>(null);
 const updateQueue = ref<Array<{ type: 'score' | 'round'; data: Record<string, unknown> }>>([]);
 const isProcessingUpdates = ref(false);
 const lastSyncTimestamp = ref<number>(Date.now());
-const connectionStatus = ref<'connected' | 'disconnected' | 'error'>('disconnected');
+const connectionStatus = ref<'connected' | 'disconnected' | 'error' | 'connecting'>('disconnected');
 
 // Debounce timer voor batch updates
 const updateDebounceTimer = ref<NodeJS.Timeout | null>(null);
+
+// Polling fallback timer voor als realtime niet werkt
+const pollingTimer = ref<NodeJS.Timeout | null>(null);
 
 // -----------------------------
 // Type-definities
@@ -845,6 +872,7 @@ const allRounds = ref<Round[]>([]); // Alle rondes in het event
 const showPlayerScores = ref(false); // Toggle voor speler-scoreoverzicht
 const showMarkerScores = ref(false); // Toggle voor marker-scoreoverzicht
 const showStandings = ref(false); // Toggle voor tussenstand
+const showAllPlayers = ref(false); // Toggle voor alle spelers tonen
 const filterByCategory = ref(false); // Toggle voor filteren op eigen categorie
 const signDialog = ref(false); // Of het onderteken-dialog open is
 const signPlayerOption = ref('Ja'); // Keuze speler bij ondertekenen
@@ -977,9 +1005,22 @@ const isScoreDisputed = (holeId: string) => {
 const openScoreDialog = (hole: Hole) => {
   // Vul het formulier met bestaande score (indien aanwezig)
   selectedHole.value = hole;
-  const myRecord = allScores.value.find(
-    (s) => s.round === route.params.id && s.hole === String(hole.id),
-  );
+
+  // Zoek de juiste score record
+  let myRecord: RoundScore | undefined;
+
+  if (isEventRound.value) {
+    // Voor event rondes: zoek direct in de huidige ronde
+    myRecord = allScores.value.find(
+      (s) => s.round === route.params.id && s.hole === String(hole.id),
+    );
+  } else {
+    // Voor andere rondes: zoek zoals voorheen
+    myRecord = allScores.value.find(
+      (s) => s.round === route.params.id && s.hole === String(hole.id),
+    );
+  }
+
   scoreForm.value = {
     score_player: myRecord?.score_player ?? 3,
     score_marker: myRecord?.score_marker ?? null,
@@ -1251,39 +1292,47 @@ const loadData = async () => {
   // Haal alle relevante data op uit PocketBase
   try {
     loading.value = true;
-    // Haal de huidige ronde op
-    const roundResult = await pb.collection('rounds').getOne(route.params.id as string, {
-      expand:
-        'player,player.category,marker,marker.category,course,status,category,event_round,event_round.event,event',
-    });
 
-    // Debug de volledige roundResult om te zien wat er wordt opgehaald
-    debug('Full roundResult:', roundResult);
+    // OPTIMALISATIE: Gebruik nieuwe view vw_round_with_scores voor huidige ronde
+    const roundData = await pb.collection('vw_round_with_scores').getOne(route.params.id as string);
+
+    // Debug de volledige roundData om te zien wat er wordt opgehaald
+    debug('Full roundData from view:', roundData);
+
+    // Converteer view data naar Round interface
+    const roundResult = {
+      ...roundData,
+      expand: {
+        course: { name: roundData.course_name },
+        player: { name: roundData.player_name },
+        event: roundData.event ? { name: roundData.event_name } : null,
+        event_round: roundData.event_round ? { round_number: roundData.round_number } : null,
+      },
+    };
+
     round.value = roundResult as unknown as Round;
 
     // Debug informatie voor de huidige ronde
     debug('Current round debug:');
-    debug('Round course ID:', roundResult.course);
-    debug('Round course expand:', roundResult.expand?.course);
-    debug('Round course name:', roundResult.expand?.course?.name);
-    debug('Round category:', roundResult.category);
-    debug('Round category expand:', roundResult.expand?.category);
-    debug('Round category name:', roundResult.expand?.category?.name);
-    debug('Player category:', roundResult.expand?.player?.category);
-    debug('Player category name:', roundResult.expand?.player?.expand?.category?.name);
+    debug('Round course ID:', roundData.course);
+    debug('Round course name:', roundData.course_name);
+    debug('Round player name:', roundData.player_name);
+    debug('Round event name:', roundData.event_name);
+    debug('Round number:', roundData.round_number);
+
     // Bepaal het eventId voor filtering
-    let eventId = roundResult.expand?.event_round?.expand?.event?.id;
-    if (!eventId && roundResult.expand?.event_round?.event) {
-      eventId = roundResult.expand.event_round.event;
+    let eventId = roundData.event_round;
+    if (!eventId && roundData.event_round) {
+      eventId = roundData.event_round;
     }
     // Voor directe event rondes
-    const directEventId = roundResult.event;
+    const directEventId = roundData.event;
 
     let roundsFilter = '';
     // Speciaal filter voor oefenrondes: alle rondes van deze speler op deze baan en datum
     if (isPracticeRound.value) {
       // Filter nu ook op category (oefenronde)
-      roundsFilter = `player = "${roundResult.player}" && course = "${roundResult.course}" && date = "${roundResult.date}" && category = "${roundResult.category}"`;
+      roundsFilter = `player = "${roundData.player}" && course = "${roundData.course}" && date = "${roundData.date}" && category = "${roundData.category}"`;
     } else if (eventId) {
       // Voor event_round rondes (oude systeem)
       roundsFilter = `event_round.event = "${String(eventId)}"`;
@@ -1293,12 +1342,20 @@ const loadData = async () => {
     } else {
       roundsFilter = `id = "${String(route.params.id)}"`;
     }
+
     // Haal alle rondes van het event op
     const roundsResult = await pb.collection('rounds').getList(1, 200, {
       filter: roundsFilter,
-      expand: 'player,player.category,category,event_round,event_round.event,event',
+      expand: 'player,player.category,category,event_round,event_round.event',
     });
     allRounds.value = roundsResult.items as unknown as Round[];
+
+    // Zorg ervoor dat de huidige ronde altijd wordt meegenomen
+    const currentRoundInAllRounds = allRounds.value.find((r) => r.id === round.value?.id);
+    if (!currentRoundInAllRounds) {
+      debug('Current round not found in allRounds, adding it manually');
+      allRounds.value.push(round.value as Round);
+    }
 
     // Debug informatie voor rondes
     debug('Rounds debug:');
@@ -1317,38 +1374,77 @@ const loadData = async () => {
         playerName: r.expand?.player?.name,
       })),
     );
-    // Haal alle holes van de baan op
-    const holesResult = await pb.collection('course_detail').getList(1, 50, {
-      filter: `course = "${roundResult.course}"`,
-      sort: 'hole',
-    });
-    holes.value = holesResult.items as unknown as Hole[];
-    // Haal alle scores op voor alle rondes
-    const roundIds = allRounds.value.map((r) => r.id);
-    let allScoresList: RoundScore[] = [];
-    for (let i = 0; i < roundIds.length; i += 50) {
-      const batchIds = roundIds.slice(i, i + 50);
-      const filter = batchIds.map((id) => `round = "${id}"`).join(' || ');
-      const scoresResult = await pb.collection('round_scores').getList(1, 200, {
-        filter,
-        expand: 'hole',
-      });
-      allScoresList = allScoresList.concat(scoresResult.items as unknown as RoundScore[]);
-    }
+
+    // OPTIMALISATIE: Gebruik scores uit de view in plaats van aparte queries
+    const scoresFromView = roundData.scores || [];
+    debug('Scores from view:', scoresFromView);
+
+    // Converteer view scores naar RoundScore interface
+    const allScoresList: RoundScore[] = scoresFromView.map(
+      (scoreData: Record<string, unknown>) => ({
+        id: scoreData.hole_id as string,
+        round: roundData.id,
+        hole: scoreData.hole_id as string,
+        score_player: scoreData.score_player as number,
+        score_marker: scoreData.score_marker as number,
+        putts: scoreData.putts as number,
+        chips: scoreData.chips as number,
+        gir: scoreData.gir as boolean,
+        created_by: roundData.player as string,
+        created: roundData.created,
+        updated: roundData.updated,
+        expand: {
+          hole: {
+            id: scoreData.hole_id as string,
+            hole: scoreData.hole_number as number,
+            par: scoreData.par as number,
+            course: roundData.course as string,
+          },
+        },
+      }),
+    );
+
     allScores.value = allScoresList;
+
+    // Maak holes array van de scores data
+    const holesFromScores = scoresFromView.map((scoreData: Record<string, unknown>) => ({
+      id: scoreData.hole_id as string,
+      hole: scoreData.hole_number as number,
+      par: scoreData.par as number,
+      course: roundData.course as string,
+    }));
+    holes.value = holesFromScores as unknown as Hole[];
     // Vul markerRecords en playerRecords voor snelle lookup
     markerRecords.value = {};
     playerRecords.value = {};
     holes.value.forEach((hole) => {
-      const markerRec = allScores.value.find(
-        (s) => s.hole === String(hole.id) && s.score_player != null,
-      );
-      if (markerRec) markerRecords.value[String(hole.id)] = markerRec;
+      // Voor event rondes: zoek scores in de huidige ronde
+      if (isEventRound.value) {
+        const currentRoundScore = allScores.value.find(
+          (s) =>
+            s.round === round.value?.id && s.hole === String(hole.id) && s.score_player != null,
+        );
+        if (currentRoundScore) {
+          markerRecords.value[String(hole.id)] = currentRoundScore;
+        }
+      } else {
+        // Voor andere rondes: zoek zoals voorheen
+        const markerRec = allScores.value.find(
+          (s) => s.hole === String(hole.id) && s.score_player != null,
+        );
+        if (markerRec) markerRecords.value[String(hole.id)] = markerRec;
+      }
+
       const playerRec = allScores.value.find(
         (s) => s.hole === String(hole.id) && s.score_marker != null,
       );
       if (playerRec) playerRecords.value[String(hole.id)] = playerRec;
     });
+
+    // Debug scores na het laden
+    debugScores();
+    debugStandings();
+    debugSystem();
   } catch (error) {
     debug('Error loading data:', error);
     // Alleen notificatie tonen als het geen realtime update is
@@ -1512,24 +1608,32 @@ const saveScore = async () => {
 };
 
 // Pull-to-refresh functionaliteit
-const onRefresh = async (done: () => void) => {
+const onRefresh = (done: () => void) => {
   // Herlaad alle data en geef feedback
-  try {
-    await loadData();
-    $q.notify({
-      color: 'positive',
-      message: $customT('notifications.dataUpdated'),
-      icon: 'refresh',
+  // Stop realtime subscriptions tijdelijk
+  stopRealtimeSubscriptions();
+
+  loadData()
+    .then(() => {
+      // Start realtime subscriptions opnieuw
+      startRealtimeSubscriptions();
+
+      $q.notify({
+        color: 'positive',
+        message: $customT('notifications.dataUpdated'),
+        icon: 'refresh',
+      });
+    })
+    .catch(() => {
+      $q.notify({
+        color: 'negative',
+        message: $customT('notifications.refreshDataError'),
+        icon: 'error',
+      });
+    })
+    .finally(() => {
+      done();
     });
-  } catch {
-    $q.notify({
-      color: 'negative',
-      message: $customT('notifications.refreshDataError'),
-      icon: 'error',
-    });
-  } finally {
-    done();
-  }
 };
 
 // -----------------------------
@@ -1542,7 +1646,7 @@ const startRealtimeSubscriptions = () => {
 
   debug('Starting realtime subscriptions for standings updates');
   isRealtimeEnabled.value = true;
-  connectionStatus.value = 'connected';
+  connectionStatus.value = 'connecting';
 
   try {
     // Subscribe op round_scores collection voor score updates
@@ -1558,9 +1662,16 @@ const startRealtimeSubscriptions = () => {
           scheduleBatchUpdate();
         }
       })
-      .then((unsubscribe) => void subscriptions.value.push(unsubscribe))
+      .then((unsubscribe) => {
+        void subscriptions.value.push(unsubscribe);
+        connectionStatus.value = 'connected';
+        debug('Realtime score subscription successful');
+      })
       .catch((error) => {
         debug('Error subscribing to round_scores:', error);
+        connectionStatus.value = 'error';
+        // Fallback: start polling als realtime niet werkt
+        startPollingFallback();
       });
 
     // Subscribe op rounds collection voor ronde status updates
@@ -1576,21 +1687,28 @@ const startRealtimeSubscriptions = () => {
           scheduleBatchUpdate();
         }
       })
-      .then((unsubscribe) => void subscriptions.value.push(unsubscribe))
+      .then((unsubscribe) => {
+        void subscriptions.value.push(unsubscribe);
+        debug('Realtime round subscription successful');
+      })
       .catch((error) => {
         debug('Error subscribing to rounds:', error);
+        // Fallback: start polling als realtime niet werkt
+        startPollingFallback();
       });
 
     debug('Realtime subscriptions started successfully');
 
     // Start connection health check (elke 60 seconden, veel minder agressief)
     connectionHealthCheck.value = setInterval(() => {
-      void checkConnectionHealth();
+      checkConnectionHealth();
     }, 60000);
   } catch (error) {
     debug('Error starting realtime subscriptions:', error);
     isRealtimeEnabled.value = false;
     connectionStatus.value = 'error';
+    // Fallback: start polling als realtime niet werkt
+    startPollingFallback();
   }
 };
 
@@ -1607,6 +1725,9 @@ const stopRealtimeSubscriptions = () => {
     clearInterval(connectionHealthCheck.value);
     connectionHealthCheck.value = null;
   }
+
+  // Stop polling fallback
+  stopPollingFallback();
 
   // Clear update queue en timers
   updateQueue.value = [];
@@ -1684,57 +1805,90 @@ const processBatchUpdates = () => {
 };
 
 // Check connection health zonder agressieve refresh
-const checkConnectionHealth = async () => {
-  try {
-    // Eenvoudige health check: probeer een kleine API call
-    await pb.collection('rounds').getList(1, 1);
-    connectionStatus.value = 'connected';
-    debug('Connection health check passed');
-  } catch (error) {
-    debug('Connection health check failed:', error);
-    connectionStatus.value = 'disconnected';
+const checkConnectionHealth = () => {
+  // Eenvoudige health check: probeer een kleine API call
+  pb.collection('rounds')
+    .getList(1, 1)
+    .then(() => {
+      connectionStatus.value = 'connected';
+      debug('Connection health check passed');
+    })
+    .catch((error) => {
+      debug('Connection health check failed:', error);
+      connectionStatus.value = 'disconnected';
 
-    // Alleen bij langdurige disconnecties een subtiele melding
-    if (connectionStatus.value === 'disconnected') {
-      $q.notify({
-        color: 'warning',
-        message: $customT('notifications.connectionLost'),
-        icon: 'wifi_off',
-        timeout: 3000,
-        position: 'top',
-        actions: [
-          {
-            label: $customT('notifications.reconnect'),
-            color: 'white',
-            handler: () => {
-              void reconnectRealtime();
+      // Alleen bij langdurige disconnecties een subtiele melding
+      if (connectionStatus.value === 'disconnected') {
+        $q.notify({
+          color: 'warning',
+          message: $customT('notifications.connectionLost'),
+          icon: 'wifi_off',
+          timeout: 3000,
+          position: 'top',
+          actions: [
+            {
+              label: $customT('notifications.reconnect'),
+              color: 'white',
+              handler: () => {
+                reconnectRealtime();
+              },
             },
-          },
-        ],
+          ],
+        });
+      }
+    });
+};
+
+// Polling fallback voor als realtime niet werkt
+const startPollingFallback = () => {
+  debug('Starting polling fallback due to realtime failure');
+  connectionStatus.value = 'error';
+
+  // Stop bestaande polling timer
+  if (pollingTimer.value) {
+    clearInterval(pollingTimer.value);
+  }
+
+  // Start polling elke 10 seconden
+  pollingTimer.value = setInterval(() => {
+    loadData()
+      .then(() => {
+        debug('Polling data update successful');
+      })
+      .catch((error) => {
+        debug('Polling data update failed:', error);
       });
-    }
+  }, 10000);
+};
+
+// Stop polling fallback
+const stopPollingFallback = () => {
+  if (pollingTimer.value) {
+    clearInterval(pollingTimer.value);
+    pollingTimer.value = null;
   }
 };
 
 // Reconnect realtime subscriptions
-const reconnectRealtime = async () => {
+const reconnectRealtime = () => {
   debug('Attempting to reconnect realtime subscriptions');
   stopRealtimeSubscriptions();
+  stopPollingFallback();
 
   // Korte delay voor reconnect
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  startRealtimeSubscriptions();
+  setTimeout(() => {
+    startRealtimeSubscriptions();
+  }, 1000);
 };
 
 // Controleer of een score update relevant is voor de huidige tussenstand
 const isRelevantScoreUpdate = (scoreRecord: Record<string, unknown>): boolean => {
   if (!round.value || !scoreRecord) return false;
 
-  // Voor event rondes: check of de score bij hetzelfde event hoort
+  // Voor event rondes: check of de score bij hetzelfde event hoort of de huidige ronde is
   if (isEventRound.value) {
     const scoreRound = allRounds.value.find((r) => r.id === scoreRecord.round);
-    return scoreRound?.event === round.value.event;
+    return scoreRound?.event === round.value.event || scoreRecord.round === round.value.id;
   }
 
   // Voor event_round rondes: check of de score bij dezelfde event_round hoort
@@ -1772,16 +1926,19 @@ const updateScoreDataEfficiently = (scoreRecord: Record<string, unknown>) => {
   }
 
   // Update markerRecords en playerRecords voor snelle lookup
-  if (scoreRecord.score_player != null) {
-    markerRecords.value[holeId] = allScores.value.find(
-      (s) => s.hole === holeId && s.score_player != null,
-    ) as RoundScore;
+  // Reset beide records voor deze hole om ervoor te zorgen dat de juiste wordt gevonden
+  delete markerRecords.value[holeId];
+  delete playerRecords.value[holeId];
+
+  // Zoek opnieuw naar de juiste records
+  const markerRec = allScores.value.find((s) => s.hole === holeId && s.score_player != null);
+  if (markerRec) {
+    markerRecords.value[holeId] = markerRec;
   }
 
-  if (scoreRecord.score_marker != null) {
-    playerRecords.value[holeId] = allScores.value.find(
-      (s) => s.hole === holeId && s.score_marker != null,
-    ) as RoundScore;
+  const playerRec = allScores.value.find((s) => s.hole === holeId && s.score_marker != null);
+  if (playerRec) {
+    playerRecords.value[holeId] = playerRec;
   }
 
   debug('Score data updated efficiently:', { scoreId, roundId, holeId });
@@ -1791,9 +1948,9 @@ const updateScoreDataEfficiently = (scoreRecord: Record<string, unknown>) => {
 const isRelevantRoundUpdate = (roundRecord: Record<string, unknown>): boolean => {
   if (!round.value || !roundRecord) return false;
 
-  // Voor event rondes: check of het dezelfde event is
+  // Voor event rondes: check of het dezelfde event is of de huidige ronde
   if (isEventRound.value) {
-    return roundRecord.event === round.value.event;
+    return roundRecord.event === round.value.event || roundRecord.id === round.value.id;
   }
 
   // Voor event_round rondes: check of het dezelfde event_round is
@@ -1850,6 +2007,7 @@ onMounted(async () => {
 // Cleanup bij verlaten van de pagina
 onUnmounted(() => {
   stopRealtimeSubscriptions();
+  stopPollingFallback();
 });
 
 // -----------------------------
@@ -1927,10 +2085,25 @@ const eventStandings = computed(() => {
 
   const standings = playerIds.map((pid) => {
     const playerRounds = eventRounds.filter((r) => r.player === pid);
-    const roundIds = playerRounds.map((r) => r.id);
+    const roundIds = playerRounds.map((r) => String(r.id));
+
+    // Debug: toon alle round IDs voor deze speler
+    debug(`Player ${pid} round IDs:`, roundIds);
+
     const scores = allScores.value.filter(
-      (s) => roundIds.includes(s.round) && s.score_player != null,
+      (s) => roundIds.includes(String(s.round)) && s.score_player != null,
     );
+
+    // Debug: toon scores voor deze speler
+    debug(
+      `Player ${pid} scores:`,
+      scores.map((s) => ({
+        round: s.round,
+        hole: s.hole,
+        score_player: s.score_player,
+      })),
+    );
+
     const total = scores.reduce(
       (sum, s) => sum + ((typeof s.score_player === 'number' ? s.score_player : 3) - 3),
       0,
@@ -1940,6 +2113,7 @@ const eventStandings = computed(() => {
     // Debug per speler
     debug(`Player ${pid} (${name}):`, {
       rounds: playerRounds.length,
+      roundIds: roundIds,
       scores: scores.length,
       total: total,
       playerCategory: playerRounds[0]?.expand?.player?.category,
@@ -2027,16 +2201,24 @@ const markerStandingsSlice = computed(() => {
 // Bepaal of de knop voor een hole blauw moet zijn (score ingevuld)
 const isHoleBlue = (holeId: string) => {
   // Controleer of er een score is ingevuld voor deze hole in deze ronde
-  return allScores.value.some(
-    (s) => s.hole === String(holeId) && s.round === round.value.id && s.score_player != null,
-  );
+  if (isEventRound.value) {
+    // Voor event rondes: check direct in de huidige ronde
+    return allScores.value.some(
+      (s) => s.hole === String(holeId) && s.round === round.value?.id && s.score_player != null,
+    );
+  } else {
+    // Voor andere rondes: check zoals voorheen
+    return allScores.value.some(
+      (s) => s.hole === String(holeId) && s.round === round.value?.id && s.score_player != null,
+    );
+  }
 };
 
 // Haal de eventnaam op uit de expand van de ronde
 function getEventName(round: Round | null): string {
-  // Voor event rondes (met direct event_id)
+  // Voor event rondes (met direct event_id) - nu via event_round expand
   if (round?.event) {
-    const eventObj = round?.expand?.event;
+    const eventObj = round?.expand?.event_round?.expand?.event;
     if (eventObj && typeof (eventObj as { name?: unknown }).name === 'string') {
       return (eventObj as unknown as { name: string }).name;
     }
@@ -2207,10 +2389,17 @@ const canFinishEventRound = computed(() => {
 // --- Functie om oefenronde af te sluiten ---
 const finishPracticeRound = async () => {
   try {
-    // Zet de ronde op afgerond: is_active = false, is_finalized = true
-    const updated = await pb
-      .collection('rounds')
-      .update(round.value.id, { is_active: false, is_finalized: true });
+    // Haal de "Afgerond" status op
+    const completedStatus = await pb
+      .collection('categories')
+      .getFirstListItem(`cat_type="status" && name="Afgerond"`);
+
+    // Zet de ronde op afgerond: is_active = false, is_finalized = true, status = Afgerond
+    const updated = await pb.collection('rounds').update(round.value.id, {
+      is_active: false,
+      is_finalized: true,
+      status: completedStatus.id,
+    });
     $q.notify({
       color: 'positive',
       message: $customT('notifications.roundFinalized'),
@@ -2231,10 +2420,17 @@ const finishPracticeRound = async () => {
 // --- Functie om event ronde af te sluiten ---
 const finishEventRound = async () => {
   try {
-    // Zet de ronde op afgerond: is_active = false, is_finalized = true
-    const updated = await pb
-      .collection('rounds')
-      .update(round.value.id, { is_active: false, is_finalized: true });
+    // Haal de "Afgerond" status op
+    const completedStatus = await pb
+      .collection('categories')
+      .getFirstListItem(`cat_type="status" && name="Afgerond"`);
+
+    // Zet de ronde op afgerond: is_active = false, is_finalized = true, status = Afgerond
+    const updated = await pb.collection('rounds').update(round.value.id, {
+      is_active: false,
+      is_finalized: true,
+      status: completedStatus.id,
+    });
     $q.notify({
       color: 'positive',
       message: $customT('notifications.eventRoundFinalized'),
@@ -2302,9 +2498,16 @@ function allScoresEntered() {
 // Nieuw: functie om ronde te finaliseren
 async function finalizeRound() {
   try {
-    const updated = await pb
-      .collection('rounds')
-      .update(round.value.id, { is_active: false, is_finalized: true });
+    // Haal de "Afgerond" status op
+    const completedStatus = await pb
+      .collection('categories')
+      .getFirstListItem(`cat_type="status" && name="Afgerond"`);
+
+    const updated = await pb.collection('rounds').update(round.value.id, {
+      is_active: false,
+      is_finalized: true,
+      status: completedStatus.id,
+    });
     $q.notify({
       color: 'positive',
       message: $customT('notifications.roundFinalized'),
@@ -2360,6 +2563,245 @@ watch(
     debug('Filter by category changed to:', newValue);
   },
 );
+
+// Debug watch voor realtime updates
+watch(
+  () => allScores.value.length,
+  (newValue) => {
+    debug('AllScores length changed to:', newValue);
+    debug('Current round ID:', round.value?.id);
+    debug('Is event round:', isEventRound.value);
+  },
+);
+
+// Debug watch voor round changes
+watch(
+  () => round.value?.id,
+  (newValue) => {
+    debug('Round ID changed to:', newValue);
+    debug('Is event round:', isEventRound.value);
+  },
+);
+
+// Debug functie om scores te controleren
+const debugScores = () => {
+  debug('=== DEBUG SCORES ===');
+  debug('Current round ID:', round.value?.id);
+  debug('Is event round:', isEventRound.value);
+  debug('Total scores in allScores:', allScores.value.length);
+
+  // Zoek scores voor de huidige ronde
+  const currentRoundScores = allScores.value.filter((s) => s.round === round.value?.id);
+  debug('Scores for current round:', currentRoundScores.length);
+
+  // Toon eerste paar scores van alle scores
+  debug('First 5 scores from allScores:');
+  allScores.value.slice(0, 5).forEach((score, index) => {
+    debug(`Score ${index + 1}:`, {
+      id: score.id,
+      hole: score.hole,
+      score_player: score.score_player,
+      score_marker: score.score_marker,
+      round: score.round,
+    });
+  });
+
+  // Zoek naar scores met dezelfde round ID als string
+  const stringRoundId = String(round.value?.id);
+  const stringRoundScores = allScores.value.filter((s) => s.round === stringRoundId);
+  debug('Scores with string round ID:', stringRoundScores.length);
+
+  // Zoek naar scores met dezelfde round ID als number
+  const numberRoundId = Number(round.value?.id);
+  const numberRoundScores = allScores.value.filter((s) => Number(s.round) === numberRoundId);
+  debug('Scores with number round ID:', numberRoundScores.length);
+
+  // Toon unieke round IDs in allScores
+  const uniqueRoundIds = [...new Set(allScores.value.map((s) => s.round))];
+  debug('Unique round IDs in allScores:', uniqueRoundIds);
+
+  // Test isHoleBlue voor eerste hole
+  if (holes.value.length > 0) {
+    const firstHole = holes.value[0];
+    const isBlue = isHoleBlue(firstHole.id);
+    debug(`Is hole ${firstHole.hole} blue:`, isBlue);
+  }
+
+  debug('=== END DEBUG SCORES ===');
+};
+
+// Debug functie om tussenstand te controleren
+const debugStandings = () => {
+  debug('=== DEBUG STANDINGS ===');
+  debug('Current round ID:', round.value?.id);
+  debug('Is event round:', isEventRound.value);
+  debug('Event ID:', round.value?.event);
+  debug('Filter by category:', filterByCategory.value);
+
+  // Toon alle rondes
+  debug(
+    'All rounds:',
+    allRounds.value.map((r) => ({
+      id: r.id,
+      player: r.player,
+      event: r.event,
+      playerName: r.expand?.player?.name,
+    })),
+  );
+
+  // Toon alle scores
+  debug('All scores count:', allScores.value.length);
+  debug(
+    'Sample scores:',
+    allScores.value.slice(0, 5).map((s) => ({
+      id: s.id,
+      round: s.round,
+      hole: s.hole,
+      score_player: s.score_player,
+    })),
+  );
+
+  // Test eventStandings computed
+  debug('Event standings result:', eventStandings.value);
+
+  debug('=== END DEBUG STANDINGS ===');
+};
+
+// Algemene debug functie om het hele systeem te analyseren
+const debugSystem = () => {
+  debug('=== DEBUG ENTIRE SYSTEM ===');
+
+  // 1. Basis informatie
+  debug('1. BASIC INFO:');
+  debug('Current round ID:', round.value?.id);
+  debug('Current round type:', isEventRound.value ? 'Event Round' : 'Event_round Round');
+  debug('Current round event:', round.value?.event);
+  debug('Current round event_round:', round.value?.event_round);
+  debug('Current round player:', round.value?.expand?.player?.name);
+  debug('Current round marker:', round.value?.expand?.marker?.name);
+
+  // 2. Data loading status
+  debug('2. DATA LOADING:');
+  debug('Total rounds loaded:', allRounds.value.length);
+  debug('Total scores loaded:', allScores.value.length);
+  debug('Total holes loaded:', holes.value.length);
+  debug('Loading state:', loading.value);
+  debug('Realtime enabled:', isRealtimeEnabled.value);
+  debug('Connection status:', connectionStatus.value);
+
+  // 3. Rounds analysis
+  debug('3. ROUNDS ANALYSIS:');
+  debug(
+    'All round IDs:',
+    allRounds.value.map((r) => r.id),
+  );
+  debug(
+    'All round players:',
+    allRounds.value.map((r) => r.expand?.player?.name),
+  );
+  debug(
+    'All round events:',
+    allRounds.value.map((r) => r.event),
+  );
+  debug(
+    'All round event_rounds:',
+    allRounds.value.map((r) => r.event_round),
+  );
+
+  // 4. Scores analysis
+  debug('4. SCORES ANALYSIS:');
+  debug('All score round IDs:', [...new Set(allScores.value.map((s) => s.round))]);
+  debug('Scores per round:');
+  const scoresPerRound = {};
+  allScores.value.forEach((s) => {
+    const roundId = s.round;
+    if (!scoresPerRound[roundId]) scoresPerRound[roundId] = 0;
+    scoresPerRound[roundId]++;
+  });
+  debug('Scores per round count:', scoresPerRound);
+
+  // 5. Current round scores
+  debug('5. CURRENT ROUND SCORES:');
+  const currentRoundScores = allScores.value.filter((s) => s.round === round.value?.id);
+  debug('Current round scores count:', currentRoundScores.length);
+  debug(
+    'Current round scores:',
+    currentRoundScores.map((s) => ({
+      hole: s.hole,
+      score_player: s.score_player,
+      score_marker: s.score_marker,
+    })),
+  );
+
+  // 6. UI state
+  debug('6. UI STATE:');
+  debug('Marker records count:', Object.keys(markerRecords.value).length);
+  debug('Player records count:', Object.keys(playerRecords.value).length);
+  debug('Show player scores:', showPlayerScores.value);
+  debug('Show marker scores:', showMarkerScores.value);
+  debug('Show standings:', showStandings.value);
+
+  // 7. Computed values
+  debug('7. COMPUTED VALUES:');
+  debug('Total score player:', totalScorePlayer.value);
+  debug('Total score marker:', totalScoreMarker.value);
+  debug('Can sign off:', canSignOff.value);
+  debug('Is read only:', isReadOnly.value);
+
+  // 8. Event standings
+  debug('8. EVENT STANDINGS:');
+  debug('Event standings count:', eventStandings.value.length);
+  debug(
+    'Event standings:',
+    eventStandings.value.map((s) => ({
+      id: s.id,
+      name: s.name,
+      score: s.score,
+      holesPlayed: s.holesPlayed,
+      rank: s.rank,
+    })),
+  );
+
+  // 9. Filter analysis
+  debug('9. FILTER ANALYSIS:');
+  debug('Filter by category:', filterByCategory.value);
+  debug('Current player category:', round.value?.expand?.player?.category);
+  debug('Current player category name:', round.value?.expand?.player?.expand?.category?.name);
+
+  // 10. Potential issues
+  debug('10. POTENTIAL ISSUES:');
+  const issues = [];
+
+  // Check if current round is in allRounds
+  const currentRoundInAllRounds = allRounds.value.find((r) => r.id === round.value?.id);
+  if (!currentRoundInAllRounds) {
+    issues.push('Current round not found in allRounds');
+  }
+
+  // Check if current round has scores
+  if (currentRoundScores.length === 0) {
+    issues.push('No scores found for current round');
+  }
+
+  // Check for type mismatches
+  const roundIdTypes = [...new Set(allRounds.value.map((r) => typeof r.id))];
+  const scoreRoundIdTypes = [...new Set(allScores.value.map((s) => typeof s.round))];
+  if (roundIdTypes.length > 1 || scoreRoundIdTypes.length > 1) {
+    issues.push('Type mismatches in round IDs');
+  }
+
+  // Check for missing data
+  if (allRounds.value.length === 0) {
+    issues.push('No rounds loaded');
+  }
+  if (allScores.value.length === 0) {
+    issues.push('No scores loaded');
+  }
+
+  debug('Issues found:', issues);
+
+  debug('=== END DEBUG ENTIRE SYSTEM ===');
+};
 </script>
 
 <style scoped>

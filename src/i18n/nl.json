@@ -510,6 +510,8 @@
     "worse": "Worse (>5)",
     "close": "Sluiten",
     "rounds": "Rondes",
+    "courseStats": "Baan statistieken",
+    "selectCourse": "Selecteer baan",
     "allCourses": "Alle banen",
     "perHoleStats": "Statistieken per hole",
     "holeStatsExplanation": "Uitleg over hole statistieken",
@@ -629,7 +631,9 @@
     "minZero": "Minimaal 0",
     "liveUpdates": "Live updates",
     "connectionError": "Verbindingsfout",
-    "connecting": "Verbinden..."
+    "connecting": "Verbinden...",
+    "refreshData": "Ververs data",
+    "showAllPlayers": "Alle spelers"
   },
   "marker": {
     "linkAsMarker": "Koppel jezelf als marker",

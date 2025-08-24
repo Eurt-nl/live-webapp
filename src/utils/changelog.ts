@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.17.0",
+    date: "2025-08-20",
+    type: "minor",
+    changes: ["feat: handicap grafiek vereenvoudigd - tabel en datums verwijderd voor cleaner design"]
+  },
+  {
     version: "0.16.9",
     date: "2025-08-20",
     type: "patch",

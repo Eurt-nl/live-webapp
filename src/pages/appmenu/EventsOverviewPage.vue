@@ -97,9 +97,12 @@ const loadEvents = async () => {
     loading.value = true;
     debug('Start loading events...');
 
+    // OPTIMALISATIE: Filter op toekomstige events
+    const today = new Date().toISOString().split('T')[0];
     const result = await pb.collection('events').getList(1, 50, {
       sort: '-startdate',
       expand: 'status,course',
+      filter: `startdate >= "${today}"`, // Alleen toekomstige events
     });
 
     debug('Events loaded:', result);
