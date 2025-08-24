@@ -82,6 +82,20 @@ export default configure((ctx) => {
           };
           return args;
         });
+        
+        // Voeg passive event listeners toe voor betere performance
+        chain.module
+          .rule('vue')
+          .use('vue-loader')
+          .tap((options) => {
+            if (!options.compilerOptions) {
+              options.compilerOptions = {};
+            }
+            options.compilerOptions.isCustomElement = (tag) => {
+              return tag.startsWith('q-');
+            };
+            return options;
+          });
       },
     },
 

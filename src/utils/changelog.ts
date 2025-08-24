@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.3",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: handle 404 errors when updating score records"]
+  },
+  {
     version: "0.21.2",
     date: "2025-08-24",
     type: "patch",

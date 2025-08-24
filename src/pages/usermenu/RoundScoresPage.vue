@@ -1545,11 +1545,15 @@ const saveScore = async () => {
           result = await pb.collection('round_scores').update(myRecord.id, optimisticScoreData);
           debug('Score update (gebruiker):', result);
         } catch (updateError) {
-          // Als update faalt (404), probeer create
-          debug('Update failed, trying create:', updateError);
+          // Als update faalt (404), probeer create - dit is normaal gedrag
+          if (updateError?.status === 404) {
+            debug('Record not found, creating new score (expected behavior)');
+          } else {
+            debug('Update failed with unexpected error:', updateError);
+          }
           result = await pb.collection('round_scores').create(optimisticScoreData);
           debug('Score create (gebruiker):', result);
-          
+
           // Update de lokale data met de nieuwe ID
           const existingIndex = allScores.value.findIndex((s) => s.id === myRecord.id);
           if (existingIndex >= 0) {
@@ -1573,7 +1577,7 @@ const saveScore = async () => {
           } as RoundScore;
         }
       }
-      
+
       // Update ronde status
       await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
     } catch (serverError) {
