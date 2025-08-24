@@ -237,6 +237,9 @@
     "loginFailed": "Login failed. Please check your details.",
     "registerSuccess": "Account successfully created! You can now log in.",
     "registerFailed": "Registration failed. Please try again.",
+    "loadCoursesError": "Could not load courses. Please try again later.",
+    "loadCategoriesError": "Could not load categories. Please try again later.",
+    "loadCountriesError": "Could not load countries. Please try again later.",
     "logout": "Logout",
     "logoutSuccess": "Successfully logged out!"
   },

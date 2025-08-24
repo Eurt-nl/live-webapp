@@ -91,13 +91,13 @@ export const useAuthStore = defineStore('auth', {
     }) {
       try {
         const { pb } = usePocketbase();
-        
+
         // Zorg dat email lowercase is
         const registerData = {
           ...data,
           email: data.email.toLowerCase(),
         };
-        
+
         await pb.collection('users').create(registerData);
         return true;
       } catch (error) {

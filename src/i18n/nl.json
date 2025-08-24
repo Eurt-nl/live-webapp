@@ -308,6 +308,9 @@
     "loginFailed": "Inloggen mislukt. Controleer je gegevens.",
     "registerSuccess": "Account succesvol aangemaakt! Je kunt nu inloggen.",
     "registerFailed": "Registreren mislukt. Probeer het opnieuw.",
+    "loadCoursesError": "Kon banen niet laden. Probeer het later opnieuw.",
+    "loadCategoriesError": "Kon categorieën niet laden. Probeer het later opnieuw.",
+    "loadCountriesError": "Kon landen niet laden. Probeer het later opnieuw.",
     "logout": "Uitloggen",
     "logoutSuccess": "Succesvol uitgelogd!"
   },

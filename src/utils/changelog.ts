@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.20.0",
+    date: "2025-08-24",
+    type: "minor",
+    changes: ["feat: implement two-step registration with profile fields"]
+  },
+  {
     version: "0.19.0",
     date: "2025-08-24",
     type: "minor",

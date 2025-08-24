@@ -235,7 +235,7 @@ const loadAllCourses = async () => {
     while (true) {
       const result = await pb.collection('courses').getList(page, perPage, {
         sort: 'name',
-        filter: 'is_active = true',
+        // Verwijder de filter omdat is_active veld mogelijk niet bestaat
       });
 
       banen.push(...result.items.map((course: Record<string, unknown>) => ({
@@ -252,6 +252,11 @@ const loadAllCourses = async () => {
     coursesOptions.value = [...banen];
   } catch (error) {
     console.error('Error loading courses:', error);
+    $q.notify({
+      color: 'warning',
+      message: $customT('auth.loadCoursesError'),
+      icon: 'warning',
+    });
   } finally {
     coursesLoading.value = false;
   }
@@ -271,6 +276,11 @@ const loadCategories = async () => {
     }));
   } catch (error) {
     console.error('Error loading categories:', error);
+    $q.notify({
+      color: 'warning',
+      message: $customT('auth.loadCategoriesError'),
+      icon: 'warning',
+    });
   } finally {
     categoriesLoading.value = false;
   }
@@ -293,6 +303,11 @@ const loadCountries = async () => {
     countriesOptions.value = [...countries];
   } catch (error) {
     console.error('Error loading countries:', error);
+    $q.notify({
+      color: 'warning',
+      message: $customT('auth.loadCountriesError'),
+      icon: 'warning',
+    });
   } finally {
     countriesLoading.value = false;
   }
