@@ -876,11 +876,15 @@ const showPlayerScores = ref(false); // Toggle voor speler-scoreoverzicht
 const showMarkerScores = ref(false); // Toggle voor marker-scoreoverzicht
 
 // Automatisch score overzicht tonen voor oefenrondes
-watch(isPracticeRound, (newValue) => {
-  if (newValue) {
-    showPlayerScores.value = true;
-  }
-}, { immediate: true });
+watch(
+  isPracticeRound,
+  (newValue) => {
+    if (newValue) {
+      showPlayerScores.value = true;
+    }
+  },
+  { immediate: true },
+);
 const showStandings = ref(false); // Toggle voor tussenstand
 const showAllPlayers = ref(false); // Toggle voor alle spelers tonen
 const filterByCategory = ref(false); // Toggle voor filteren op eigen categorie
@@ -1317,6 +1321,8 @@ const loadData = async () => {
 
     // OPTIMALISATIE: Gebruik nieuwe view vw_round_with_scores voor huidige ronde
     const roundData = await pb.collection('vw_round_with_scores').getOne(route.params.id as string);
+    
+    console.log('Round data from view:', roundData);
 
     // Converteer view data naar Round interface
     const roundResult = {
@@ -1330,6 +1336,7 @@ const loadData = async () => {
     };
 
     round.value = roundResult as unknown as Round;
+    console.log('Processed round result:', round.value);
 
     // Bepaal het eventId voor filtering
     let eventId = roundData.event_round;
@@ -1369,6 +1376,7 @@ const loadData = async () => {
 
     // OPTIMALISATIE: Gebruik scores uit de view in plaats van aparte queries
     const scoresFromView = roundData.scores || [];
+    console.log('Scores from view:', scoresFromView);
 
     // Converteer view scores naar RoundScore interface
     const allScoresList: RoundScore[] = scoresFromView.map(
@@ -1396,6 +1404,7 @@ const loadData = async () => {
     );
 
     allScores.value = allScoresList;
+    console.log('Processed allScores:', allScores.value);
 
     // Maak holes array van de scores data
     const holesFromScores = scoresFromView.map((scoreData: Record<string, unknown>) => ({
@@ -1405,6 +1414,9 @@ const loadData = async () => {
       course: roundData.course as string,
     }));
     holes.value = holesFromScores as unknown as Hole[];
+    console.log('Processed holes:', holes.value);
+    console.log('showPlayerScores:', showPlayerScores.value);
+    console.log('isPracticeRound:', isPracticeRound.value);
     // Vul markerRecords en playerRecords voor snelle lookup
     markerRecords.value = {};
     playerRecords.value = {};

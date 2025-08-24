@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.6",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: auto-show score overview for practice rounds and improve touch handling"]
+  },
+  {
     version: "0.21.5",
     date: "2025-08-24",
     type: "patch",
