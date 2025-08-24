@@ -5,6 +5,15 @@
   touch-action: manipulation;
 }
 
+// Specifieke fix voor Quasar touch events
+.q-btn,
+.q-card,
+.q-dialog,
+.q-drawer,
+.q-page {
+  touch-action: manipulation;
+}
+
 // Verbeter scroll performance
 html {
   scroll-behavior: smooth;
@@ -12,4 +21,9 @@ html {
 
 body {
   -webkit-overflow-scrolling: touch;
+}
+
+// Fix voor Vue touch events
+[data-v-] {
+  touch-action: manipulation;
 }

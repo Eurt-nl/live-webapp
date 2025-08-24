@@ -874,6 +874,13 @@ const allRounds = ref<Round[]>([]); // Alle rondes in het event
 // UI-state voor toggles en dialogs
 const showPlayerScores = ref(false); // Toggle voor speler-scoreoverzicht
 const showMarkerScores = ref(false); // Toggle voor marker-scoreoverzicht
+
+// Automatisch score overzicht tonen voor oefenrondes
+watch(isPracticeRound, (newValue) => {
+  if (newValue) {
+    showPlayerScores.value = true;
+  }
+}, { immediate: true });
 const showStandings = ref(false); // Toggle voor tussenstand
 const showAllPlayers = ref(false); // Toggle voor alle spelers tonen
 const filterByCategory = ref(false); // Toggle voor filteren op eigen categorie
