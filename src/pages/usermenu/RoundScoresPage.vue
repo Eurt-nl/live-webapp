@@ -366,7 +366,11 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="row in showAllPlayers ? eventStandings : (isPracticeRound ? eventStandings : markerStandingsSlice)"
+                      v-for="row in showAllPlayers
+                        ? eventStandings
+                        : isPracticeRound
+                          ? eventStandings
+                          : markerStandingsSlice"
                       :key="row.id"
                       :class="{ 'bg-primary text-white': !isPracticeRound && row.id === markerId }"
                     >
@@ -396,11 +400,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                                      <tr
-                      v-for="row in skinsStandings"
-                      :key="row.id"
-                      :class="{ 'bg-primary text-white': !isPracticeRound && row.id === markerId }"
-                    >
+                  <tr
+                    v-for="row in skinsStandings"
+                    :key="row.id"
+                    :class="{ 'bg-primary text-white': !isPracticeRound && row.id === markerId }"
+                  >
                     <td class="text-left">{{ row.name }}</td>
                     <td class="text-right">
                       <span
@@ -1093,7 +1097,7 @@ const isUpdate = computed(() => {
 const scorePlayerError = computed(() => {
   // Voor oefenrondes: geen marker vergelijking
   if (isPracticeRound.value) return false;
-  
+
   // Geeft true als de speler-score afwijkt van de marker-score
   const myUserId = authStore.user?.id;
   const currentRound = allRounds.value.find((r) => r.marker === myUserId);
@@ -1118,7 +1122,7 @@ const scorePlayerError = computed(() => {
 const scoreMarkerError = computed(() => {
   // Voor oefenrondes: geen marker vergelijking
   if (isPracticeRound.value) return false;
-  
+
   // Geeft true als de marker-score afwijkt van de speler-score
   const myUserId = authStore.user?.id;
   const currentRound = allRounds.value.find((r) => r.marker === myUserId);
@@ -1174,7 +1178,7 @@ const totalScorePlayer = computed(() => {
 const totalScoreMarker = computed(() => {
   // Voor oefenrondes: geen marker score
   if (isPracticeRound.value) return null;
-  
+
   // Som van alle scores van de marker in deze ronde
   if (!round.value?.expand?.marker?.id || holes.value.length === 0) return null;
   const markerRound = findMarkerRound(round.value.expand.marker.id);
@@ -1210,7 +1214,7 @@ const getPlayerScoreForHole = (holeId: string) => {
 const getMarkerScoreForHole = (holeId: string) => {
   // Voor oefenrondes: geen marker score
   if (isPracticeRound.value) return '-';
-  
+
   if (!round.value?.expand?.marker?.id) return '-';
   const markerRound = findMarkerRound(round.value.expand.marker.id);
   if (!markerRound) return '-';
@@ -1451,7 +1455,7 @@ const saveScore = async () => {
     round: route.params.id,
     hole: String(holeId),
     score_player: scoreForm.value.score_player,
-    score_marker: scoreForm.value.score_marker,
+    score_marker: isPracticeRound.value ? null : scoreForm.value.score_marker,
     note: scoreForm.value.note,
     gir: scoreForm.value.gir,
     putts: scoreForm.value.putts,
@@ -1462,12 +1466,12 @@ const saveScore = async () => {
   try {
     if (!isPracticeRound.value && !isEventRound.value) {
       // Alleen voor event_round rondes: beide scores verplicht
-      if (
-        scoreForm.value.score_player == null ||
-        scoreForm.value.score_marker == null ||
-        scoreForm.value.score_player === 0 ||
-        scoreForm.value.score_marker === 0
-      ) {
+          if (
+      scoreForm.value.score_player == null ||
+      (!isPracticeRound.value && scoreForm.value.score_marker == null) ||
+      scoreForm.value.score_player === 0 ||
+      (!isPracticeRound.value && scoreForm.value.score_marker === 0)
+    ) {
         $q.notify({
           color: 'negative',
           message: $customT('notifications.fillBothScores'),
@@ -1519,7 +1523,7 @@ const saveScore = async () => {
       ) as RoundScore;
     }
 
-    if (optimisticScoreData.score_marker != null) {
+    if (optimisticScoreData.score_marker != null && !isPracticeRound.value) {
       playerRecords.value[String(holeId)] = allScores.value.find(
         (s) => s.hole === String(holeId) && s.score_marker != null,
       ) as RoundScore;
