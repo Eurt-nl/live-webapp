@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.10",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: update vw_round_with_scores view to include missing fields"]
+  },
+  {
     version: "0.21.9",
     date: "2025-08-24",
     type: "patch",

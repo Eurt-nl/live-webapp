@@ -1288,6 +1288,9 @@ const loadData = async () => {
     console.log('Round event field:', roundData.event);
     console.log('Round event_round field:', roundData.event_round);
     console.log('Round category field:', roundData.category);
+    console.log('Round marker field:', roundData.marker);
+    console.log('Round category_name field:', roundData.category_name);
+    console.log('Round marker_name field:', roundData.marker_name);
 
     // Converteer view data naar Round interface
     const roundResult = {
@@ -1304,6 +1307,7 @@ const loadData = async () => {
 
     round.value = roundResult as unknown as Round;
     console.log('Processed round result:', round.value);
+    console.log('Round expand data:', round.value?.expand);
 
     // Bepaal het eventId voor filtering
     let eventId = roundData.event_round;
