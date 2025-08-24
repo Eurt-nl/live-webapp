@@ -91,7 +91,15 @@
                         class="col text-center text-body1"
                         :style="getScoreColorStyle(getPlayerScoreForHole(hole.id))"
                       >
-                        {{ (() => { console.log(`Template rendering hole ${hole.id}:`, getPlayerScoreForHole(hole.id)); return getPlayerScoreForHole(hole.id); })() }}
+                        {{
+                          (() => {
+                            console.log(
+                              `Template rendering hole ${hole.id}:`,
+                              getPlayerScoreForHole(hole.id),
+                            );
+                            return getPlayerScoreForHole(hole.id);
+                          })()
+                        }}
                       </div>
                     </div>
                   </div>
@@ -1200,6 +1208,8 @@ const getPlayerScoreForHole = (holeId: string) => {
       allScoresRounds: allScores.value.map((s) => s.round),
       allScoresHoles: allScores.value.map((s) => s.hole),
       allScoresPlayerScores: allScores.value.map((s) => s.score_player),
+      isPracticeRound: isPracticeRound.value,
+      isEventRound: isEventRound.value,
     });
     return scoreRec?.score_player ?? '-';
   }
