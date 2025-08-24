@@ -815,7 +815,20 @@ const isPracticeRound = computed(() => {
   // Extra check: als er geen event en geen event_round is, is het waarschijnlijk een oefenronde
   const hasNoEvent = !round.value?.event && !round.value?.event_round;
 
-  return isPractice || hasNoEvent;
+  // Extra check: als er geen marker is, is het waarschijnlijk een oefenronde
+  const hasNoMarker = !round.value?.marker;
+
+  console.log('isPracticeRound debug:', {
+    categoryName,
+    isPractice,
+    hasNoEvent,
+    hasNoMarker,
+    event: round.value?.event,
+    event_round: round.value?.event_round,
+    marker: round.value?.marker
+  });
+
+  return isPractice || hasNoEvent || hasNoMarker;
 });
 
 // Bepalen of het een event ronde is (heeft event_id)
@@ -1180,6 +1193,12 @@ const getPlayerScoreForHole = (holeId: string) => {
   // Voor oefenrondes en event rondes: gebruik direct de huidige ronde
   if (isPracticeRound.value || isEventRound.value) {
     const scoreRec = allScores.value.find((s) => s.round === round.value?.id && s.hole === holeId);
+    console.log(`getPlayerScoreForHole(${holeId}):`, {
+      roundId: round.value?.id,
+      scoreRec,
+      allScoresLength: allScores.value.length,
+      allScoresRounds: allScores.value.map(s => s.round)
+    });
     return scoreRec?.score_player ?? '-';
   }
 

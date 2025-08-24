@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.11",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["debug: add more detailed logging for view data analysis"]
+  },
+  {
     version: "0.21.10",
     date: "2025-08-24",
     type: "patch",
