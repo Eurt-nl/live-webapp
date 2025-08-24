@@ -862,6 +862,10 @@ const isPracticeRound = computed(() => {
 
 // Bepalen of het een event ronde is (heeft event_id)
 const isEventRound = computed(() => {
+  // Als het een oefenronde is, is het geen event ronde
+  if (isPracticeRound.value) return false;
+  
+  // Anders: check of er een event is
   return !!round.value?.event;
 });
 
@@ -1321,8 +1325,11 @@ const loadData = async () => {
 
     // OPTIMALISATIE: Gebruik nieuwe view vw_round_with_scores voor huidige ronde
     const roundData = await pb.collection('vw_round_with_scores').getOne(route.params.id as string);
-    
+
     console.log('Round data from view:', roundData);
+    console.log('Round event field:', roundData.event);
+    console.log('Round event_round field:', roundData.event_round);
+    console.log('Round category field:', roundData.category);
 
     // Converteer view data naar Round interface
     const roundResult = {

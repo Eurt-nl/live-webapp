@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.7",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["debug: add console logs to diagnose score overview display issue"]
+  },
+  {
     version: "0.21.6",
     date: "2025-08-24",
     type: "patch",
