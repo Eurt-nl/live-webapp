@@ -851,11 +851,12 @@ const scoreForm = ref({
 const isPracticeRound = computed(() => {
   // Controleer of de ronde-categorie 'oefenronde' is (via expand of direct)
   const categoryName = round.value?.expand?.category?.name || round.value?.category;
-  const isPractice = typeof categoryName === 'string' && categoryName.toLowerCase() === 'oefenronde';
-  
+  const isPractice =
+    typeof categoryName === 'string' && categoryName.toLowerCase() === 'oefenronde';
+
   // Extra check: als er geen event en geen event_round is, is het waarschijnlijk een oefenronde
   const hasNoEvent = !round.value?.event && !round.value?.event_round;
-  
+
   return isPractice || hasNoEvent;
 });
 
@@ -1537,23 +1538,47 @@ const saveScore = async () => {
 
     // Sla op naar server
     let result;
-    if (myRecord && myRecord.id) {
-      result = await pb.collection('round_scores').update(myRecord.id, optimisticScoreData);
-      await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
-      debug('Score update (gebruiker):', result);
-    } else {
-      result = await pb.collection('round_scores').create(optimisticScoreData);
-      await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
-      debug('Score create (gebruiker):', result);
+    try {
+      if (myRecord && myRecord.id && !myRecord.id.startsWith('temp_')) {
+        // Probeer update, maar fallback naar create als het record niet bestaat
+        try {
+          result = await pb.collection('round_scores').update(myRecord.id, optimisticScoreData);
+          debug('Score update (gebruiker):', result);
+        } catch (updateError) {
+          // Als update faalt (404), probeer create
+          debug('Update failed, trying create:', updateError);
+          result = await pb.collection('round_scores').create(optimisticScoreData);
+          debug('Score create (gebruiker):', result);
+          
+          // Update de lokale data met de nieuwe ID
+          const existingIndex = allScores.value.findIndex((s) => s.id === myRecord.id);
+          if (existingIndex >= 0) {
+            allScores.value[existingIndex] = {
+              ...allScores.value[existingIndex],
+              id: result.id,
+            } as RoundScore;
+          }
+        }
+      } else {
+        // Create nieuwe score
+        result = await pb.collection('round_scores').create(optimisticScoreData);
+        debug('Score create (gebruiker):', result);
 
-      // Vervang tijdelijke ID met echte ID
-      const tempIndex = allScores.value.findIndex((s) => s.id === `temp_${Date.now() - 1000}`);
-      if (tempIndex >= 0) {
-        allScores.value[tempIndex] = {
-          ...allScores.value[tempIndex],
-          id: result.id,
-        } as RoundScore;
+        // Vervang tijdelijke ID met echte ID
+        const tempIndex = allScores.value.findIndex((s) => s.id === `temp_${Date.now() - 1000}`);
+        if (tempIndex >= 0) {
+          allScores.value[tempIndex] = {
+            ...allScores.value[tempIndex],
+            id: result.id,
+          } as RoundScore;
+        }
       }
+      
+      // Update ronde status
+      await pb.collection('rounds').update(String(route.params.id), { status: '0n8l4fpvwt05y6k' });
+    } catch (serverError) {
+      debug('Server error during save:', serverError);
+      throw serverError;
     }
 
     // Geen volledige refresh meer - de websocket zal de data syncen
