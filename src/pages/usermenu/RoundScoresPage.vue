@@ -825,7 +825,7 @@ const isPracticeRound = computed(() => {
     hasNoMarker,
     event: round.value?.event,
     event_round: round.value?.event_round,
-    marker: round.value?.marker
+    marker: round.value?.marker,
   });
 
   return isPractice || hasNoEvent || hasNoMarker;
@@ -1197,7 +1197,9 @@ const getPlayerScoreForHole = (holeId: string) => {
       roundId: round.value?.id,
       scoreRec,
       allScoresLength: allScores.value.length,
-      allScoresRounds: allScores.value.map(s => s.round)
+      allScoresRounds: allScores.value.map((s) => s.round),
+      allScoresHoles: allScores.value.map((s) => s.hole),
+      allScoresPlayerScores: allScores.value.map((s) => s.score_player),
     });
     return scoreRec?.score_player ?? '-';
   }
@@ -1395,6 +1397,10 @@ const loadData = async () => {
 
     allScores.value = allScoresList;
     console.log('Processed allScores:', allScores.value);
+    console.log('Current round ID:', roundData.id);
+    console.log('All scores round IDs:', allScoresList.map(s => s.round));
+    console.log('All scores hole IDs:', allScoresList.map(s => s.hole));
+    console.log('All scores player scores:', allScoresList.map(s => s.score_player));
 
     // Maak holes array van de scores data
     const holesFromScores = scoresFromView.map((scoreData: Record<string, unknown>) => ({
