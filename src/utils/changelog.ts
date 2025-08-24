@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.4",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: improve error handling and performance warnings"]
+  },
+  {
     version: "0.21.3",
     date: "2025-08-24",
     type: "patch",

@@ -1156,8 +1156,8 @@ const totalScorePlayer = computed(() => {
   // Som van alle scores van de speler in deze ronde
   if (!round.value?.expand?.player?.id || holes.value.length === 0) return null;
 
-  // Voor event rondes: gebruik direct de huidige ronde
-  if (isEventRound.value) {
+  // Voor oefenrondes en event rondes: gebruik direct de huidige ronde
+  if (isPracticeRound.value || isEventRound.value) {
     const scores = allScores.value.filter(
       (s) => s.round === round.value?.id && s.score_player != null,
     );
@@ -1204,8 +1204,8 @@ const totalScoreMarker = computed(() => {
 const getPlayerScoreForHole = (holeId: string) => {
   if (!round.value?.expand?.player?.id) return '-';
 
-  // Voor event rondes: gebruik direct de huidige ronde
-  if (isEventRound.value) {
+  // Voor oefenrondes en event rondes: gebruik direct de huidige ronde
+  if (isPracticeRound.value || isEventRound.value) {
     const scoreRec = allScores.value.find((s) => s.round === round.value?.id && s.hole === holeId);
     return scoreRec?.score_player ?? '-';
   }

@@ -82,7 +82,7 @@ export default configure((ctx) => {
           };
           return args;
         });
-        
+
         // Voeg passive event listeners toe voor betere performance
         chain.module
           .rule('vue')
