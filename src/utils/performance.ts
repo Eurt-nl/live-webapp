@@ -1,6 +1,6 @@
 /**
  * Performance Monitoring Utility
- * 
+ *
  * Deze utility biedt tools voor het monitoren van query performance
  * en het detecteren van langzame queries.
  */
@@ -22,30 +22,30 @@ class PerformanceMonitor {
    * Track een query of operatie
    */
   async trackQuery<T>(
-    name: string, 
+    name: string,
     queryFn: () => Promise<T>
   ): Promise<T> {
     const startTime = Date.now()
-    
+
     try {
       const result = await queryFn()
       const duration = Date.now() - startTime
-      
+
       this.recordMetric({
         name,
         duration,
         timestamp: startTime,
         success: true,
       })
-      
+
       if (duration > this.SLOW_QUERY_THRESHOLD) {
         console.warn(`Slow query detected: ${name} took ${duration}ms`)
       }
-      
+
       return result
     } catch (error) {
       const duration = Date.now() - startTime
-      
+
       this.recordMetric({
         name,
         duration,
@@ -53,7 +53,7 @@ class PerformanceMonitor {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
-      
+
       console.error(`Query failed: ${name} after ${duration}ms`, error)
       throw error
     }
@@ -64,7 +64,7 @@ class PerformanceMonitor {
    */
   private recordMetric(metric: PerformanceMetrics): void {
     this.metrics.push(metric)
-    
+
     // Beperk aantal opgeslagen metrics
     if (this.metrics.length > this.MAX_METRICS) {
       this.metrics = this.metrics.slice(-this.MAX_METRICS / 2)
@@ -77,7 +77,7 @@ class PerformanceMonitor {
   getStats() {
     const successful = this.metrics.filter(m => m.success)
     const failed = this.metrics.filter(m => !m.success)
-    
+
     if (successful.length === 0) {
       return {
         totalQueries: this.metrics.length,
@@ -87,10 +87,10 @@ class PerformanceMonitor {
         recentMetrics: this.metrics.slice(-10),
       }
     }
-    
+
     const avgDuration = successful.reduce((sum, m) => sum + m.duration, 0) / successful.length
     const slowQueries = successful.filter(m => m.duration > this.SLOW_QUERY_THRESHOLD).length
-    
+
     return {
       totalQueries: this.metrics.length,
       successRate: successful.length / this.metrics.length,

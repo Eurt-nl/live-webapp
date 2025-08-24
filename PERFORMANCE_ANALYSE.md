@@ -129,31 +129,32 @@ const result = await pb.collection('events').getList(1, 50, {
 **Status**: ✅ **Geïmplementeerd**
 
 **Gerealiseerd:**
+
 ```typescript
 // src/utils/cache.ts
 export class CacheService {
-  private cache = new Map<string, CacheEntry<unknown>>()
-  private readonly DEFAULT_TTL = 5 * 60 * 1000 // 5 minuten
-  private stats = { hits: 0, misses: 0 }
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minuten
+  private stats = { hits: 0, misses: 0 };
 
   async get<T>(key: string, fetchFn: () => Promise<T>, ttl = this.DEFAULT_TTL): Promise<T> {
-    const cached = this.cache.get(key)
-    
+    const cached = this.cache.get(key);
+
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      this.stats.hits++
-      return cached.data as T
+      this.stats.hits++;
+      return cached.data as T;
     }
-    
-    this.stats.misses++
-    const data = await fetchFn()
-    this.cache.set(key, { data, timestamp: Date.now(), ttl })
-    return data
+
+    this.stats.misses++;
+    const data = await fetchFn();
+    this.cache.set(key, { data, timestamp: Date.now(), ttl });
+    return data;
   }
 
   invalidate(pattern: string): void {
     for (const key of this.cache.keys()) {
       if (key.includes(pattern)) {
-        this.cache.delete(key)
+        this.cache.delete(key);
       }
     }
   }
@@ -165,6 +166,7 @@ export class CacheService {
 **Status**: ✅ **Gedeeltelijk geïmplementeerd**
 
 **Gerealiseerd:**
+
 1. **Weer data**: Cache voor 15 minuten ✅
 2. **Banen lijst**: Cache voor 30 minuten ❌ (nog te implementeren)
 3. **Statistieken**: Cache voor 10 minuten ❌ (nog te implementeren)
@@ -200,12 +202,14 @@ export class CacheService {
 **Status**: ✅ **Gedeeltelijk geïmplementeerd**
 
 **Gerealiseerd:**
+
 ```typescript
 // OPTIMALISATIE: Lazy load zware componenten
 const WeatherWidget = defineAsyncComponent(() => import('src/components/WeatherWidget.vue'));
 ```
 
 **Nog te implementeren:**
+
 - StatsComponent lazy loading
 - Infinite scroll component
 - Paginering toepassingen
@@ -228,26 +232,27 @@ const WeatherWidget = defineAsyncComponent(() => import('src/components/WeatherW
 **Status**: ✅ **Geïmplementeerd**
 
 **Gerealiseerd:**
+
 ```typescript
 // src/utils/performance.ts
 export const trackQuery = async <T>(name: string, queryFn: () => Promise<T>): Promise<T> => {
-  const startTime = Date.now()
-  
+  const startTime = Date.now();
+
   try {
-    const result = await queryFn()
-    const duration = Date.now() - startTime
-    
+    const result = await queryFn();
+    const duration = Date.now() - startTime;
+
     if (duration > 1000) {
-      console.warn(`Slow query detected: ${name} took ${duration}ms`)
+      console.warn(`Slow query detected: ${name} took ${duration}ms`);
     }
-    
-    return result
+
+    return result;
   } catch (error) {
-    const duration = Date.now() - startTime
-    console.error(`Query failed: ${name} after ${duration}ms`, error)
-    throw error
+    const duration = Date.now() - startTime;
+    console.error(`Query failed: ${name} after ${duration}ms`, error);
+    throw error;
   }
-}
+};
 ```
 
 #### Cache Hit Rate Monitoring
@@ -255,6 +260,7 @@ export const trackQuery = async <T>(name: string, queryFn: () => Promise<T>): Pr
 **Status**: ✅ **Geïmplementeerd**
 
 **Gerealiseerd:**
+
 ```typescript
 // Geïntegreerd in CacheService
 private stats = { hits: 0, misses: 0 }

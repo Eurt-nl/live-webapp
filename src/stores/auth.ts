@@ -48,7 +48,8 @@ export const useAuthStore = defineStore('auth', {
     async login(email: string, password: string) {
       try {
         const { pb } = usePocketbase();
-        const authData = await pb.collection('users').authWithPassword(email, password);
+        // Zorg dat email lowercase is voor case-insensitive login
+        const authData = await pb.collection('users').authWithPassword(email.toLowerCase(), password);
 
         // Haal user data op met role expand
         const userWithRole = await pb.collection('users').getOne(authData.record.id, {
@@ -84,10 +85,20 @@ export const useAuthStore = defineStore('auth', {
       password: string;
       passwordConfirm: string;
       birthyear: number;
+      homecourse?: string;
+      category?: string;
+      country?: string;
     }) {
       try {
         const { pb } = usePocketbase();
-        await pb.collection('users').create(data);
+        
+        // Zorg dat email lowercase is
+        const registerData = {
+          ...data,
+          email: data.email.toLowerCase(),
+        };
+        
+        await pb.collection('users').create(registerData);
         return true;
       } catch (error) {
         console.error('Registration error:', error);

@@ -1,6 +1,6 @@
 /**
  * Cache Service voor performance optimalisatie
- * 
+ *
  * Deze service biedt een eenvoudige caching layer voor statische data
  * om database queries te verminderen en response tijden te verbeteren.
  */
@@ -24,12 +24,12 @@ export class CacheService {
    */
   async get<T>(key: string, fetchFn: () => Promise<T>, ttl = this.DEFAULT_TTL): Promise<T> {
     const cached = this.cache.get(key)
-    
+
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       this.stats.hits++
       return cached.data as T
     }
-    
+
     this.stats.misses++
     const data = await fetchFn()
     this.cache.set(key, { data, timestamp: Date.now(), ttl })
