@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.20.1",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: resolve courses API filter error and improve error handling"]
+  },
+  {
     version: "0.20.0",
     date: "2025-08-24",
     type: "minor",

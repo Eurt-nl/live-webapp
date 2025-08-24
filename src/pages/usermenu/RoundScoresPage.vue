@@ -244,15 +244,7 @@
               @click="onRefresh(() => {})"
               class="q-mr-sm"
             />
-            <q-btn flat color="orange" label="Debug Scores" @click="debugScores" class="q-mr-sm" />
-            <q-btn
-              flat
-              color="purple"
-              label="Debug Standings"
-              @click="debugStandings"
-              class="q-mr-sm"
-            />
-            <q-btn flat color="red" label="Debug System" @click="debugSystem" class="q-mr-sm" />
+
             <q-btn color="primary" :label="$customT('navigation.back')" @click="router.back()" />
           </div>
           <!-- Popup voor bevestiging annuleren oefenronde -->
@@ -1296,9 +1288,6 @@ const loadData = async () => {
     // OPTIMALISATIE: Gebruik nieuwe view vw_round_with_scores voor huidige ronde
     const roundData = await pb.collection('vw_round_with_scores').getOne(route.params.id as string);
 
-    // Debug de volledige roundData om te zien wat er wordt opgehaald
-    debug('Full roundData from view:', roundData);
-
     // Converteer view data naar Round interface
     const roundResult = {
       ...roundData,
@@ -1311,14 +1300,6 @@ const loadData = async () => {
     };
 
     round.value = roundResult as unknown as Round;
-
-    // Debug informatie voor de huidige ronde
-    debug('Current round debug:');
-    debug('Round course ID:', roundData.course);
-    debug('Round course name:', roundData.course_name);
-    debug('Round player name:', roundData.player_name);
-    debug('Round event name:', roundData.event_name);
-    debug('Round number:', roundData.round_number);
 
     // Bepaal het eventId voor filtering
     let eventId = roundData.event_round;
@@ -1353,31 +1334,11 @@ const loadData = async () => {
     // Zorg ervoor dat de huidige ronde altijd wordt meegenomen
     const currentRoundInAllRounds = allRounds.value.find((r) => r.id === round.value?.id);
     if (!currentRoundInAllRounds) {
-      debug('Current round not found in allRounds, adding it manually');
       allRounds.value.push(round.value as Round);
     }
 
-    // Debug informatie voor rondes
-    debug('Rounds debug:');
-    debug('Filter used:', roundsFilter);
-    debug('Total rounds found:', roundsResult.items.length);
-    debug(
-      'Rounds details:',
-      roundsResult.items.map((r) => ({
-        id: r.id,
-        player: r.player,
-        category: r.category,
-        categoryExpand: r.expand?.category,
-        categoryName: r.expand?.category?.name,
-        event: r.event,
-        event_round: r.event_round,
-        playerName: r.expand?.player?.name,
-      })),
-    );
-
     // OPTIMALISATIE: Gebruik scores uit de view in plaats van aparte queries
     const scoresFromView = roundData.scores || [];
-    debug('Scores from view:', scoresFromView);
 
     // Converteer view scores naar RoundScore interface
     const allScoresList: RoundScore[] = scoresFromView.map(
@@ -1441,10 +1402,7 @@ const loadData = async () => {
       if (playerRec) playerRecords.value[String(hole.id)] = playerRec;
     });
 
-    // Debug scores na het laden
-    debugScores();
-    debugStandings();
-    debugSystem();
+    // Data geladen succesvol
   } catch (error) {
     debug('Error loading data:', error);
     // Alleen notificatie tonen als het geen realtime update is
@@ -1644,7 +1602,7 @@ const onRefresh = (done: () => void) => {
 const startRealtimeSubscriptions = () => {
   if (!round.value || isRealtimeEnabled.value) return;
 
-  debug('Starting realtime subscriptions for standings updates');
+      // Start realtime subscriptions for standings updates
   isRealtimeEnabled.value = true;
   connectionStatus.value = 'connecting';
 
@@ -2583,130 +2541,11 @@ watch(
   },
 );
 
-// Debug functie om scores te controleren
-const debugScores = () => {
-  debug('=== DEBUG SCORES ===');
-  debug('Current round ID:', round.value?.id);
-  debug('Is event round:', isEventRound.value);
-  debug('Total scores in allScores:', allScores.value.length);
 
-  // Zoek scores voor de huidige ronde
-  const currentRoundScores = allScores.value.filter((s) => s.round === round.value?.id);
-  debug('Scores for current round:', currentRoundScores.length);
 
-  // Toon eerste paar scores van alle scores
-  debug('First 5 scores from allScores:');
-  allScores.value.slice(0, 5).forEach((score, index) => {
-    debug(`Score ${index + 1}:`, {
-      id: score.id,
-      hole: score.hole,
-      score_player: score.score_player,
-      score_marker: score.score_marker,
-      round: score.round,
-    });
-  });
 
-  // Zoek naar scores met dezelfde round ID als string
-  const stringRoundId = String(round.value?.id);
-  const stringRoundScores = allScores.value.filter((s) => s.round === stringRoundId);
-  debug('Scores with string round ID:', stringRoundScores.length);
 
-  // Zoek naar scores met dezelfde round ID als number
-  const numberRoundId = Number(round.value?.id);
-  const numberRoundScores = allScores.value.filter((s) => Number(s.round) === numberRoundId);
-  debug('Scores with number round ID:', numberRoundScores.length);
 
-  // Toon unieke round IDs in allScores
-  const uniqueRoundIds = [...new Set(allScores.value.map((s) => s.round))];
-  debug('Unique round IDs in allScores:', uniqueRoundIds);
-
-  // Test isHoleBlue voor eerste hole
-  if (holes.value.length > 0) {
-    const firstHole = holes.value[0];
-    const isBlue = isHoleBlue(firstHole.id);
-    debug(`Is hole ${firstHole.hole} blue:`, isBlue);
-  }
-
-  debug('=== END DEBUG SCORES ===');
-};
-
-// Debug functie om tussenstand te controleren
-const debugStandings = () => {
-  debug('=== DEBUG STANDINGS ===');
-  debug('Current round ID:', round.value?.id);
-  debug('Is event round:', isEventRound.value);
-  debug('Event ID:', round.value?.event);
-  debug('Filter by category:', filterByCategory.value);
-
-  // Toon alle rondes
-  debug(
-    'All rounds:',
-    allRounds.value.map((r) => ({
-      id: r.id,
-      player: r.player,
-      event: r.event,
-      playerName: r.expand?.player?.name,
-    })),
-  );
-
-  // Toon alle scores
-  debug('All scores count:', allScores.value.length);
-  debug(
-    'Sample scores:',
-    allScores.value.slice(0, 5).map((s) => ({
-      id: s.id,
-      round: s.round,
-      hole: s.hole,
-      score_player: s.score_player,
-    })),
-  );
-
-  // Test eventStandings computed
-  debug('Event standings result:', eventStandings.value);
-
-  debug('=== END DEBUG STANDINGS ===');
-};
-
-// Algemene debug functie om het hele systeem te analyseren
-const debugSystem = () => {
-  debug('=== DEBUG ENTIRE SYSTEM ===');
-
-  // 1. Basis informatie
-  debug('1. BASIC INFO:');
-  debug('Current round ID:', round.value?.id);
-  debug('Current round type:', isEventRound.value ? 'Event Round' : 'Event_round Round');
-  debug('Current round event:', round.value?.event);
-  debug('Current round event_round:', round.value?.event_round);
-  debug('Current round player:', round.value?.expand?.player?.name);
-  debug('Current round marker:', round.value?.expand?.marker?.name);
-
-  // 2. Data loading status
-  debug('2. DATA LOADING:');
-  debug('Total rounds loaded:', allRounds.value.length);
-  debug('Total scores loaded:', allScores.value.length);
-  debug('Total holes loaded:', holes.value.length);
-  debug('Loading state:', loading.value);
-  debug('Realtime enabled:', isRealtimeEnabled.value);
-  debug('Connection status:', connectionStatus.value);
-
-  // 3. Rounds analysis
-  debug('3. ROUNDS ANALYSIS:');
-  debug(
-    'All round IDs:',
-    allRounds.value.map((r) => r.id),
-  );
-  debug(
-    'All round players:',
-    allRounds.value.map((r) => r.expand?.player?.name),
-  );
-  debug(
-    'All round events:',
-    allRounds.value.map((r) => r.event),
-  );
-  debug(
-    'All round event_rounds:',
-    allRounds.value.map((r) => r.event_round),
-  );
 
   // 4. Scores analysis
   debug('4. SCORES ANALYSIS:');
@@ -2790,18 +2629,7 @@ const debugSystem = () => {
     issues.push('Type mismatches in round IDs');
   }
 
-  // Check for missing data
-  if (allRounds.value.length === 0) {
-    issues.push('No rounds loaded');
-  }
-  if (allScores.value.length === 0) {
-    issues.push('No scores loaded');
-  }
 
-  debug('Issues found:', issues);
-
-  debug('=== END DEBUG ENTIRE SYSTEM ===');
-};
 </script>
 
 <style scoped>
