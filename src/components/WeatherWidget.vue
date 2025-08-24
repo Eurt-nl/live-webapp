@@ -70,6 +70,8 @@ import { useI18n } from 'vue-i18n';
 
 import { useLocationStore } from 'stores/location';
 import { useLocationFocus } from 'src/composables/useLocationFocus';
+import { cacheService } from 'src/utils/cache';
+import { trackQuery } from 'src/utils/performance';
 
 const { t: $customT } = useI18n();
 const locationStore = useLocationStore();
@@ -112,29 +114,39 @@ const fetchWeather = async () => {
     const lat = Number(userLocation.value.latitude.toFixed(4));
     const lon = Number(userLocation.value.longitude.toFixed(4));
 
-    const response = await fetch(
-      `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
-      {
-        headers: {
-          Accept: 'application/json',
-        },
-        // CORS-vriendelijke configuratie voor iOS PWA
-        mode: 'cors',
-        credentials: 'omit',
+    // OPTIMALISATIE: Cache weer data voor 15 minuten
+    const cacheKey = `weather_${lat}_${lon}`;
+    const weatherDataResult = await cacheService.get(
+      cacheKey,
+      async () => {
+        return await trackQuery('weather_api_fetch', async () => {
+          const response = await fetch(
+            `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
+            {
+              headers: {
+                Accept: 'application/json',
+              },
+              // CORS-vriendelijke configuratie voor iOS PWA
+              mode: 'cors',
+              credentials: 'omit',
+            },
+          );
+
+          if (!response.ok) {
+            console.error(`Weather API error: ${response.status} ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            throw new Error(errorMessage);
+          }
+
+          return await response.json();
+        });
       },
+      15 * 60 * 1000 // 15 minuten cache
     );
 
-    if (!response.ok) {
-      console.error(`Weather API error: ${response.status} ${response.statusText}`);
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-
     // Extract current weather from the first timeseries entry
-    const currentWeather = data.properties.timeseries[0];
+    const currentWeather = weatherDataResult.properties.timeseries[0];
     const details = currentWeather.data.instant.details;
 
     weatherData.value = {
@@ -145,9 +157,9 @@ const fetchWeather = async () => {
       pressure: Math.round(details.air_pressure_at_sea_level),
       cloudCover: Math.round(details.cloud_area_fraction),
       description: getWeatherDescription(
-        data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+        weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
       ),
-      symbol: data.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+      symbol: weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
       lastUpdated: currentWeather.time,
     };
   } catch (err) {

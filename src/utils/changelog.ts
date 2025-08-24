@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.18.0",
+    date: "2025-08-24",
+    type: "minor",
+    changes: ["feat: implement high priority performance optimizations"]
+  },
+  {
     version: "0.17.0",
     date: "2025-08-20",
     type: "minor",
