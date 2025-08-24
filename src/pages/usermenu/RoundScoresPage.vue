@@ -91,7 +91,7 @@
                         class="col text-center text-body1"
                         :style="getScoreColorStyle(getPlayerScoreForHole(hole.id))"
                       >
-                        {{ getPlayerScoreForHole(hole.id) }}
+                        {{ (() => { console.log(`Template rendering hole ${hole.id}:`, getPlayerScoreForHole(hole.id)); return getPlayerScoreForHole(hole.id); })() }}
                       </div>
                     </div>
                   </div>
@@ -1398,9 +1398,18 @@ const loadData = async () => {
     allScores.value = allScoresList;
     console.log('Processed allScores:', allScores.value);
     console.log('Current round ID:', roundData.id);
-    console.log('All scores round IDs:', allScoresList.map(s => s.round));
-    console.log('All scores hole IDs:', allScoresList.map(s => s.hole));
-    console.log('All scores player scores:', allScoresList.map(s => s.score_player));
+    console.log(
+      'All scores round IDs:',
+      allScoresList.map((s) => s.round),
+    );
+    console.log(
+      'All scores hole IDs:',
+      allScoresList.map((s) => s.hole),
+    );
+    console.log(
+      'All scores player scores:',
+      allScoresList.map((s) => s.score_player),
+    );
 
     // Maak holes array van de scores data
     const holesFromScores = scoresFromView.map((scoreData: Record<string, unknown>) => ({
