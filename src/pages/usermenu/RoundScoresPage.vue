@@ -91,15 +91,7 @@
                         class="col text-center text-body1"
                         :style="getScoreColorStyle(getPlayerScoreForHole(hole.id))"
                       >
-                        {{
-                          (() => {
-                            console.log(
-                              `Template rendering hole ${hole.id}:`,
-                              getPlayerScoreForHole(hole.id),
-                            );
-                            return getPlayerScoreForHole(hole.id);
-                          })()
-                        }}
+                        {{ getPlayerScoreForHole(hole.id) }}
                       </div>
                     </div>
                   </div>
@@ -1194,30 +1186,9 @@ const totalScoreMarker = computed(() => {
   );
 });
 
-// Haal de score van de speler op voor een specifieke hole
+// Haal de score van de speler op voor een specifieke hole - simpel!
 const getPlayerScoreForHole = (holeId: string) => {
-  if (!round.value?.expand?.player?.id) return '-';
-
-  // Voor oefenrondes en event rondes: gebruik direct de huidige ronde
-  if (isPracticeRound.value || isEventRound.value) {
-    const scoreRec = allScores.value.find((s) => s.round === round.value?.id && s.hole === holeId);
-    console.log(`getPlayerScoreForHole(${holeId}):`, {
-      roundId: round.value?.id,
-      scoreRec,
-      allScoresLength: allScores.value.length,
-      allScoresRounds: allScores.value.map((s) => s.round),
-      allScoresHoles: allScores.value.map((s) => s.hole),
-      allScoresPlayerScores: allScores.value.map((s) => s.score_player),
-      isPracticeRound: isPracticeRound.value,
-      isEventRound: isEventRound.value,
-    });
-    return scoreRec?.score_player ?? '-';
-  }
-
-  // Voor andere rondes: gebruik findPlayerRound
-  const spelerRound = findPlayerRound(round.value.expand.player.id);
-  if (!spelerRound) return '-';
-  const scoreRec = allScores.value.find((s) => s.round === spelerRound.id && s.hole === holeId);
+  const scoreRec = allScores.value.find((s) => s.hole === holeId);
   return scoreRec?.score_player ?? '-';
 };
 
@@ -1376,60 +1347,33 @@ const loadData = async () => {
       allRounds.value.push(round.value as Round);
     }
 
-    // OPTIMALISATIE: Gebruik scores uit de view in plaats van aparte queries
-    const scoresFromView = roundData.scores || [];
-    console.log('Scores from view:', scoresFromView);
+    // Haal gewoon alle scores op van deze ronde - simpel!
+    try {
+      const scoresResult = await pb.collection('round_scores').getList(1, 50, {
+        filter: `round = "${roundData.id}"`,
+        sort: 'hole'
+      });
+      
+      allScores.value = scoresResult.items as unknown as RoundScore[];
+      console.log('Scores loaded from round_scores:', allScores.value);
+    } catch (error) {
+      console.error('Error loading scores:', error);
+      allScores.value = [];
+    }
 
-    // Converteer view scores naar RoundScore interface
-    const allScoresList: RoundScore[] = scoresFromView.map(
-      (scoreData: Record<string, unknown>) => ({
-        id: scoreData.hole_id as string,
-        round: roundData.id,
-        hole: scoreData.hole_id as string,
-        score_player: scoreData.score_player as number,
-        score_marker: scoreData.score_marker as number,
-        putts: scoreData.putts as number,
-        chips: scoreData.chips as number,
-        gir: scoreData.gir as boolean,
-        created_by: roundData.player as string,
-        created: roundData.created,
-        updated: roundData.updated,
-        expand: {
-          hole: {
-            id: scoreData.hole_id as string,
-            hole: scoreData.hole_number as number,
-            par: scoreData.par as number,
-            course: roundData.course as string,
-          },
-        },
-      }),
-    );
-
-    allScores.value = allScoresList;
-    console.log('Processed allScores:', allScores.value);
-    console.log('Current round ID:', roundData.id);
-    console.log(
-      'All scores round IDs:',
-      allScoresList.map((s) => s.round),
-    );
-    console.log(
-      'All scores hole IDs:',
-      allScoresList.map((s) => s.hole),
-    );
-    console.log(
-      'All scores player scores:',
-      allScoresList.map((s) => s.score_player),
-    );
-
-    // Maak holes array van de scores data
-    const holesFromScores = scoresFromView.map((scoreData: Record<string, unknown>) => ({
-      id: scoreData.hole_id as string,
-      hole: scoreData.hole_number as number,
-      par: scoreData.par as number,
-      course: roundData.course as string,
-    }));
-    holes.value = holesFromScores as unknown as Hole[];
-    console.log('Processed holes:', holes.value);
+    // Haal gewoon alle holes op van deze baan - simpel!
+    try {
+      const holesResult = await pb.collection('course_detail').getList(1, 50, {
+        filter: `course = "${roundData.course}"`,
+        sort: 'hole'
+      });
+      
+      holes.value = holesResult.items as unknown as Hole[];
+      console.log('Holes loaded from course_detail:', holes.value);
+    } catch (error) {
+      console.error('Error loading holes:', error);
+      holes.value = [];
+    }
     console.log('showPlayerScores:', showPlayerScores.value);
     console.log('isPracticeRound:', isPracticeRound.value);
     // Vul markerRecords en playerRecords voor snelle lookup

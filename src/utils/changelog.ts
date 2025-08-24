@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.15",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["debug: add isPracticeRound and isEventRound to getPlayerScoreForHole debug"]
+  },
+  {
     version: "0.21.14",
     date: "2025-08-24",
     type: "patch",
