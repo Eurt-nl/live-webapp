@@ -73,46 +73,25 @@
                   </div>
                   <!-- Compacte scoreweergave speler -->
                   <div v-if="holes.length > 0 && showPlayerScores" class="q-mt-sm">
-                    <!-- Holenummers 1 t/m 9 -->
+                    <!-- Alle holes in één rij -->
                     <div class="row items-center no-wrap q-mb-xs">
                       <div
-                        v-for="hole in holes.slice(0, 9)"
-                        :key="'hn1-' + hole.id"
+                        v-for="hole in holes"
+                        :key="'hn-' + hole.id"
                         class="col text-center text-caption text-weight-medium"
                       >
                         {{ hole.hole }}
                       </div>
                     </div>
-                    <!-- Scores 1 t/m 9 -->
+                    <!-- Alle scores in één rij -->
                     <div class="row items-center no-wrap q-mb-md">
                       <div
-                        v-for="hole in holes.slice(0, 9)"
-                        :key="'sc1-' + hole.id"
+                        v-for="hole in holes"
+                        :key="'sc-' + hole.id"
                         class="col text-center text-body1"
                         :style="getScoreColorStyle(getPlayerScoreForHole(hole.id))"
                       >
                         {{ getPlayerScoreForHole(hole.id) }}
-                      </div>
-                    </div>
-                    <!-- Scores 10 t/m 18 -->
-                    <div class="row items-center no-wrap q-mb-xs">
-                      <div
-                        v-for="hole in holes.slice(9, 18)"
-                        :key="'sc2-' + hole.id"
-                        class="col text-center text-body1"
-                        :style="getScoreColorStyle(getPlayerScoreForHole(hole.id))"
-                      >
-                        {{ getPlayerScoreForHole(hole.id) }}
-                      </div>
-                    </div>
-                    <!-- Holenummers 10 t/m 18 -->
-                    <div class="row items-center no-wrap">
-                      <div
-                        v-for="hole in holes.slice(9, 18)"
-                        :key="'hn2-' + hole.id"
-                        class="col text-center text-caption text-weight-medium"
-                      >
-                        {{ hole.hole }}
                       </div>
                     </div>
                   </div>
@@ -136,46 +115,25 @@
                   </div>
                   <!-- Compacte scoreweergave marker -->
                   <div v-if="holes.length > 0 && showMarkerScores" class="q-mt-sm">
-                    <!-- Holenummers 1 t/m 9 marker -->
+                    <!-- Alle holes in één rij -->
                     <div class="row items-center no-wrap q-mb-xs">
                       <div
-                        v-for="hole in holes.slice(0, 9)"
-                        :key="'mhn1-' + hole.id"
+                        v-for="hole in holes"
+                        :key="'mhn-' + hole.id"
                         class="col text-center text-caption text-weight-medium"
                       >
                         {{ hole.hole }}
                       </div>
                     </div>
-                    <!-- Scores 1 t/m 9 marker -->
+                    <!-- Alle scores in één rij -->
                     <div class="row items-center no-wrap q-mb-md">
                       <div
-                        v-for="hole in holes.slice(0, 9)"
-                        :key="'msc1-' + hole.id"
+                        v-for="hole in holes"
+                        :key="'msc-' + hole.id"
                         class="col text-center text-body1"
                         :style="getScoreColorStyle(getMarkerScoreForHole(hole.id))"
                       >
                         {{ getMarkerScoreForHole(hole.id) }}
-                      </div>
-                    </div>
-                    <!-- Scores 10 t/m 18 marker -->
-                    <div class="row items-center no-wrap q-mb-xs">
-                      <div
-                        v-for="hole in holes.slice(9, 18)"
-                        :key="'msc2-' + hole.id"
-                        class="col text-center text-body1"
-                        :style="getScoreColorStyle(getMarkerScoreForHole(hole.id))"
-                      >
-                        {{ getMarkerScoreForHole(hole.id) }}
-                      </div>
-                    </div>
-                    <!-- Holenummers 10 t/m 18 marker -->
-                    <div class="row items-center no-wrap">
-                      <div
-                        v-for="hole in holes.slice(9, 18)"
-                        :key="'mhn2-' + hole.id"
-                        class="col text-center text-caption text-weight-medium"
-                      >
-                        {{ hole.hole }}
                       </div>
                     </div>
                   </div>
@@ -864,7 +822,7 @@ const isPracticeRound = computed(() => {
 const isEventRound = computed(() => {
   // Als het een oefenronde is, is het geen event ronde
   if (isPracticeRound.value) return false;
-  
+
   // Anders: check of er een event is
   return !!round.value?.event;
 });

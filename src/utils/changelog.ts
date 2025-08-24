@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.8",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: improve event round detection logic and add more debug info"]
+  },
+  {
     version: "0.21.7",
     date: "2025-08-24",
     type: "patch",
