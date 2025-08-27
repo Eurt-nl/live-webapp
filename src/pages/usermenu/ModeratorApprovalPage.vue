@@ -150,7 +150,7 @@ const approveModerator = async () => {
     if (Array.isArray(course.value?.moderators)) {
       // Als het een array van user objects is, haal de IDs eruit
       currentModerators = course.value.moderators.map((mod) =>
-        typeof mod === 'string' ? mod : (mod as any)?.id || mod,
+        typeof mod === 'string' ? mod : (mod as Record<string, unknown>)?.id || mod,
       );
     }
 

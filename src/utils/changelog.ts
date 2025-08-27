@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.16",
+    date: "2025-08-24",
+    type: "patch",
+    changes: ["fix: simplify score loading and display - use direct database queries"]
+  },
+  {
     version: "0.21.15",
     date: "2025-08-24",
     type: "patch",

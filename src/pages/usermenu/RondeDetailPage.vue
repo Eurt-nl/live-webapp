@@ -54,6 +54,41 @@
         </q-card-section>
       </q-card>
 
+      <!-- Ronde statistieken -->
+      <q-card v-if="roundStats">
+        <q-card-section>
+          <div class="text-h6">{{ $customT('stats.roundStats') }}</div>
+          <div class="row q-col-gutter-sm q-mt-md">
+            <div class="col-3">
+              <div class="text-center">
+                <div class="text-h6 text-primary">{{ formatPercentage(roundStats.gir_pct) }}</div>
+                <div class="text-caption">{{ $customT('stats.gir') }}</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <div class="text-h6 text-positive">
+                  {{ formatPercentage(roundStats.scramble_pct) }}
+                </div>
+                <div class="text-caption">{{ $customT('stats.scramble') }}</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <div class="text-h6 text-warning">{{ formatPutts(roundStats.putts_avg_gir) }}</div>
+                <div class="text-caption">{{ $customT('stats.putts') }}</div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <div class="text-h6 text-info">{{ roundStats.chipin_total || 0 }}</div>
+                <div class="text-caption">{{ $customT('stats.chipIn') }}</div>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
       <!-- Scores overzicht -->
       <q-card v-if="holes.length > 0">
         <q-card-section>
@@ -63,10 +98,11 @@
           </div>
           <div class="row q-col-gutter-md q-mt-md">
             <div class="col-12">
+              <!-- Front 9 holes met totaal -->
               <div class="row q-col-gutter-xs">
                 <div v-for="hole in holes.slice(0, 9)" :key="hole.id" class="col-1">
                   <div class="text-center">
-                    <div class="text-caption">{{ String(hole.hole || '') }}</div>
+                    <div class="text-caption text-weight-bold">{{ String(hole.hole || '') }}</div>
                     <div
                       class="text-body2"
                       :style="{
@@ -77,10 +113,21 @@
                     </div>
                   </div>
                 </div>
+                <div class="col-3">
+                  <div class="text-center">
+                    <div class="text-caption text-weight-bold">{{ $customT('stats.front9') }}</div>
+                    <div class="text-body2 text-weight-bold">
+                      {{ calculateScoreForHoles(0, 9) }}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="row q-col-gutter-xs q-mt-xs">
+
+              <!-- Back 9 holes met totaal -->
+              <div class="row q-col-gutter-xs q-mt-sm">
                 <div v-for="hole in holes.slice(9)" :key="hole.id" class="col-1">
                   <div class="text-center">
+                    <div class="text-caption text-weight-bold">{{ String(hole.hole || '') }}</div>
                     <div
                       class="text-body2"
                       :style="{
@@ -89,7 +136,14 @@
                     >
                       {{ getScore(hole.id)?.score_player || '-' }}
                     </div>
-                    <div class="text-caption">{{ String(hole.hole || '') }}</div>
+                  </div>
+                </div>
+                <div class="col-3">
+                  <div class="text-center">
+                    <div class="text-caption text-weight-bold">{{ $customT('stats.back9') }}</div>
+                    <div class="text-body2 text-weight-bold">
+                      {{ calculateScoreForHoles(9, 18) }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -142,6 +196,7 @@ interface Hole {
 const round = ref(null);
 const holes = ref<Hole[]>([]);
 const scores = ref<Record<string, Score>>({});
+const roundStats = ref(null);
 const loading = ref(true);
 
 const formatDate = (dateString: string) => {
@@ -213,6 +268,20 @@ const loadData = async () => {
         note: score.note,
       };
     });
+
+    // Haal ronde statistieken op
+    try {
+      const statsResult = await pb.collection('vw_round_stats').getList(1, 1, {
+        filter: `round_id = "${roundId}"`,
+      });
+
+      if (statsResult.items.length > 0) {
+        roundStats.value = statsResult.items[0];
+      }
+    } catch (error) {
+      debug('Error loading round stats:', error);
+      // Statistieken zijn optioneel, dus geen error notificatie
+    }
   } catch (error) {
     debug('Error loading data:', error);
     $q.notify({
@@ -238,6 +307,34 @@ const calculateTotalScore = () => {
         const diff = score.score_player - hole.par;
         totalDiff += diff;
       }
+    }
+  });
+
+  return `${totalDiff > 0 ? '+' : ''}${totalDiff}`;
+};
+
+// Formatteren van percentage waarden voor statistieken
+const formatPercentage = (value: number | null) => {
+  if (value === null || value === undefined) return '-';
+  return `${value.toFixed(1)}%`;
+};
+
+// Formatteren van putts gemiddelde
+const formatPutts = (value: number | null) => {
+  if (value === null || value === undefined) return '-';
+  return value.toFixed(1);
+};
+
+// Bereken score voor specifieke holes (bijv. front 9 of back 9)
+const calculateScoreForHoles = (startIndex: number, endIndex: number) => {
+  let totalDiff = 0;
+  const holesToCalculate = holes.value.slice(startIndex, endIndex);
+
+  holesToCalculate.forEach((hole) => {
+    const score = getScore(hole.id);
+    if (score.score_player) {
+      const diff = score.score_player - hole.par;
+      totalDiff += diff;
     }
   });
 

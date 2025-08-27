@@ -536,7 +536,15 @@
     "bestScore": "Beste score",
     "averageScore": "Gemiddelde score",
     "worstScore": "Slechtste score",
-    "noCourseStats": "Geen baan statistieken beschikbaar"
+    "noCourseStats": "Geen baan statistieken beschikbaar",
+    "roundStats": "Ronde statistieken",
+    "gir": "GIR",
+    "scramble": "Scramble",
+    "putts": "Putts",
+    "chipIn": "Chip-in",
+    "noRoundStats": "Geen statistieken beschikbaar voor deze ronde",
+    "front9": "Front 9",
+    "back9": "Back 9"
   },
   "holes": {
     "title": "Holes",

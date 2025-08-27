@@ -1351,9 +1351,9 @@ const loadData = async () => {
     try {
       const scoresResult = await pb.collection('round_scores').getList(1, 50, {
         filter: `round = "${roundData.id}"`,
-        sort: 'hole'
+        sort: 'hole',
       });
-      
+
       allScores.value = scoresResult.items as unknown as RoundScore[];
       console.log('Scores loaded from round_scores:', allScores.value);
     } catch (error) {
@@ -1365,9 +1365,9 @@ const loadData = async () => {
     try {
       const holesResult = await pb.collection('course_detail').getList(1, 50, {
         filter: `course = "${roundData.course}"`,
-        sort: 'hole'
+        sort: 'hole',
       });
-      
+
       holes.value = holesResult.items as unknown as Hole[];
       console.log('Holes loaded from course_detail:', holes.value);
     } catch (error) {
@@ -1650,7 +1650,7 @@ const startRealtimeSubscriptions = () => {
         }
       })
       .then((unsubscribe) => {
-        void subscriptions.value.push(unsubscribe);
+        subscriptions.value.push(unsubscribe);
         connectionStatus.value = 'connected';
         debug('Realtime score subscription successful');
       })
@@ -1675,7 +1675,7 @@ const startRealtimeSubscriptions = () => {
         }
       })
       .then((unsubscribe) => {
-        void subscriptions.value.push(unsubscribe);
+        subscriptions.value.push(unsubscribe);
         debug('Realtime round subscription successful');
       })
       .catch((error) => {

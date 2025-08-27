@@ -59,6 +59,7 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { debug } from 'src/utils/debug';
+import { formatDateOnlyForPocketBase } from 'src/utils/dateUtils';
 
 const router = useRouter();
 const $q = useQuasar();
@@ -98,7 +99,7 @@ const loadEvents = async () => {
     debug('Start loading events...');
 
     // OPTIMALISATIE: Filter op toekomstige events
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateOnlyForPocketBase(new Date());
     const result = await pb.collection('events').getList(1, 50, {
       sort: '-startdate',
       expand: 'status,course',

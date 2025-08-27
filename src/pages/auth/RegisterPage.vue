@@ -238,10 +238,12 @@ const loadAllCourses = async () => {
         // Verwijder de filter omdat is_active veld mogelijk niet bestaat
       });
 
-      banen.push(...result.items.map((course: Record<string, unknown>) => ({
-        id: typeof course.id === 'string' ? course.id : '',
-        name: typeof course.name === 'string' ? course.name : '',
-      })));
+      banen.push(
+        ...result.items.map((course: Record<string, unknown>) => ({
+          id: typeof course.id === 'string' ? course.id : '',
+          name: typeof course.name === 'string' ? course.name : '',
+        })),
+      );
 
       if (result.items.length < perPage) break;
       page++;
@@ -337,7 +339,7 @@ const detectCountryFromGPS = async () => {
       // Voor nu laten we het handmatig
       console.log('GPS location detected:', locationStore.userLocation);
     }
-  } catch (error) {
+  } catch {
     console.log('GPS not available or denied');
   }
 };
@@ -362,7 +364,7 @@ const onSubmit = async () => {
       email: email.value.toLowerCase(), // Zorg dat email lowercase is
       password: password.value,
       passwordConfirm: confirmPassword.value,
-      birthyear: birthyear.value!,
+      birthyear: birthyear.value,
       homecourse: homecourse.value,
       category: category.value,
       country: country.value,
@@ -393,12 +395,7 @@ const onSubmit = async () => {
 
 // Laad data bij mount
 onMounted(async () => {
-  await Promise.all([
-    loadAllCourses(),
-    loadCategories(),
-    loadCountries(),
-    detectCountryFromGPS(),
-  ]);
+  await Promise.all([loadAllCourses(), loadCategories(), loadCountries(), detectCountryFromGPS()]);
 });
 </script>
 

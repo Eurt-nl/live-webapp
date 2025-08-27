@@ -854,7 +854,15 @@
     "bestScore": "Best score",
     "averageScore": "Average score",
     "worstScore": "Worst score",
-    "noCourseStats": "No course statistics available"
+    "noCourseStats": "No course statistics available",
+    "roundStats": "Round statistics",
+    "gir": "GIR",
+    "scramble": "Scramble",
+    "putts": "Putts",
+    "chipIn": "Chip-in",
+    "noRoundStats": "No statistics available for this round",
+    "front9": "Front 9",
+    "back9": "Back 9"
   },
   "serviceWorker": {
     "newVersionDownloading": "New version available, downloading...",

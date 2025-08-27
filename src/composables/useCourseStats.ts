@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
-import { useI18n } from 'vue-i18n';
 
 // Interface voor baan statistieken uit de view
 interface CourseStatsData {
@@ -24,7 +23,6 @@ interface CourseOption {
 }
 
 export function useCourseStats() {
-  const { t: $customT } = useI18n();
   const authStore = useAuthStore();
   const { pb } = usePocketbase();
 

@@ -6,45 +6,42 @@
  */
 
 export interface PerformanceMetrics {
-  name: string
-  duration: number
-  timestamp: number
-  success: boolean
-  error?: string
+  name: string;
+  duration: number;
+  timestamp: number;
+  success: boolean;
+  error?: string;
 }
 
 class PerformanceMonitor {
-  private metrics: PerformanceMetrics[] = []
-  private readonly MAX_METRICS = 1000 // Beperk aantal opgeslagen metrics
-  private readonly SLOW_QUERY_THRESHOLD = 1000 // 1 seconde
+  private metrics: PerformanceMetrics[] = [];
+  private readonly MAX_METRICS = 1000; // Beperk aantal opgeslagen metrics
+  private readonly SLOW_QUERY_THRESHOLD = 1000; // 1 seconde
 
   /**
    * Track een query of operatie
    */
-  async trackQuery<T>(
-    name: string,
-    queryFn: () => Promise<T>
-  ): Promise<T> {
-    const startTime = Date.now()
+  async trackQuery<T>(name: string, queryFn: () => Promise<T>): Promise<T> {
+    const startTime = Date.now();
 
     try {
-      const result = await queryFn()
-      const duration = Date.now() - startTime
+      const result = await queryFn();
+      const duration = Date.now() - startTime;
 
       this.recordMetric({
         name,
         duration,
         timestamp: startTime,
         success: true,
-      })
+      });
 
       if (duration > this.SLOW_QUERY_THRESHOLD) {
-        console.warn(`Slow query detected: ${name} took ${duration}ms`)
+        console.warn(`Slow query detected: ${name} took ${duration}ms`);
       }
 
-      return result
+      return result;
     } catch (error) {
-      const duration = Date.now() - startTime
+      const duration = Date.now() - startTime;
 
       this.recordMetric({
         name,
@@ -52,10 +49,10 @@ class PerformanceMonitor {
         timestamp: startTime,
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-      })
+      });
 
-      console.error(`Query failed: ${name} after ${duration}ms`, error)
-      throw error
+      console.error(`Query failed: ${name} after ${duration}ms`, error);
+      throw error;
     }
   }
 
@@ -63,11 +60,11 @@ class PerformanceMonitor {
    * Record een performance metric
    */
   private recordMetric(metric: PerformanceMetrics): void {
-    this.metrics.push(metric)
+    this.metrics.push(metric);
 
     // Beperk aantal opgeslagen metrics
     if (this.metrics.length > this.MAX_METRICS) {
-      this.metrics = this.metrics.slice(-this.MAX_METRICS / 2)
+      this.metrics = this.metrics.slice(-this.MAX_METRICS / 2);
     }
   }
 
@@ -75,8 +72,8 @@ class PerformanceMonitor {
    * Haal performance statistieken op
    */
   getStats() {
-    const successful = this.metrics.filter(m => m.success)
-    const failed = this.metrics.filter(m => !m.success)
+    const successful = this.metrics.filter((m) => m.success);
+    const failedMetrics = this.metrics.filter((m) => !m.success);
 
     if (successful.length === 0) {
       return {
@@ -84,20 +81,22 @@ class PerformanceMonitor {
         successRate: 0,
         averageDuration: 0,
         slowQueries: 0,
+        failedQueries: failedMetrics.length,
         recentMetrics: this.metrics.slice(-10),
-      }
+      };
     }
 
-    const avgDuration = successful.reduce((sum, m) => sum + m.duration, 0) / successful.length
-    const slowQueries = successful.filter(m => m.duration > this.SLOW_QUERY_THRESHOLD).length
+    const avgDuration = successful.reduce((sum, m) => sum + m.duration, 0) / successful.length;
+    const slowQueries = successful.filter((m) => m.duration > this.SLOW_QUERY_THRESHOLD).length;
 
     return {
       totalQueries: this.metrics.length,
       successRate: successful.length / this.metrics.length,
       averageDuration: Math.round(avgDuration),
       slowQueries,
+      failedQueries: failedMetrics.length,
       recentMetrics: this.metrics.slice(-10),
-    }
+    };
   }
 
   /**
@@ -105,27 +104,27 @@ class PerformanceMonitor {
    */
   getSlowQueries(threshold = this.SLOW_QUERY_THRESHOLD) {
     return this.metrics
-      .filter(m => m.duration > threshold)
-      .sort((a, b) => b.duration - a.duration)
+      .filter((m) => m.duration > threshold)
+      .sort((a, b) => b.duration - a.duration);
   }
 
   /**
    * Reset alle metrics
    */
   reset(): void {
-    this.metrics = []
+    this.metrics = [];
   }
 
   /**
    * Export metrics voor debugging
    */
   exportMetrics(): PerformanceMetrics[] {
-    return [...this.metrics]
+    return [...this.metrics];
   }
 }
 
 // Export een singleton instance
-export const performanceMonitor = new PerformanceMonitor()
+export const performanceMonitor = new PerformanceMonitor();
 
 // Export de trackQuery functie voor gemakkelijk gebruik
-export const trackQuery = performanceMonitor.trackQuery.bind(performanceMonitor)
+export const trackQuery = performanceMonitor.trackQuery.bind(performanceMonitor);

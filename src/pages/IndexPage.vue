@@ -416,7 +416,7 @@ async function loadEvents() {
     loading.value = true;
 
     // OPTIMALISATIE: Specifieke datum/tijd filters voor nearby events
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateOnlyForPocketBase(new Date());
     const result = await pb.collection('events').getList(1, 20, {
       sort: 'startdate',
       expand: 'course,status',

@@ -309,6 +309,7 @@ import { usePocketbase } from 'src/composables/usePocketbase';
 import QrcodeVue from 'qrcode.vue';
 import PracticeRoundDialog from 'src/components/PracticeRoundDialog.vue';
 import { debug } from 'src/utils/debug';
+import { formatDateForPocketBase } from 'src/utils/dateUtils';
 import { usePracticeRoundDialog } from 'src/composables/usePracticeRoundDialog';
 
 const $q = useQuasar();
@@ -431,7 +432,7 @@ const loadData = async () => {
 
     // Haal alle rondes op met recente filter
     const roundsResult = await pb.collection('rounds').getList(1, 50, {
-      filter: `${baseFilter} && created >= "${sixMonthsAgo.toISOString()}"`,
+      filter: `${baseFilter} && created >= "${formatDateForPocketBase(sixMonthsAgo)}"`,
       sort: '-date,-time',
       expand: 'course,category,status,event_round,event_round.event,event',
     });

@@ -214,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, defineAsyncComponent } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import VChart from 'vue-echarts';
 import { useHandicapStats } from 'src/composables/useHandicapStats';
@@ -222,8 +222,8 @@ import { useCourseStats } from 'src/composables/useCourseStats';
 import { useHoleStats } from 'src/composables/useHoleStats';
 import { useShortgameStats } from 'src/composables/useShortgameStats';
 
-// OPTIMALISATIE: Lazy load zware componenten
-const WeatherWidget = defineAsyncComponent(() => import('src/components/WeatherWidget.vue'));
+// OPTIMALISATIE: Lazy load zware componenten (niet gebruikt)
+// const WeatherWidget = defineAsyncComponent(() => import('src/components/WeatherWidget.vue'));
 
 const { t: $customT } = useI18n();
 

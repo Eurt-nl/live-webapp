@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue';
 import { useAuthStore } from 'stores/auth';
 import { usePocketbase } from 'src/composables/usePocketbase';
-import { useI18n } from 'vue-i18n';
 
 // Interface voor hole statistieken uit de view
 interface HoleStatsData {
@@ -21,7 +20,6 @@ interface HoleStatsData {
 }
 
 export function useHoleStats() {
-  const { t: $customT } = useI18n();
   const authStore = useAuthStore();
   const { pb } = usePocketbase();
 
@@ -122,9 +120,10 @@ export function useHoleStats() {
       },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
-          let result = `${params[0].name}<br/>`;
-          params.forEach((param: any) => {
+        formatter: (params: unknown) => {
+          const paramsArray = params as Array<{ name: string; value: number; seriesName: string }>;
+          let result = `${paramsArray[0].name}<br/>`;
+          paramsArray.forEach((param) => {
             if (param.value > 0) {
               result += `${param.seriesName}: ${param.value}%<br/>`;
             }

@@ -20,7 +20,7 @@ ECharts.use([
   CanvasRenderer,
 ]);
 
-export default boot(({ app }) => {
+export default boot(() => {
   // ECharts is nu beschikbaar in de hele app
   console.log('ECharts boot file loaded');
 });

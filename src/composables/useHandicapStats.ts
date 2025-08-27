@@ -16,14 +16,14 @@ interface HandicapData {
   handicap_at_round: number;
 }
 
-// Interface voor handicap statistieken
-interface HandicapStats {
-  currentHandicap: number | null;
-  handicapHistory: HandicapData[];
-  totalRounds: number;
-  loading: boolean;
-  error: string | null;
-}
+// Interface voor handicap statistieken (niet gebruikt, maar behouden voor toekomstig gebruik)
+// interface HandicapStats {
+//   currentHandicap: number | null;
+//   handicapHistory: HandicapData[];
+//   totalRounds: number;
+//   loading: boolean;
+//   error: string | null;
+// }
 
 export function useHandicapStats() {
   const { t: $customT } = useI18n();
@@ -115,8 +115,8 @@ export function useHandicapStats() {
       },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
-          const data = params[0];
+        formatter: (params: unknown) => {
+          const data = (params as Array<{ name: string; value: number }>)[0];
           const handicap = data.value;
           const sign = handicap > 0 ? '+' : '';
           return `${data.name}<br/>${$customT('stats.myHandicap')}: ${sign}${handicap.toFixed(1)}`;
