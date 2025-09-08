@@ -125,7 +125,8 @@ export function useHoleStats() {
           let result = `${paramsArray[0].name}<br/>`;
           paramsArray.forEach((param) => {
             if (param.value > 0) {
-              result += `${param.seriesName}: ${param.value}%<br/>`;
+              // Rond percentages af op twee decimalen
+              result += `${param.seriesName}: ${param.value.toFixed(2)}%<br/>`;
             }
           });
           return result;
@@ -144,6 +145,7 @@ export function useHoleStats() {
       },
       xAxis: {
         type: 'value',
+        max: 100, // Beperk schaal tot 100%
         axisLabel: {
           formatter: '{value}%',
         },

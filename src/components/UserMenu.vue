@@ -88,7 +88,9 @@
           <div>{{ $customT('menu.currentVersion') }}: {{ currentVersion }}</div>
           <div v-if="latestVersion">{{ $customT('menu.newVersion') }}: {{ latestVersion }}</div>
           <div v-if="updateStatus" class="q-mt-xs">
-            <span v-if="updateAvailable" class="text-warning">⚠️ {{ $customT('menu.updateAvailable') }}</span>
+            <span v-if="updateAvailable" class="text-warning"
+              >⚠️ {{ $customT('menu.updateAvailable') }}</span
+            >
             <span v-else class="text-positive">✅ {{ $customT('menu.upToDate') }}</span>
           </div>
           <!-- Update knop (alleen zichtbaar als versies niet gelijk zijn) -->
@@ -144,15 +146,15 @@ const updating = ref(false);
 const compareVersions = (current: string, latest: string): boolean => {
   const currentParts = current.split('.').map(Number);
   const latestParts = latest.split('.').map(Number);
-  
+
   for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
     const currentPart = currentParts[i] || 0;
     const latestPart = latestParts[i] || 0;
-    
+
     if (latestPart > currentPart) return true;
     if (latestPart < currentPart) return false;
   }
-  
+
   return false; // Versies zijn gelijk
 };
 
@@ -176,9 +178,9 @@ const handleLogout = () => {
 
 const handleUpdate = async () => {
   if (updating.value) return;
-  
+
   updating.value = true;
-  
+
   try {
     // Controleer of we in PWA modus zijn
     const isStandalone =
@@ -192,7 +194,7 @@ const handleUpdate = async () => {
       await registration.update();
 
       // Wacht even om de update te laten verwerken
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (isStandalone) {
         // In PWA modus: toon update melding en herlaad
@@ -245,14 +247,12 @@ const handleUpdate = async () => {
   }
 };
 
-
-
 onMounted(() => {
   void notificationsStore.checkUnreadMessages();
-  
+
   // Initialiseer huidige versie en forceer refresh
   currentVersion.value = getCurrentVersion();
-  
+
   // Check voor updates
   void checkForUpdates();
 });
@@ -265,21 +265,21 @@ const checkForUpdates = async () => {
     if (response.ok) {
       const versionData = await response.json();
       latestVersion.value = versionData.version;
-      
+
       // Debug: log versies
       console.log('Version check:', {
         current: currentVersion.value,
         latest: latestVersion.value,
-        fromChangelog: getCurrentVersion()
+        fromChangelog: getCurrentVersion(),
       });
-      
+
       // Vergelijk versies
       if (latestVersion.value && latestVersion.value !== currentVersion.value) {
         updateAvailable.value = compareVersions(currentVersion.value, latestVersion.value);
       } else {
         updateAvailable.value = false;
       }
-      
+
       updateStatus.value = true;
     }
   } catch {

@@ -7,6 +7,12 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.18",
+    date: "2025-09-08",
+    type: "patch",
+    changes: ["chore: update version to 0.21.17 and changelog"]
+  },
+  {
     version: "0.21.17",
     date: "2025-08-27",
     type: "patch",

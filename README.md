@@ -10,6 +10,7 @@ npm install
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 ```bash
 quasar dev
+quasar dev -m pwa
 ```
 
 **BELANGRIJK**: Gebruik altijd `quasar dev` om de app te starten, niet `npm run dev`.

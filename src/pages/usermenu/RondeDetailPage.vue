@@ -152,6 +152,13 @@
         </q-card-section>
       </q-card>
 
+      <!-- Leaderboard widget voor event rondes -->
+      <LeaderboardWidget
+        v-if="round?.event"
+        :event-id="String(round.event)"
+        :current-user-id="round?.player || ''"
+      />
+
       <div class="row justify-end">
         <q-btn flat color="primary" :label="$customT('scores.back')" @click="router.back()" />
       </div>
@@ -172,6 +179,7 @@ import { useI18n } from 'vue-i18n';
 import { usePocketbase } from 'src/composables/usePocketbase';
 import { debug } from 'src/utils/debug';
 import { getScoreColor } from 'src/constants/scoreColors';
+import LeaderboardWidget from 'src/components/LeaderboardWidget.vue';
 
 const route = useRoute();
 const router = useRouter();

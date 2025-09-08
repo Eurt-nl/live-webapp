@@ -23,28 +23,17 @@
               {{ $customT('weather.feelsLike') }} {{ weatherData.feelsLike }}°C
             </div>
           </div>
-          <div class="weather-icon">
-            <q-icon :name="getWeatherIcon(weatherData.symbol)" size="48px" color="primary" />
-          </div>
-        </div>
 
-        <!-- Weer details -->
-        <div class="weather-details">
-          <div class="detail-item">
-            <q-icon name="opacity" size="20px" color="blue" />
-            <div class="text-body2">{{ weatherData.humidity }}%</div>
-          </div>
-          <div class="detail-item">
-            <q-icon name="air" size="20px" color="grey" />
-            <div class="text-body2">{{ weatherData.windSpeed }} m/s</div>
-          </div>
-          <div class="detail-item">
-            <q-icon name="visibility" size="20px" color="orange" />
-            <div class="text-body2">{{ weatherData.pressure }} hPa</div>
-          </div>
-          <div class="detail-item">
-            <q-icon name="cloud" size="20px" color="blue-grey" />
-            <div class="text-body2">{{ weatherData.cloudCover }}%</div>
+          <!-- Weer details -->
+          <div class="weather-details">
+            <div class="detail-item">
+              <q-icon name="opacity" size="20px" color="blue" />
+              <div class="text-body2">{{ weatherData.humidity }}%</div>
+            </div>
+            <div class="detail-item">
+              <q-icon name="air" size="20px" color="grey" />
+              <div class="text-body2">{{ weatherData.windSpeed }} m/s</div>
+            </div>
           </div>
         </div>
       </div>
@@ -135,14 +124,15 @@ const fetchWeather = async () => {
           if (!response.ok) {
             console.error(`Weather API error: ${response.status} ${response.statusText}`);
             const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            const errorMessage =
+              errorData.error || `HTTP ${response.status}: ${response.statusText}`;
             throw new Error(errorMessage);
           }
 
           return await response.json();
         });
       },
-      15 * 60 * 1000 // 15 minuten cache
+      15 * 60 * 1000, // 15 minuten cache
     );
 
     // Extract current weather from the first timeseries entry
@@ -157,9 +147,12 @@ const fetchWeather = async () => {
       pressure: Math.round(details.air_pressure_at_sea_level),
       cloudCover: Math.round(details.cloud_area_fraction),
       description: getWeatherDescription(
-        weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+        weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code ||
+          'fair_day',
       ),
-      symbol: weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code || 'fair_day',
+      symbol:
+        weatherDataResult.properties.timeseries[0].data.next_1_hours?.summary?.symbol_code ||
+        'fair_day',
       lastUpdated: currentWeather.time,
     };
   } catch (err) {
@@ -256,28 +249,22 @@ onMounted(() => {
 
   .weather-main {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 16px;
+    gap: 16px;
   }
 
   .weather-info {
     flex: 1;
-  }
-
-  .weather-icon {
-    flex-shrink: 0;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 50%;
   }
 
   .weather-details {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
+    flex: 1;
+    width: 50%;
   }
 
   .detail-item {
