@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.22.1",
+    date: "2025-01-13",
+    type: "patch",
+    changes: ["fix: live tussenstand blijft nu werken na ronde afsluiten"]
+  },
+  {
+    version: "0.22.0",
+    date: "2025-09-08",
+    type: "minor",
+    changes: ["feat: implement leaderboard widget and improve round scoring functionality"]
+  },
+  {
     version: "0.21.18",
     date: "2025-09-08",
     type: "patch",

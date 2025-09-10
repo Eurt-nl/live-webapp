@@ -128,21 +128,14 @@
             </div>
           </div>
 
-          <!-- Leaderboard widget voor afgeronde event rondes - onder score overview -->
-          <LeaderboardWidget
-            v-if="isEventRound && round?.event && isReadOnly"
-            :event-id="String(round.event)"
-            :current-user-id="authStore.user?.id || ''"
-          />
-
           <!-- Back knop onder de acties -->
           <div class="row q-mt-sm justify-end">
             <q-btn color="primary" :label="$customT('navigation.back')" @click="router.back()" />
           </div>
 
-          <!-- Leaderboard widget voor actieve event rondes - onderaan de pagina -->
+          <!-- Leaderboard widget voor event rondes - altijd live, ongeacht ronde status -->
           <LeaderboardWidget
-            v-if="isEventRound && round?.event && !isReadOnly"
+            v-if="isEventRound && round?.event"
             :event-id="String(round.event)"
             :current-user-id="authStore.user?.id || ''"
           />

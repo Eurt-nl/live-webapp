@@ -350,8 +350,8 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     debug('Leaderboard: Collapsing');
     state.value.ui.expanded = false;
 
-    // Stop realtime subscriptions
-    stopRealtimeSubscription();
+    // Behoud realtime subscriptions voor live updates, ook als widget is ingeklapt
+    // stopRealtimeSubscription(); // Verwijderd: live updates moeten blijven werken
   };
 
   const startRealtimeSubscription = async () => {
